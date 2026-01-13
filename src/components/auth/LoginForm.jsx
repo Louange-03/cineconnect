@@ -27,11 +27,7 @@ export function LoginForm({ onSuccess }) {
     >
       <label className="block">
         <span className="text-sm font-medium">Email</span>
-        <input
-          className="mt-1 w-full rounded border p-2"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <input className="mt-1 w-full rounded border p-2" value={email} onChange={(e) => setEmail(e.target.value)} />
       </label>
 
       <label className="block">
