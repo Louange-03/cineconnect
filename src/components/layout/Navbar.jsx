@@ -1,41 +1,32 @@
 import { Link } from "@tanstack/react-router"
-import { isAuthenticated, clearToken } from "../../lib/auth"
+
+function NavItem({ to, children }) {
+  return (
+    <Link
+      to={to}
+      className="rounded px-3 py-2 text-sm hover:bg-slate-100"
+      activeProps={{ className: "bg-slate-200 font-medium" }}
+    >
+      {children}
+    </Link>
+  )
+}
 
 export function Navbar() {
-  const isAuth = isAuthenticated()
-
   return (
     <header className="border-b">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between p-4">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Link to="/" className="font-semibold">
           CinéConnect
         </Link>
 
-        <div className="flex items-center gap-3">
-          <Link to="/films" className="[&.active]:underline">Films</Link>
-          <Link to="/discussion" className="[&.active]:underline">Discussion</Link>
-
-          {isAuth ? (
-            <>
-              <Link to="/profil" className="[&.active]:underline">Profil</Link>
-              <button
-                className="rounded border px-3 py-1"
-                onClick={() => {
-                  clearToken()
-                  window.location.href = "/login"
-                }}
-              >
-                Déconnexion
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="[&.active]:underline">Connexion</Link>
-              <Link to="/register" className="[&.active]:underline">Inscription</Link>
-            </>
-          )}
-        </div>
-      </nav>
+        <nav className="flex items-center gap-2">
+          <NavItem to="/films">Films</NavItem>
+          <NavItem to="/discussion">Discussion</NavItem>
+          <NavItem to="/profil">Profil</NavItem>
+          <NavItem to="/login">Login</NavItem>
+        </nav>
+      </div>
     </header>
   )
 }

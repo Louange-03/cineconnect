@@ -1,66 +1,95 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { omdbSearch } from "../lib/omdb"
+import { useDebounce } from "../hooks/useDebounce"
+
+function SkeletonCard() {
+  return (
+    <div className="rounded border p-2">
+      <div className="mb-2 aspect-[2/3] w-full rounded bg-slate-200" />
+      <div className="h-4 w-3/4 rounded bg-slate-200" />
+      <div className="mt-2 h-3 w-1/2 rounded bg-slate-200" />
+    </div>
+  )
+}
 
 export function Films() {
   const [search, setSearch] = useState("batman")
+  const debounced = useDebounce(search, 450)
+
+  const q = useMemo(() => debounced.trim(), [debounced])
 
   const { data: films = [], isLoading, isError, error } = useQuery({
-    queryKey: ["films", search],
-    queryFn: () => omdbSearch(search),
-    enabled: !!search,
+    queryKey: ["films", q],
+    queryFn: () => omdbSearch(q),
+    enabled: q.length > 0,
     staleTime: 60_000,
   })
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold">Films</h1>
-      <p className="mt-1 text-slate-600">Recherche de films via l’API OMDb</p>
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-2xl font-semibold">Films</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Recherche de films via l’API OMDb
+        </p>
+      </div>
 
       <input
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Rechercher un film (ex : Batman, Inception...)"
-        className="mt-4 w-full max-w-md rounded border px-3 py-2"
+        className="w-full max-w-md rounded border px-3 py-2"
       />
 
-      {isLoading && <p className="mt-6">Chargement des films…</p>}
-
       {isError && (
-        <p className="mt-6 text-red-600">
+        <p className="text-red-600">
           Erreur : {error?.message || "Impossible de charger les films"}
         </p>
       )}
 
-      {!isLoading && !isError && films.length === 0 && (
-        <p className="mt-6">Aucun film trouvé.</p>
+      {isLoading && (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       )}
 
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-        {films.map((film) => (
-          <Link
-            key={film.imdbID}
-            to="/film/$id"
-            params={{ id: film.imdbID }}
-            className="group rounded border p-2 hover:shadow"
-          >
-            {film.Poster && film.Poster !== "N/A" ? (
-              <img
-                src={film.Poster}
-                alt={film.Title}
-                className="mb-2 aspect-[2/3] w-full rounded object-cover"
-              />
-            ) : (
-              <div className="mb-2 aspect-[2/3] w-full rounded bg-slate-200" />
-            )}
+      {!isLoading && !isError && films.length === 0 && (
+        <p className="text-slate-600">Aucun film trouvé.</p>
+      )}
 
-            <h2 className="font-semibold group-hover:underline">{film.Title}</h2>
-            <p className="text-sm text-slate-600">{film.Year}</p>
-          </Link>
-        ))}
-      </div>
+      {!isLoading && !isError && films.length > 0 && (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+          {films.map((film) => (
+            <Link
+              key={film.imdbID}
+              to="/film/$id"
+              params={{ id: film.imdbID }}
+              className="group rounded border p-2 hover:shadow"
+            >
+              {film.Poster && film.Poster !== "N/A" ? (
+                <img
+                  src={film.Poster}
+                  alt={film.Title}
+                  className="mb-2 aspect-[2/3] w-full rounded object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="mb-2 aspect-[2/3] w-full rounded bg-slate-200" />
+              )}
+
+              <h2 className="font-semibold group-hover:underline">
+                {film.Title}
+              </h2>
+              <p className="text-sm text-slate-600">{film.Year}</p>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
