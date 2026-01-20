@@ -2,9 +2,9 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
-  Outlet,
   redirect,
 } from "@tanstack/react-router"
+
 import { AppLayout } from "./components/layout/AppLayout"
 import { isAuthenticated } from "./lib/auth"
 
@@ -15,13 +15,11 @@ import { Login } from "./pages/Login"
 import { Register } from "./pages/Register"
 import { Profil } from "./pages/Profil"
 import { Discussion } from "./pages/Discussion"
+import { Amis } from "./pages/Amis"
+import { Utilisateurs } from "./pages/Utilisateurs"
 
 const rootRoute = createRootRoute({
-  component: () => (
-    <AppLayout>
-      <Outlet />
-    </AppLayout>
-  ),
+  component: AppLayout,
 })
 
 const indexRoute = createRoute({
@@ -71,10 +69,34 @@ const discussionRoute = createRoute({
   component: Discussion,
 })
 
+const amisRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/amis",
+  beforeLoad: () => {
+    if (!isAuthenticated()) {
+      throw redirect({ to: "/login" })
+    }
+  },
+  component: Amis,
+})
+
+const utilisateursRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/utilisateurs",
+  beforeLoad: () => {
+    if (!isAuthenticated()) {
+      throw redirect({ to: "/login" })
+    }
+  },
+  component: Utilisateurs,
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   filmsRoute,
   filmDetailRoute,
+  amisRoute,
+  utilisateursRoute,
   loginRoute,
   registerRoute,
   profilRoute,
