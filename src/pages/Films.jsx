@@ -27,6 +27,16 @@ export function Films() {
     staleTime: 60_000,
   })
 
+  // ✅ Déduplication par imdbID pour éviter "duplicate key"
+  const uniqueFilms = useMemo(() => {
+    const map = new Map()
+    for (const f of films) {
+      if (!f?.imdbID) continue
+      if (!map.has(f.imdbID)) map.set(f.imdbID, f)
+    }
+    return Array.from(map.values())
+  }, [films])
+
   return (
     <div className="space-y-4">
       <div>
@@ -58,15 +68,15 @@ export function Films() {
         </div>
       )}
 
-      {!isLoading && !isError && films.length === 0 && (
+      {!isLoading && !isError && uniqueFilms.length === 0 && (
         <p className="text-slate-600">Aucun film trouvé.</p>
       )}
 
-      {!isLoading && !isError && films.length > 0 && (
+      {!isLoading && !isError && uniqueFilms.length > 0 && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-          {films.map((film) => (
+          {uniqueFilms.map((film) => (
             <Link
-              key={film.imdbID}
+              key={`${film.imdbID}-${film.Year || ""}`}
               to="/film/$id"
               params={{ id: film.imdbID }}
               className="group rounded border p-2 hover:shadow"
@@ -93,4 +103,3 @@ export function Films() {
     </div>
   )
 }
-

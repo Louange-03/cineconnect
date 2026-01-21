@@ -1,22 +1,23 @@
-export function StarRating({ value = 0, onChange }) {
+export function StarRating({ value = 0, onChange, size = 26 }) {
+  const stars = [1, 2, 3, 4, 5]
+
   return (
     <div className="flex items-center gap-1">
-      {Array.from({ length: 5 }).map((_, i) => {
-        const starValue = i + 1
-        const active = starValue <= value
+      {stars.map((n) => {
+        const active = n <= value
         return (
           <button
-            key={starValue}
+            key={n}
             type="button"
-            className={`text-xl ${active ? "" : "opacity-30"} hover:opacity-100`}
-            onClick={() => onChange?.(starValue)}
-            aria-label={`Note ${starValue} sur 5`}
+            onClick={() => onChange?.(n)}
+            className="leading-none"
+            aria-label={`Noter ${n} sur 5`}
+            style={{ fontSize: size }}
           >
-            ★
+            <span className={active ? "text-yellow-500" : "text-slate-300"}>★</span>
           </button>
         )
       })}
-      <span className="ml-2 text-sm text-slate-600">{value}/5</span>
     </div>
   )
 }

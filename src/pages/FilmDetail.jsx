@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useParams } from "@tanstack/react-router"
 import { omdbGetById } from "../lib/omdb"
@@ -6,17 +6,22 @@ import { useAuth } from "../hooks/useAuth"
 
 import { ReviewForm } from "../components/reviews/ReviewForm"
 import { ReviewList } from "../components/reviews/ReviewList"
-import { addReview, deleteReview, getReviewsByFilmId } from "../lib/reviews"
+import { deleteReview, getReviewsByFilmId, upsertReview } from "../lib/reviews"
 
 export function FilmDetail() {
   const { id } = useParams({ from: "/film/$id" })
   const { user, isAuth } = useAuth()
 
-  // Reviews (localStorage mock)
+  const myUserId = user?.id || "u_local"
+  const myUsername = user?.username || "Utilisateur"
+
+  // Reviews (localStorage)
   const [reviews, setReviews] = useState([])
+  const [editing, setEditing] = useState(null)
 
   useEffect(() => {
     setReviews(getReviewsByFilmId(id))
+    setEditing(null)
   }, [id])
 
   // Film data (OMDb)
@@ -51,6 +56,11 @@ export function FilmDetail() {
   const genre = data?.Genre && data.Genre !== "N/A" ? data.Genre : null
   const imdbRating =
     data?.imdbRating && data.imdbRating !== "N/A" ? data.imdbRating : null
+
+  // Ta review (si existe) — utile pour afficher "Modifier"
+  const myReview = useMemo(() => {
+    return reviews.find((r) => r.userId === myUserId) || null
+  }, [reviews, myUserId])
 
   return (
     <div className="space-y-8">
@@ -117,8 +127,20 @@ export function FilmDetail() {
       </div>
 
       {/* Reviews */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Reviews & notation</h2>
+      <section className="space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold">Reviews & notation</h2>
+
+          {isAuth && myReview && !editing && (
+            <button
+              type="button"
+              className="rounded border px-3 py-2 text-sm hover:bg-slate-50"
+              onClick={() => setEditing(myReview)}
+            >
+              Modifier ma review
+            </button>
+          )}
+        </div>
 
         {!isAuth ? (
           <p className="text-slate-600">
@@ -126,34 +148,33 @@ export function FilmDetail() {
           </p>
         ) : (
           <ReviewForm
+            initial={editing || myReview}
             onSubmit={({ rating, comment }) => {
-              const newReview = {
-                id: crypto.randomUUID(),
+              upsertReview({
                 filmId: id,
-                userId: user?.id || "u_local",
-                username: user?.username || "Utilisateur",
+                userId: myUserId,
+                username: myUsername,
                 rating,
                 comment,
-                createdAt: new Date().toISOString(),
-              }
-              const next = addReview(id, newReview)
-              setReviews(next)
+              })
+              setReviews(getReviewsByFilmId(id))
+              setEditing(null)
             }}
+            onCancel={() => setEditing(null)}
           />
         )}
 
         <ReviewList
           reviews={reviews}
-          onDelete={
-            isAuth
-              ? (reviewId) => {
-                  const next = deleteReview(id, reviewId)
-                  setReviews(next)
-                }
-              : null
-          }
+          myUserId={myUserId}
+          onEditMine={(r) => setEditing(r)}
+          onDeleteMine={(r) => {
+            deleteReview(r.id, myUserId)
+            setReviews(getReviewsByFilmId(id))
+            setEditing(null)
+          }}
         />
-      </div>
+      </section>
     </div>
   )
 }
