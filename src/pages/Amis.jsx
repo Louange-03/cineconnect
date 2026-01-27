@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
-import { Navigate, Link } from "@tanstack/react-router"
+import { Link } from "@tanstack/react-router"
 import { useAuth } from "../hooks/useAuth"
+
 import {
   acceptRequest,
   getAllUsers,
@@ -10,38 +11,34 @@ import {
   removeFriendRelation,
   seedUsersIfEmpty,
 } from "../lib/friends"
+
 import { FriendCard } from "../components/friends/FriendCard"
 import { FriendRequestCard } from "../components/friends/FriendRequestCard"
 
 export function Amis() {
-  const { user, isAuth } = useAuth()
+  const { user } = useAuth()
+  const myId = user?.id || "u_1" // fallback local
+
   const [refresh, setRefresh] = useState(0)
 
   useEffect(() => {
     seedUsersIfEmpty()
+    setRefresh((x) => x + 1)
   }, [])
 
   const users = useMemo(() => getAllUsers(), [refresh])
-  const myId = user?.id
 
-  const friends = useMemo(() => {
-    if (!myId) return []
+  const friendUsers = useMemo(() => {
     const rel = getMyFriends(myId)
-    return rel
-      .map((r) => (r.userId === myId ? r.friendId : r.userId))
-      .map((id) => users.find((u) => u.id === id))
-      .filter(Boolean)
+    const ids = rel.map((r) => (r.userId === myId ? r.friendId : r.userId))
+    return ids.map((id) => users.find((u) => u.id === id)).filter(Boolean)
   }, [users, myId, refresh])
 
-  const requests = useMemo(() => {
-    if (!myId) return []
+  const requestUsers = useMemo(() => {
     const rel = getMyRequests(myId)
-    return rel
-      .map((r) => users.find((u) => u.id === r.userId))
-      .filter(Boolean)
+    const ids = rel.map((r) => r.userId)
+    return ids.map((id) => users.find((u) => u.id === id)).filter(Boolean)
   }, [users, myId, refresh])
-
-  if (!isAuth) return <Navigate to="/login" />
 
   return (
     <div className="space-y-6">
@@ -53,18 +50,22 @@ export function Amis() {
           </p>
         </div>
 
-        <Link to="/utilisateurs" className="rounded border px-3 py-2 text-sm hover:bg-slate-50">
+        <Link
+          to="/utilisateurs"
+          className="rounded border px-3 py-2 text-sm hover:bg-slate-50"
+        >
           Trouver des utilisateurs
         </Link>
       </div>
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Demandes reçues</h2>
-        {requests.length === 0 ? (
+
+        {requestUsers.length === 0 ? (
           <p className="text-slate-600">Aucune demande en attente.</p>
         ) : (
           <div className="space-y-3">
-            {requests.map((u) => (
+            {requestUsers.map((u) => (
               <FriendRequestCard
                 key={u.id}
                 user={u}
@@ -84,11 +85,12 @@ export function Amis() {
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Amis</h2>
-        {friends.length === 0 ? (
+
+        {friendUsers.length === 0 ? (
           <p className="text-slate-600">Tu n’as pas encore d’amis.</p>
         ) : (
           <div className="space-y-3">
-            {friends.map((u) => (
+            {friendUsers.map((u) => (
               <FriendCard
                 key={u.id}
                 user={u}

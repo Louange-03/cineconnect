@@ -13,10 +13,7 @@ function write(key, value) {
   localStorage.setItem(key, JSON.stringify(value))
 }
 
-/**
- * Users mock: on garde une "liste d'utilisateurs" locale
- * (Pour le backend plus tard : table users)
- */
+// ---------- USERS (mock) ----------
 export function seedUsersIfEmpty() {
   const users = read(USERS_KEY, [])
   if (users.length > 0) return users
@@ -40,6 +37,7 @@ export function searchUsers(q) {
   const users = getAllUsers()
   const query = (q || "").trim().toLowerCase()
   if (!query) return users
+
   return users.filter(
     (u) =>
       u.username.toLowerCase().includes(query) ||
@@ -47,11 +45,10 @@ export function searchUsers(q) {
   )
 }
 
-/**
- * Friends mock:
- * on stocke des relations : { id, userId, friendId, status, createdAt }
- * status: pending | accepted | rejected
- */
+// ---------- FRIEND RELATIONS (mock) ----------
+// relation: { id, userId, friendId, status, createdAt }
+// status: pending | accepted | rejected
+
 export function getFriendRelations() {
   return read(FRIENDS_KEY, [])
 }
@@ -63,8 +60,7 @@ function setFriendRelations(next) {
 export function getMyFriends(userId) {
   const rel = getFriendRelations()
   const accepted = rel.filter((r) => r.status === "accepted")
-  const my = accepted.filter((r) => r.userId === userId || r.friendId === userId)
-  return my
+  return accepted.filter((r) => r.userId === userId || r.friendId === userId)
 }
 
 export function getMyRequests(userId) {
@@ -75,7 +71,7 @@ export function getMyRequests(userId) {
 export function sendFriendRequest(userId, targetUserId) {
   const rel = getFriendRelations()
 
-  // éviter doublons
+  // éviter doublons (dans les 2 sens)
   const exists = rel.find(
     (r) =>
       (r.userId === userId && r.friendId === targetUserId) ||
@@ -97,39 +93,45 @@ export function sendFriendRequest(userId, targetUserId) {
   return next
 }
 
-export function acceptRequest(userId, requesterId) {
+export function acceptRequest(myId, requesterId) {
   const rel = getFriendRelations()
+
   const next = rel.map((r) => {
-    if (r.status === "pending" && r.userId === requesterId && r.friendId === userId) {
+    if (r.status === "pending" && r.userId === requesterId && r.friendId === myId) {
       return { ...r, status: "accepted" }
     }
     return r
   })
+
   setFriendRelations(next)
   return next
 }
 
-export function rejectRequest(userId, requesterId) {
+export function rejectRequest(myId, requesterId) {
   const rel = getFriendRelations()
+
   const next = rel.map((r) => {
-    if (r.status === "pending" && r.userId === requesterId && r.friendId === userId) {
+    if (r.status === "pending" && r.userId === requesterId && r.friendId === myId) {
       return { ...r, status: "rejected" }
     }
     return r
   })
+
   setFriendRelations(next)
   return next
 }
 
-export function removeFriendRelation(userId, otherId) {
+export function removeFriendRelation(myId, otherId) {
   const rel = getFriendRelations()
+
   const next = rel.filter(
     (r) =>
       !(
-        (r.userId === userId && r.friendId === otherId) ||
-        (r.userId === otherId && r.friendId === userId)
+        (r.userId === myId && r.friendId === otherId) ||
+        (r.userId === otherId && r.friendId === myId)
       )
   )
+
   setFriendRelations(next)
   return next
 }

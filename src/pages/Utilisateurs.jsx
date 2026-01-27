@@ -1,27 +1,29 @@
 import { useEffect, useMemo, useState } from "react"
-import { Navigate, Link } from "@tanstack/react-router"
+import { Link } from "@tanstack/react-router"
 import { useAuth } from "../hooks/useAuth"
+
 import {
   getAllUsers,
-  seedUsersIfEmpty,
-  searchUsers,
-  sendFriendRequest,
   getFriendRelations,
+  searchUsers,
+  seedUsersIfEmpty,
+  sendFriendRequest,
 } from "../lib/friends"
 
 export function Utilisateurs() {
-  const { user, isAuth } = useAuth()
+  const { user } = useAuth()
+  const myId = user?.id || "u_1"
+
   const [q, setQ] = useState("")
   const [refresh, setRefresh] = useState(0)
 
   useEffect(() => {
     seedUsersIfEmpty()
+    setRefresh((x) => x + 1)
   }, [])
 
-  const myId = user?.id
   const users = useMemo(() => getAllUsers(), [refresh])
   const results = useMemo(() => searchUsers(q), [q, refresh])
-
   const relations = useMemo(() => getFriendRelations(), [refresh])
 
   function statusWith(targetId) {
@@ -33,8 +35,6 @@ export function Utilisateurs() {
     return r?.status || null
   }
 
-  if (!isAuth) return <Navigate to="/login" />
-
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -45,7 +45,10 @@ export function Utilisateurs() {
           </p>
         </div>
 
-        <Link to="/amis" className="rounded border px-3 py-2 text-sm hover:bg-slate-50">
+        <Link
+          to="/amis"
+          className="rounded border px-3 py-2 text-sm hover:bg-slate-50"
+        >
           ← Retour amis
         </Link>
       </div>
@@ -62,8 +65,12 @@ export function Utilisateurs() {
           .filter((u) => u.id !== myId)
           .map((u) => {
             const st = statusWith(u.id)
+
             return (
-              <div key={u.id} className="flex items-center justify-between rounded border p-3">
+              <div
+                key={u.id}
+                className="flex items-center justify-between rounded border p-3"
+              >
                 <div>
                   <p className="font-medium">{u.username}</p>
                   <p className="text-sm text-slate-600">{u.email}</p>
@@ -75,6 +82,7 @@ export function Utilisateurs() {
                   <span className="text-sm text-slate-600">Demande envoyée</span>
                 ) : (
                   <button
+                    type="button"
                     className="rounded bg-black px-3 py-2 text-sm text-white"
                     onClick={() => {
                       sendFriendRequest(myId, u.id)
