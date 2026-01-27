@@ -1,15 +1,16 @@
 {
   "name": "backend",
   "version": "1.0.0",
+  "private": true,
+  "type": "module",
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.28.0",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
