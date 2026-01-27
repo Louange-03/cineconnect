@@ -1,43 +1,47 @@
-const STORAGE_KEY = "cineconnect_reviews"
+const KEY = "cineconnect.reviews.v1"
 
-function readAll() {
+function read() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return {}
-    return JSON.parse(raw)
+    return JSON.parse(localStorage.getItem(KEY) || "{}")
   } catch {
     return {}
   }
 }
 
-function writeAll(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+function write(data) {
+  localStorage.setItem(KEY, JSON.stringify(data))
 }
 
 export function getReviewsByFilmId(filmId) {
-  const all = readAll()
-  return all[filmId] || []
+  const data = read()
+  return data[filmId] || []
 }
 
 export function addReview(filmId, review) {
-  const all = readAll()
-  const current = all[filmId] || []
+  const data = read()
+  const list = data[filmId] || []
 
-  // ✅ 1 review par user par film : on remplace l'ancienne
-  const withoutUser = current.filter((r) => r.userId !== review.userId)
+  // 1 review par utilisateur
+  const filtered = list.filter((r) => r.userId !== review.userId)
 
-  const next = [review, ...withoutUser]
-  all[filmId] = next
-  writeAll(all)
-  return next
+  const next = {
+    ...data,
+    [filmId]: [review, ...filtered],
+  }
+
+  write(next)
+  return next[filmId]
 }
 
 export function deleteReview(filmId, reviewId) {
-  const all = readAll()
-  const current = all[filmId] || []
-  const next = current.filter((r) => r.id !== reviewId)
+  const data = read()
+  const list = data[filmId] || []
 
-  all[filmId] = next
-  writeAll(all)
-  return next
+  const next = {
+    ...data,
+    [filmId]: list.filter((r) => r.id !== reviewId),
+  }
+
+  write(next)
+  return next[filmId]
 }

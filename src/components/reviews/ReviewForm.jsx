@@ -1,48 +1,34 @@
 import { useState } from "react"
+import { StarRating } from "./StarRating"
 
 export function ReviewForm({ onSubmit }) {
-  const [rating, setRating] = useState(5)
+  const [rating, setRating] = useState(0)
   const [comment, setComment] = useState("")
 
+  function submit(e) {
+    e.preventDefault()
+    if (rating === 0) return
+
+    onSubmit({ rating, comment })
+    setRating(0)
+    setComment("")
+  }
+
   return (
-    <form
-      className="space-y-3 rounded border p-4"
-      onSubmit={(e) => {
-        e.preventDefault()
-        const c = comment.trim()
-        if (!c) return
-        onSubmit({ rating, comment: c })
-        setComment("")
-        setRating(5)
-      }}
-    >
-      <div>
-        <label className="block text-sm font-medium">Note (0 à 5)</label>
-        <input
-          type="number"
-          min={0}
-          max={5}
-          value={rating}
-          onChange={(e) => setRating(Number(e.target.value))}
-          className="mt-1 w-24 rounded border px-2 py-1"
-        />
-      </div>
+    <form onSubmit={submit} className="space-y-3 rounded border p-4">
+      <h3 className="font-medium">Laisser une review</h3>
 
-      <div>
-        <label className="block text-sm font-medium">Commentaire</label>
-        <textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          rows={3}
-          placeholder="Écris ton avis…"
-          className="mt-1 w-full rounded border px-3 py-2"
-        />
-      </div>
+      <StarRating value={rating} onChange={setRating} />
 
-      <button
-        type="submit"
-        className="rounded bg-black px-4 py-2 text-sm text-white hover:opacity-90"
-      >
+      <textarea
+        rows={3}
+        className="w-full rounded border px-3 py-2"
+        placeholder="Ton avis…"
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+      />
+
+      <button className="rounded bg-black px-4 py-2 text-white">
         Publier
       </button>
     </form>

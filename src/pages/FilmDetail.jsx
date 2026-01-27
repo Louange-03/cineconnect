@@ -1,9 +1,26 @@
+import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useParams } from "@tanstack/react-router"
 import { omdbGetById } from "../lib/omdb"
+import { useAuth } from "../hooks/useAuth"
+
+import { ReviewForm } from "../components/reviews/ReviewForm"
+import { ReviewList } from "../components/reviews/ReviewList"
+import {
+  addReview,
+  deleteReview,
+  getReviewsByFilmId,
+} from "../lib/reviews"
 
 export function FilmDetail() {
   const { id } = useParams({ from: "/film/$id" })
+  const { user, isAuth } = useAuth()
+
+  const [reviews, setReviews] = useState([])
+
+  useEffect(() => {
+    setReviews(getReviewsByFilmId(id))
+  }, [id])
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["omdb", "film", id],
@@ -32,65 +49,57 @@ export function FilmDetail() {
       : "https://via.placeholder.com/300x450?text=No+Poster"
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <Link to="/films" className="text-sm underline">
         ← Retour aux films
       </Link>
 
       <div className="grid gap-6 md:grid-cols-[280px_1fr]">
-        <img
-          src={poster}
-          alt={data?.Title || "Film"}
-          className="w-full rounded object-cover"
-        />
+        <img src={poster} alt={data?.Title} className="rounded" />
 
-        <div className="space-y-3">
-          <div>
-            <h1 className="text-2xl font-semibold">{data?.Title}</h1>
-            <p className="text-slate-600">
-              {data?.Year && data.Year !== "N/A" ? data.Year : ""}
-              {data?.Runtime && data.Runtime !== "N/A" ? ` • ${data.Runtime}` : ""}
-              {data?.Genre && data.Genre !== "N/A" ? ` • ${data.Genre}` : ""}
-            </p>
-          </div>
-
-          {data?.imdbRating && data.imdbRating !== "N/A" && (
-            <p>
-              <span className="font-medium">Note IMDb :</span> {data.imdbRating}/10
-            </p>
-          )}
-
-          {data?.Director && data.Director !== "N/A" && (
-            <p>
-              <span className="font-medium">Réalisateur :</span> {data.Director}
-            </p>
-          )}
-
-          {data?.Actors && data.Actors !== "N/A" && (
-            <p>
-              <span className="font-medium">Acteurs :</span> {data.Actors}
-            </p>
-          )}
-
-          {data?.Plot && data.Plot !== "N/A" && (
-            <p>
-              <span className="font-medium">Synopsis :</span> {data.Plot}
-            </p>
-          )}
-
-          {data?.Language && data.Language !== "N/A" && (
-            <p>
-              <span className="font-medium">Langue :</span> {data.Language}
-            </p>
-          )}
-
-          {data?.Country && data.Country !== "N/A" && (
-            <p>
-              <span className="font-medium">Pays :</span> {data.Country}
-            </p>
-          )}
+        <div className="space-y-2">
+          <h1 className="text-2xl font-semibold">{data?.Title}</h1>
+          <p className="text-slate-600">
+            {data?.Year} • {data?.Genre}
+          </p>
+          <p>{data?.Plot}</p>
         </div>
       </div>
+
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold">Reviews & notation</h2>
+
+        {!isAuth ? (
+          <p className="text-slate-600">
+            Connecte-toi pour publier une review.
+          </p>
+        ) : (
+          <ReviewForm
+            onSubmit={({ rating, comment }) => {
+              const newReview = {
+                id: crypto.randomUUID(),
+                filmId: id,
+                userId: user.id,
+                username: user.username,
+                rating,
+                comment,
+                createdAt: new Date().toISOString(),
+              }
+
+              setReviews(addReview(id, newReview))
+            }}
+          />
+        )}
+
+        <ReviewList
+          reviews={reviews}
+          onDelete={
+            isAuth
+              ? (reviewId) => setReviews(deleteReview(id, reviewId))
+              : null
+          }
+        />
+      </section>
     </div>
   )
 }

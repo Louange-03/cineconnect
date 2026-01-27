@@ -1,4 +1,4 @@
- export function ConversationList({ conversations, selectedId, onSelect }) {
+export function ConversationList({ conversations, selectedId, onSelect }) {
   return (
     <div className="border-r">
       {conversations.length === 0 ? (
