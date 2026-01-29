@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16
+    container_name: cineconnect-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: cineconnect
+      POSTGRES_PASSWORD: cineconnect
+      POSTGRES_DB: cineconnect
+    volumes:
+      - cineconnect_pg:/var/lib/postgresql/data
+
+volumes:
+  cineconnect_pg:

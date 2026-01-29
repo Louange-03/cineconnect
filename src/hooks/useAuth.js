@@ -1,23 +1,37 @@
-import { getToken, getUser, setUser, clearUser, clearToken } from "../lib/auth"
+import { useEffect, useState } from "react"
+import { fetchMe, getUser, isAuthenticated, logout } from "../lib/auth"
 
 export function useAuth() {
-  const token = getToken()
-  const user = getUser()
+  const [user, setUser] = useState(() => getUser())
+  const [loading, setLoading] = useState(true)
 
-  function saveUser(nextUser) {
-    setUser(nextUser)
-  }
+  const isAuth = isAuthenticated()
 
-  function signOut() {
-    clearToken()
-    clearUser()
-  }
+  useEffect(() => {
+    let mounted = true
 
-  return {
-    token,
-    user,
-    isAuth: Boolean(token),
-    saveUser,
-    signOut,
-  }
+    async function init() {
+      try {
+        if (isAuthenticated()) {
+          const me = await fetchMe()
+          if (mounted) setUser(me)
+        } else {
+          if (mounted) setUser(null)
+        }
+      } catch {
+        // token invalide => on nettoie
+        logout()
+        if (mounted) setUser(null)
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+
+    init()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  return { user, isAuth, loading }
 }
