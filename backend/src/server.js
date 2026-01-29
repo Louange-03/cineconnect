@@ -1,12 +1,11 @@
 import "dotenv/config"
 import express from "express"
 import cors from "cors"
-import pg from "pg"
-
-const { Pool } = pg
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+import { pool } from "./db/client.js"
+import authRoutes from "./routes/auth.routes.js"
 
 const app = express()
+
 app.use(cors())
 app.use(express.json())
 
@@ -19,6 +18,8 @@ app.get("/health", async (req, res) => {
   }
 })
 
-app.listen(process.env.PORT || 4000, () => {
-  console.log(`API running on http://localhost:${process.env.PORT || 4000}`)
+app.use("/auth", authRoutes)
+
+app.listen(process.env.PORT || 3001, () => {
+  console.log(`API running on http://localhost:${process.env.PORT || 3001}`)
 })
