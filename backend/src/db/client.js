@@ -1,6 +1,6 @@
 import "dotenv/config"
-import pg from "pg"
 import { drizzle } from "drizzle-orm/node-postgres"
+import pg from "pg"
 
 const { Pool } = pg
 

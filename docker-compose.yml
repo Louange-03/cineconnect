@@ -11,5 +11,13 @@ services:
     volumes:
       - cineconnect_pg:/var/lib/postgresql/data
 
+  adminer:
+    image: adminer
+    container_name: cineconnect-adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
 volumes:
   cineconnect_pg:

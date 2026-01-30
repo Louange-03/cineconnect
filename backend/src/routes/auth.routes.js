@@ -59,7 +59,12 @@ router.post("/login", async (req, res) => {
 
   const { email, password } = parsed.data
 
-  const found = await db.select().from(users).where(eq(users.email, email)).limit(1)
+  const found = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1)
+
   const user = found[0]
   if (!user) return res.status(401).json({ message: "Identifiants incorrects" })
 
