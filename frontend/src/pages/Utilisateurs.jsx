@@ -1,101 +1,67 @@
-import { useEffect, useMemo, useState } from "react"
-import { Link } from "@tanstack/react-router"
-import { useAuth } from "../hooks/useAuth"
-
-import {
-  getAllUsers,
-  getFriendRelations,
-  searchUsers,
-  seedUsersIfEmpty,
-  sendFriendRequest,
-} from "../lib/friends"
+import { useMemo, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { fetchUsers } from "../lib/userApi"
+import { useDebounce } from "../hooks/useDebounce"
 
 export function Utilisateurs() {
-  const { user } = useAuth()
-  const myId = user?.id || "u_1"
+  const [search, setSearch] = useState("")
+  const debounced = useDebounce(search, 300)
 
-  const [q, setQ] = useState("")
-  const [refresh, setRefresh] = useState(0)
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["users"],
+    queryFn: fetchUsers,
+    staleTime: 30_000,
+  })
 
-  useEffect(() => {
-    seedUsersIfEmpty()
-    setRefresh((x) => x + 1)
-  }, [])
+  const users = data?.users || []
 
-  const users = useMemo(() => getAllUsers(), [refresh])
-  const results = useMemo(() => searchUsers(q), [q, refresh])
-  const relations = useMemo(() => getFriendRelations(), [refresh])
-
-  function statusWith(targetId) {
-    const r = relations.find(
-      (x) =>
-        (x.userId === myId && x.friendId === targetId) ||
-        (x.userId === targetId && x.friendId === myId)
+  const filtered = useMemo(() => {
+    const q = debounced.trim().toLowerCase()
+    if (!q) return users
+    return users.filter((u) =>
+      (u.username || "").toLowerCase().includes(q) ||
+      (u.email || "").toLowerCase().includes(q)
     )
-    return r?.status || null
-  }
+  }, [users, debounced])
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Utilisateurs</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Recherche et envoie des demandes d’amis.
-          </p>
-        </div>
-
-        <Link
-          to="/amis"
-          className="rounded border px-3 py-2 text-sm hover:bg-slate-50"
-        >
-          ← Retour amis
-        </Link>
+      <div>
+        <h1 className="text-2xl font-semibold">Utilisateurs</h1>
+        <p className="text-sm text-slate-600">
+          Recherche d’utilisateurs (protégé)
+        </p>
       </div>
 
       <input
-        className="w-full max-w-md rounded border px-3 py-2"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
         placeholder="Rechercher par username ou email…"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
+        className="w-full max-w-md rounded border px-3 py-2"
       />
 
-      <div className="space-y-3">
-        {results
-          .filter((u) => u.id !== myId)
-          .map((u) => {
-            const st = statusWith(u.id)
+      {isLoading && <p className="text-slate-600">Chargement…</p>}
 
-            return (
-              <div
-                key={u.id}
-                className="flex items-center justify-between rounded border p-3"
-              >
-                <div>
-                  <p className="font-medium">{u.username}</p>
-                  <p className="text-sm text-slate-600">{u.email}</p>
-                </div>
+      {isError && (
+        <p className="text-red-600">
+          Erreur : {error?.message || "Impossible de charger les utilisateurs"}
+        </p>
+      )}
 
-                {st === "accepted" ? (
-                  <span className="text-sm text-slate-600">Déjà ami</span>
-                ) : st === "pending" ? (
-                  <span className="text-sm text-slate-600">Demande envoyée</span>
-                ) : (
-                  <button
-                    type="button"
-                    className="rounded bg-black px-3 py-2 text-sm text-white"
-                    onClick={() => {
-                      sendFriendRequest(myId, u.id)
-                      setRefresh((x) => x + 1)
-                    }}
-                  >
-                    Ajouter
-                  </button>
-                )}
-              </div>
-            )
-          })}
-      </div>
+      {!isLoading && !isError && filtered.length === 0 && (
+        <p className="text-slate-600">Aucun utilisateur trouvé.</p>
+      )}
+
+      {!isLoading && !isError && filtered.length > 0 && (
+        <div className="space-y-2">
+          {filtered.map((u) => (
+            <div key={u.id} className="rounded border p-3">
+              <p className="font-medium">{u.username}</p>
+              <p className="text-sm text-slate-600">{u.email}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

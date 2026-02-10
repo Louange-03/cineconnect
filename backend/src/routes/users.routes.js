@@ -5,6 +5,7 @@ import { authMiddleware } from "../middlewares/auth.js"
 
 const router = Router()
 
+// GET /users -> liste (sans passwordHash)
 router.get("/", authMiddleware, async (req, res) => {
   const rows = await db
     .select({

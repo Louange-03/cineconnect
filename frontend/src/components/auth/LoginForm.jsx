@@ -1,57 +1,46 @@
 import { useState } from "react"
-import { login } from "../../lib/auth"
+import { login } from "../../lib/authApi"
 
 export function LoginForm({ onSuccess }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e) {
+  async function onSubmit(e) {
     e.preventDefault()
-    setError("")
+    setError(null)
     setLoading(true)
-
     try {
       await login({ email, password })
       onSuccess?.()
     } catch (err) {
-      setError(err?.message || "Erreur lors de la connexion")
+      setError(err.message)
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-4 space-y-3">
-      <div className="space-y-1">
-        <label className="text-sm">Email</label>
-        <input
-          className="w-full rounded border px-3 py-2"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          type="email"
-          required
-        />
-      </div>
+    <form onSubmit={onSubmit} className="space-y-3">
+      <input
+        className="w-full rounded border px-3 py-2"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+      />
 
-      <div className="space-y-1">
-        <label className="text-sm">Mot de passe</label>
-        <input
-          className="w-full rounded border px-3 py-2"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          type="password"
-          required
-        />
-      </div>
+      <input
+        className="w-full rounded border px-3 py-2"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Mot de passe"
+        type="password"
+      />
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <button
-        disabled={loading}
-        className="rounded bg-black px-4 py-2 text-white disabled:opacity-60"
-      >
+      <button className="rounded bg-black px-4 py-2 text-white" disabled={loading}>
         {loading ? "Connexion..." : "Se connecter"}
       </button>
     </form>

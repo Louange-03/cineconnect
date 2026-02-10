@@ -1,18 +1,23 @@
 import { useAuth } from "../hooks/useAuth"
-import { ProfileCard } from "../components/auth/ProfileCard"
 
 export function Profil() {
-  const { user, logout } = useAuth()
+  const { user, isLoading, error } = useAuth()
+
+  if (isLoading) return <p className="text-slate-600">Chargement...</p>
+  if (error) return <p className="text-red-600">{error.message}</p>
 
   return (
-    <div className="max-w-xl">
+    <div className="space-y-2">
       <h1 className="text-2xl font-semibold">Profil</h1>
-      <div className="mt-4">
-        <ProfileCard user={user} />
-      </div>
-      <button className="mt-4 rounded border px-3 py-2" onClick={logout}>
-        Se déconnecter
-      </button>
+      {user ? (
+        <div className="rounded border p-4">
+          <p><span className="font-medium">ID :</span> {user.id}</p>
+          <p><span className="font-medium">Email :</span> {user.email}</p>
+          <p><span className="font-medium">Username :</span> {user.username}</p>
+        </div>
+      ) : (
+        <p className="text-slate-600">Aucun utilisateur.</p>
+      )}
     </div>
   )
 }
