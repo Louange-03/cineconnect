@@ -3,9 +3,10 @@ import { RegisterForm } from "../components/auth/RegisterForm"
 
 export function Register() {
   const navigate = useNavigate()
+
   return (
     <div className="mx-auto max-w-md">
-      <h1 className="text-2xl font-semibold">Inscription</h1>
+      <h1 className="text-2xl font-semibold mb-4">Inscription</h1>
       <RegisterForm onSuccess={() => navigate({ to: "/profil" })} />
     </div>
   )
