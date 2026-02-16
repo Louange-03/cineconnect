@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1769526113339,
-      "tag": "0000_odd_jubilee",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1769528782990,
-      "tag": "0001_chief_timeslip",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1769678494200,
-      "tag": "0002_superb_wasp",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1769773297426,
-      "tag": "0003_quick_rogue",
+      "when": 1771237787943,
+      "tag": "0000_sparkling_mongu",
       "breakpoints": true
     }
   ]
