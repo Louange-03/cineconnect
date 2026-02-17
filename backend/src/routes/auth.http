@@ -1,0 +1,29 @@
+### Register
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "a@b.com",
+  "username": "alice",
+  "password": "secret123"
+}
+
+### Login
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "a@b.com",
+  "password": "secret123"
+}
+
+### Me (remplacer le token)
+GET http://localhost:3001/auth/me
+Authorization: Bearer {{accessToken}}
+
+### Refresh (le client doit envoyer le cookie refreshToken)
+POST http://localhost:3001/auth/refresh
+
+### Logout
+POST http://localhost:3001/auth/logout
+Authorization: Bearer {{accessToken}}

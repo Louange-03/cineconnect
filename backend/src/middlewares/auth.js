@@ -1,4 +1,4 @@
-import { verifyToken } from "../utils/tokens.js"
+import { verifyAccessToken } from "../utils/tokens.js"
 
 export function authMiddleware(req, res, next) {
   const header = req.headers.authorization || ""
@@ -9,9 +9,19 @@ export function authMiddleware(req, res, next) {
   }
 
   try {
-    req.user = verifyToken(token)
+    req.user = verifyAccessToken(token)
     next()
   } catch {
     return res.status(401).json({ message: "Token invalide" })
+  }
+}
+
+export function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!req.user?.role) return res.status(403).json({ message: "Accès refusé" })
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: "Accès refusé" })
+    }
+    next()
   }
 }
