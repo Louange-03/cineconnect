@@ -3,7 +3,11 @@ import ReactDOM from "react-dom/client"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { RouterProvider } from "@tanstack/react-router"
 import { router } from "./router"
+import { initTheme } from "./lib/theme"
 import "./index.css"
+import "./styles/theme.css"
+
+initTheme()
 
 const queryClient = new QueryClient({
   defaultOptions: {
