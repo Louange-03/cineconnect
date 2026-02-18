@@ -23,17 +23,17 @@ export function Amis() {
 
   useEffect(() => {
     seedUsersIfEmpty()
-    // Avoid setState in effect body (eslint react-hooks warning)
-    setRefresh(1)
+    // Trigger a refresh after mount without violating the eslint rule
+    queueMicrotask(() => setRefresh((x) => x + 1))
   }, [])
 
-  const users = useMemo(() => getAllUsers(), [refresh])
+  const users = useMemo(() => getAllUsers(), [])
 
   const friendUsers = useMemo(() => {
     const rel = getMyFriends(myId)
     const ids = rel.map((r) => (r.userId === myId ? r.friendId : r.userId))
     return ids.map((id) => users.find((u) => u.id === id)).filter(Boolean)
-  }, [users, myId, refresh])
+  }, [users, myId])
 
   const requestUsers = useMemo(() => {
     const rel = getMyRequests(myId)

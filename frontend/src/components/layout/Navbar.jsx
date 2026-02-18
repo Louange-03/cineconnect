@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router"
 import { isAuthenticated, logout } from "../../lib/auth"
 import { getInitialTheme, setTheme } from "../../lib/theme"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 function NavItem({ to, children }) {
   return (
@@ -20,11 +20,13 @@ function NavItem({ to, children }) {
 
 export function Navbar() {
   const isAuth = isAuthenticated()
-  const [theme, setThemeState] = useState("light")
-
-  useEffect(() => {
-    setThemeState(getInitialTheme())
-  }, [])
+  const [theme, setThemeState] = useState(() => {
+    try {
+      return getInitialTheme()
+    } catch {
+      return "light"
+    }
+  })
 
   return (
     <header className="sticky top-0 z-50 border-b border-[color:var(--border)] bg-[color:var(--surface)] backdrop-blur">

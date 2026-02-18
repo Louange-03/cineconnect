@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useAuth } from "../hooks/useAuth"
 
 import {
@@ -14,19 +14,17 @@ export function Discussion() {
   const { user } = useAuth()
   const myId = user?.id || "u_1"
 
-  const [selectedUserId, setSelectedUserId] = useState(null)
+  const conversations = getConversations(myId)
+
+  // Initialize selection without useEffect to satisfy eslint rule
+  const [selectedUserId, setSelectedUserId] = useState(() =>
+    conversations.length > 0 ? conversations[0].userId : null
+  )
   const [refresh, setRefresh] = useState(0)
 
-  const conversations = getConversations(myId)
   const messages = selectedUserId
     ? getMessagesWithUser(myId, selectedUserId)
     : []
-
-  useEffect(() => {
-    if (!selectedUserId && conversations.length > 0) {
-      setSelectedUserId(conversations[0].userId)
-    }
-  }, [conversations, selectedUserId])
 
   return (
     <div className="space-y-4">
