@@ -23,7 +23,8 @@ export function Amis() {
 
   useEffect(() => {
     seedUsersIfEmpty()
-    setRefresh((x) => x + 1)
+    // Avoid setState in effect body (eslint react-hooks warning)
+    setRefresh(1)
   }, [])
 
   const users = useMemo(() => getAllUsers(), [refresh])
@@ -42,67 +43,80 @@ export function Amis() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Mes amis</h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <h1 className="h-display text-2xl font-semibold">Amis</h1>
+          <p className="mt-1 text-sm text-[color:var(--muted)]">
             Gère tes amis et tes demandes.
           </p>
         </div>
 
-        <Link
-          to="/utilisateurs"
-          className="rounded border px-3 py-2 text-sm hover:bg-slate-50"
-        >
+        <Link to="/utilisateurs" className="btn btn-primary w-fit">
           Trouver des utilisateurs
         </Link>
       </div>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Demandes reçues</h2>
-
-        {requestUsers.length === 0 ? (
-          <p className="text-slate-600">Aucune demande en attente.</p>
-        ) : (
-          <div className="space-y-3">
-            {requestUsers.map((u) => (
-              <FriendRequestCard
-                key={u.id}
-                user={u}
-                onAccept={() => {
-                  acceptRequest(myId, u.id)
-                  setRefresh((x) => x + 1)
-                }}
-                onReject={() => {
-                  rejectRequest(myId, u.id)
-                  setRefresh((x) => x + 1)
-                }}
-              />
-            ))}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className="surface p-6">
+          <div className="mb-4">
+            <h2 className="h-display text-lg font-semibold">Demandes reçues</h2>
+            <p className="mt-1 text-sm text-[color:var(--muted)]">
+              Accepte ou refuse les demandes d’amis.
+            </p>
           </div>
-        )}
-      </section>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Amis</h2>
+          {requestUsers.length === 0 ? (
+            <p className="text-sm text-[color:var(--muted)]">
+              Aucune demande en attente.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {requestUsers.map((u) => (
+                <FriendRequestCard
+                  key={u.id}
+                  user={u}
+                  onAccept={() => {
+                    acceptRequest(myId, u.id)
+                    setRefresh((x) => x + 1)
+                  }}
+                  onReject={() => {
+                    rejectRequest(myId, u.id)
+                    setRefresh((x) => x + 1)
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </section>
 
-        {friendUsers.length === 0 ? (
-          <p className="text-slate-600">Tu n’as pas encore d’amis.</p>
-        ) : (
-          <div className="space-y-3">
-            {friendUsers.map((u) => (
-              <FriendCard
-                key={u.id}
-                user={u}
-                onRemove={() => {
-                  removeFriendRelation(myId, u.id)
-                  setRefresh((x) => x + 1)
-                }}
-              />
-            ))}
+        <section className="surface p-6">
+          <div className="mb-4">
+            <h2 className="h-display text-lg font-semibold">Mes amis</h2>
+            <p className="mt-1 text-sm text-[color:var(--muted)]">
+              Retrouve tes amis et gère ta liste.
+            </p>
           </div>
-        )}
-      </section>
+
+          {friendUsers.length === 0 ? (
+            <p className="text-sm text-[color:var(--muted)]">
+              Tu n’as pas encore d’amis.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {friendUsers.map((u) => (
+                <FriendCard
+                  key={u.id}
+                  user={u}
+                  onRemove={() => {
+                    removeFriendRelation(myId, u.id)
+                    setRefresh((x) => x + 1)
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   )
 }
