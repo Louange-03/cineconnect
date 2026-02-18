@@ -29,6 +29,13 @@
       "when": 1769773297426,
       "tag": "0003_quick_rogue",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1771446269022,
+      "tag": "0004_white_lady_mastermind",
+      "breakpoints": true
     }
   ]
 }
