@@ -6,11 +6,51 @@ import { useDebounce } from "../hooks/useDebounce"
 
 function SkeletonCard() {
   return (
-    <div className="rounded border p-2">
-      <div className="mb-2 aspect-[2/3] w-full rounded bg-slate-200" />
-      <div className="h-4 w-3/4 rounded bg-slate-200" />
-      <div className="mt-2 h-3 w-1/2 rounded bg-slate-200" />
+    <div className="surface overflow-hidden p-3">
+      <div className="mb-3 aspect-[2/3] w-full rounded-xl bg-black/10" />
+      <div className="h-4 w-3/4 rounded bg-black/10" />
+      <div className="mt-2 h-3 w-1/2 rounded bg-black/10" />
     </div>
+  )
+}
+
+function FilmCard({ film }) {
+  const posterOk = film.Poster && film.Poster !== "N/A"
+
+  return (
+    <Link
+      key={`${film.imdbID}-${film.Year || ""}`}
+      to="/film/$id"
+      params={{ id: film.imdbID }}
+      className="group relative overflow-hidden rounded-[18px] border border-[color:var(--border)] bg-[color:var(--surface-solid)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+    >
+      <div className="relative">
+        {posterOk ? (
+          <img
+            src={film.Poster}
+            alt={film.Title}
+            className="aspect-[2/3] w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="aspect-[2/3] w-full bg-black/10" />
+        )}
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/60 to-transparent opacity-90" />
+      </div>
+
+      <div className="space-y-1 p-3">
+        <h2 className="line-clamp-2 text-sm font-semibold text-[color:var(--text)]">
+          {film.Title}
+        </h2>
+        <div className="flex items-center justify-between text-xs text-[color:var(--muted)]">
+          <span>{film.Year}</span>
+          <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-2 py-0.5">
+            IMDb
+          </span>
+        </div>
+      </div>
+    </Link>
   )
 }
 
@@ -38,65 +78,54 @@ export function Films() {
   }, [films])
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold">Films</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Recherche de films via l’API OMDb
-        </p>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 className="h-display text-2xl font-semibold">Films</h1>
+          <p className="mt-1 text-sm text-[color:var(--muted)]">
+            Recherche de films via l’API OMDb
+          </p>
+        </div>
+
+        <div className="w-full md:max-w-md">
+          <label className="label" htmlFor="search">
+            Rechercher
+          </label>
+          <input
+            id="search"
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Batman, Inception..."
+            className="input mt-1"
+          />
+        </div>
       </div>
 
-      <input
-        type="text"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Rechercher un film (ex : Batman, Inception...)"
-        className="w-full max-w-md rounded border px-3 py-2"
-      />
-
       {isError && (
-        <p className="text-red-600">
+        <p className="surface border-red-200 bg-red-50 p-3 text-sm text-red-700">
           Erreur : {error?.message || "Impossible de charger les films"}
         </p>
       )}
 
       {isLoading && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {Array.from({ length: 10 }).map((_, i) => (
             <SkeletonCard key={i} />
           ))}
         </div>
       )}
 
       {!isLoading && !isError && uniqueFilms.length === 0 && (
-        <p className="text-slate-600">Aucun film trouvé.</p>
+        <div className="surface p-6 text-sm text-[color:var(--muted)]">
+          Aucun film trouvé.
+        </div>
       )}
 
       {!isLoading && !isError && uniqueFilms.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {uniqueFilms.map((film) => (
-            <Link
-              key={`${film.imdbID}-${film.Year || ""}`}
-              to="/film/$id"
-              params={{ id: film.imdbID }}
-              className="group rounded border p-2 hover:shadow"
-            >
-              {film.Poster && film.Poster !== "N/A" ? (
-                <img
-                  src={film.Poster}
-                  alt={film.Title}
-                  className="mb-2 aspect-[2/3] w-full rounded object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="mb-2 aspect-[2/3] w-full rounded bg-slate-200" />
-              )}
-
-              <h2 className="font-semibold group-hover:underline">
-                {film.Title}
-              </h2>
-              <p className="text-sm text-slate-600">{film.Year}</p>
-            </Link>
+            <FilmCard key={film.imdbID} film={film} />
           ))}
         </div>
       )}
