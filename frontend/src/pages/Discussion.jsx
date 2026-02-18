@@ -29,27 +29,37 @@ export function Discussion() {
   }, [conversations, selectedUserId])
 
   return (
-    <div className="grid h-[70vh] grid-cols-[260px_1fr] overflow-hidden rounded border">
-      <ConversationList
-        conversations={conversations}
-        selectedId={selectedUserId}
-        onSelect={setSelectedUserId}
-      />
+    <div className="space-y-4">
+      <div>
+        <h1 className="h-display text-2xl font-semibold">Discussion</h1>
+        <p className="mt-1 text-sm text-[color:var(--muted)]">
+          Un chat simple style Messenger/Discord.
+        </p>
+      </div>
 
-      {selectedUserId ? (
-        <ChatWindow
-          messages={messages}
-          myId={myId}
-          onSend={(content) => {
-            sendMessage(myId, selectedUserId, content)
-            setRefresh((x) => x + 1)
-          }}
+      <div className="surface grid h-[72vh] grid-cols-1 overflow-hidden md:grid-cols-[320px_1fr]">
+        <ConversationList
+          conversations={conversations}
+          selectedId={selectedUserId}
+          onSelect={setSelectedUserId}
         />
-      ) : (
-        <div className="flex items-center justify-center text-slate-600">
-          Sélectionne une conversation
-        </div>
-      )}
+
+        {selectedUserId ? (
+          <ChatWindow
+            key={`${selectedUserId}-${refresh}`}
+            messages={messages}
+            myId={myId}
+            onSend={(content) => {
+              sendMessage(myId, selectedUserId, content)
+              setRefresh((x) => x + 1)
+            }}
+          />
+        ) : (
+          <div className="flex items-center justify-center p-6 text-sm text-[color:var(--muted)]">
+            Sélectionne une conversation
+          </div>
+        )}
+      </div>
     </div>
   )
 }
