@@ -5,11 +5,14 @@ import type { SafeUser, JwtPayload } from "../types/index.js"
 const JWT_SECRET = process.env.JWT_SECRET || "secret"
 
 export function signToken(user: SafeUser): string {
-  return jwt.sign(
-    { id: user.id, email: user.email, username: user.username },
-    JWT_SECRET,
-    { expiresIn: "7d" }
-  )
+  const payload: any = {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+  }
+  if (user.createdAt) payload.createdAt = user.createdAt
+
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" })
 }
 
 export function verifyToken(token: string): JwtPayload {

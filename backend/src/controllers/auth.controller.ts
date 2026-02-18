@@ -33,12 +33,22 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const inserted = await db
       .insert(users)
       .values({ email, username, passwordHash })
-      .returning({ id: users.id, email: users.email, username: users.username })
+      .returning({
+        id: users.id,
+        email: users.email,
+        username: users.username,
+        createdAt: users.createdAt,
+      })
 
-    const user: SafeUser = inserted[0]
+    const user: SafeUser = inserted[0] as SafeUser
     const token = signToken(user)
 
-    res.status(201).json({ token, user })
+    res.status(201).json({ 
+        success: true,
+        message: "Utilisateur créé avec succès",
+        token, 
+        user  
+    })
   } catch {
     res.status(400).json({ message: "Email ou username déjà utilisé" })
   }
@@ -67,7 +77,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     return
   }
 
-  const safeUser: SafeUser = { id: user.id, email: user.email, username: user.username }
+  const safeUser: SafeUser = {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+    createdAt: user.createdAt,
+  }
   const token = signToken(safeUser)
 
   res.json({ token, user: safeUser })

@@ -10,12 +10,15 @@ export interface SafeUser {
   id: string
   email: string
   username: string
+  /** optional timestamp */
+  createdAt?: Date
 }
 
 export interface JwtPayload {
   id: string
   email: string
   username: string
+  createdAt?: Date
 }
 
 export interface Friendship {
