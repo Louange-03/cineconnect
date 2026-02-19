@@ -9,6 +9,7 @@ export function LoginForm({ onSuccess }: LoginFormProps): JSX.Element {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   async function onSubmit(e: FormEvent) {
@@ -17,6 +18,7 @@ export function LoginForm({ onSuccess }: LoginFormProps): JSX.Element {
     setLoading(true)
     try {
       await login({ email, password })
+      setSuccess("Connecté avec succès !")
       onSuccess?.()
     } catch (err: any) {
       setError(err.message)
@@ -43,6 +45,7 @@ export function LoginForm({ onSuccess }: LoginFormProps): JSX.Element {
       />
 
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {success && <p className="text-sm text-green-600">{success}</p>}
 
       <button className="rounded bg-black px-4 py-2 text-white" disabled={loading}>
         {loading ? "Connexion..." : "Se connecter"}

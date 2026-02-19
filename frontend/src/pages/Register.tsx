@@ -6,7 +6,10 @@ export function Register(): JSX.Element {
   return (
     <div className="mx-auto max-w-md">
       <h1 className="text-2xl font-semibold mb-4">Inscription</h1>
-      <RegisterForm onSuccess={() => navigate({ to: "/profil" })} />
+      <RegisterForm onSuccess={() => {
+        alert("Inscription réussie, vous êtes connecté !")
+        navigate({ to: "/profil" })
+      }} />
     </div>
   )
 }
