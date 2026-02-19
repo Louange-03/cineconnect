@@ -1,39 +1,15 @@
 import type { OMDBMovie, OMDBMovieDetail } from "../types"
+import { apiClient } from "./apiClient"
 
-const API_KEY = import.meta.env.VITE_OMDB_API_KEY as string | undefined
-const BASE_URL = "https://www.omdbapi.com/"
-
-// ✅ Debug : vérifie que Vite lit bien la clé (à enlever après test)
-console.log("OMDB KEY =", API_KEY)
-
-function ensureKey(): void {
-  if (!API_KEY) {
-    throw new Error(
-      "Clé OMDb manquante : ajoute VITE_OMDB_API_KEY dans .env puis relance pnpm dev"
-    )
-  }
-}
+// pas besoin de clé côté client ; backend se charge de la requête
 
 export async function omdbSearch(query: string): Promise<OMDBMovie[]> {
-  ensureKey()
   if (!query) return []
-
-  const res = await fetch(
-    `${BASE_URL}?apikey=${API_KEY}&s=${encodeURIComponent(query)}`
-  )
-  const data = await res.json()
+  const data = await apiClient.post<{ Search: OMDBMovie[] }>(`/films/search`, { query }, { auth: false })
   return data?.Search || []
 }
 
 export async function omdbGetById(id: string): Promise<OMDBMovieDetail> {
-  ensureKey()
-  const res = await fetch(
-    `${BASE_URL}?apikey=${API_KEY}&i=${encodeURIComponent(id)}&plot=full`
-  )
-  const data = await res.json()
-
-  if (data?.Response === "False") {
-    throw new Error(data?.Error || "Film introuvable")
-  }
+  const data = await apiClient.post<OMDBMovieDetail>(`/films/detail`, { id }, { auth: false })
   return data
 }

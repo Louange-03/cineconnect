@@ -1,7 +1,11 @@
 import { getToken } from "./token"
 import type { ApiRequestOptions } from "../types"
 
-const API_URL = import.meta.env.VITE_API_URL as string
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined) || "http://localhost:3000"
+
+if (!import.meta.env.VITE_API_URL) {
+  console.warn("VITE_API_URL not defined, defaulting to http://localhost:3000")
+}
 
 interface RequestOptions {
   method?: string
@@ -17,7 +21,9 @@ async function request(path: string, { method = "GET", body, auth = true }: Requ
     if (token) headers.Authorization = `Bearer ${token}`
   }
 
-  const res = await fetch(`${API_URL}${path}`, {
+  const url = `${API_URL}${path}`
+  try {
+    const res = await fetch(url, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
@@ -27,10 +33,15 @@ async function request(path: string, { method = "GET", body, auth = true }: Requ
   const data = text ? JSON.parse(text) : null
 
   if (!res.ok) {
-    throw new Error(data?.message || "Erreur serveur")
+    throw new Error(data?.message || `Erreur serveur (${res.status})`)
   }
 
   return data
+  } catch (e) {
+    // rethrow with context
+    const err = e as Error
+    throw new Error(err.message || `Failed to fetch ${url}`)
+  }
 }
 
 export const apiClient = {

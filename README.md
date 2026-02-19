@@ -90,13 +90,16 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/cineconnect
 JWT_SECRET=your-super-secret-jwt-key-at-least-32-chars-long
 JWT_EXPIRES_IN=7d
 JWT_REFRESH_EXPIRES_IN=30d
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:5173   # utilisé par le backend pour configurer CORS
+OMDB_API_KEY=your_omdb_api_key      # requis pour la recherche de films via l'API backend
 ```
+
+> Après chaque modification du fichier `.env`, redémarrez le serveur backend (`pnpm dev:backend`).
 
 Remplissez `frontend/.env` :
 
 ```
-VITE_TMDB_API_KEY=your_tmdb_api_key
+VITE_OMDB_API_KEY=your_omdb_api_key    # utilisé uniquement par l'ancien code, le backend proxy sera préféré
 VITE_API_URL=http://localhost:3000
 ```
 
@@ -207,5 +210,3 @@ Pour démarrer un seul service :
 Voir `docs/CONTRIBUTING.md` pour l’intégration et les consignes.
 
 ---
-
-Ce README reflète la structure et les technologies actuelles du projet CineConnect. N’hésitez pas à l’adapter ou l’enrichir au fil de l’évolution du projet.

@@ -6,10 +6,13 @@ import { pool } from "./db/client.js"
 import authRoutes from "./routes/auth.routes.js"
 import usersRoutes from "./routes/users.routes.js"
 import friendsRoutes from "./routes/friends.routes.js"
+import filmsRoutes from "./routes/films.routes.js"
 
 const app = express()
 
-app.use(cors({ origin: "http://localhost:5173" }))
+// allow the frontend origin from env, default to localhost:5173
+const FRONTEND_ORIGIN = process.env.FRONTEND_URL || "http://localhost:5173"
+app.use(cors({ origin: FRONTEND_ORIGIN }))
 app.use(express.json())
 
 // ✅ Healthcheck DB
@@ -31,6 +34,7 @@ app.get("/health", async (req: Request, res: Response): Promise<void> => {
 app.use("/auth", authRoutes)
 app.use("/users", usersRoutes)
 app.use("/friends", friendsRoutes)
+app.use("/films", filmsRoutes)
 
 // Optionnel: racine
 app.get("/", (req: Request, res: Response): void => {
