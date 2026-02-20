@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   username: varchar("username", { length: 30 }).notNull().unique(),
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),//optionel
 })
 
 export const friendshipStatus = pgEnum("friendship_status", [
@@ -46,3 +47,4 @@ export const friendships = pgTable(
     statusIdx: index("friendships_status_idx").on(t.status),
   })
 )
+//
