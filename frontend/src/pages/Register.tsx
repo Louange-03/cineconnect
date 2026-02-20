@@ -7,8 +7,7 @@ export function Register(): JSX.Element {
     <div className="mx-auto max-w-md">
       <h1 className="text-2xl font-semibold mb-4">Inscription</h1>
       <RegisterForm onSuccess={() => {
-        alert("Inscription réussie, vous êtes connecté !")
-        navigate({ to: "/profil" })
+        navigate({ to: "/profil" }, { state: { message: "Inscription réussie, vous êtes connecté !" } })
       }} />
     </div>
   )

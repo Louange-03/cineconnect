@@ -22,24 +22,27 @@ async function request(path: string, { method = "GET", body, auth = true }: Requ
   }
 
   const url = `${API_URL}${path}`
+  console.log("apiClient request", { url, method, body, auth, headers })
   try {
     const res = await fetch(url, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  })
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    })
+    console.log("apiClient response status", res.status)
+    const text = await res.text()
+    console.log("apiClient response text", text)
+    const data = text ? JSON.parse(text) : null
 
-  const text = await res.text()
-  const data = text ? JSON.parse(text) : null
+    if (!res.ok) {
+      throw new Error(data?.message || `Erreur serveur (${res.status})`)
+    }
 
-  if (!res.ok) {
-    throw new Error(data?.message || `Erreur serveur (${res.status})`)
-  }
-
-  return data
+    return data
   } catch (e) {
     // rethrow with context
     const err = e as Error
+    console.error("apiClient error", err)
     throw new Error(err.message || `Failed to fetch ${url}`)
   }
 }

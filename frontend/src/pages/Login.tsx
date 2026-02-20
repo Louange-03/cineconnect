@@ -7,8 +7,7 @@ export function Login(): JSX.Element {
     <div className="mx-auto max-w-md">
       <h1 className="text-2xl font-semibold mb-4">Connexion</h1>
       <LoginForm onSuccess={() => {
-        alert("Vous êtes bien connecté !")
-        navigate({ to: "/profil" })
+        navigate({ to: "/profil" }, { state: { message: "Vous êtes bien connecté !" } })
       }} />
     </div>
   )

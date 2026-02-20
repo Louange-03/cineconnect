@@ -34,6 +34,7 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
 
 // POST /films/search { query }
 router.post("/search", async (req: Request, res: Response): Promise<void> => {
+  console.log("/films/search body:", req.body)
   if (!OMDB_KEY) {
     res.status(500).json({ error: "OMDB_API_KEY missing on server" })
     return

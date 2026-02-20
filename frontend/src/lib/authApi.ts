@@ -3,11 +3,13 @@ import { setToken } from "./token"
 import type { AuthResponse } from "../types"
 
 export async function register({ email, username, password }: { email: string; username: string; password: string }): Promise<AuthResponse> {
+  console.log("authApi.register", { email, username, password })
   const data = await apiClient.post<{ token: string; user: any }>(
     "/auth/register",
     { email, username, password },
     { auth: false }
   )
+  console.log("authApi.register response", data)
   if (data?.token) setToken(data.token)
   return data as AuthResponse
 }
