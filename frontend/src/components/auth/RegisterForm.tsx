@@ -56,7 +56,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps): JSX.Element {
       {success && <p className="text-sm text-green-600">{success}</p>}
 
       <button
-        className="rounded bg-black px-4 py-2 text-white"
+        className="rounded bg-gradient-to-r from-imperial to-ocean  px-4 py-2 text-white"
         disabled={loading}
       >
         {loading ? "Création..." : "Créer un compte"}
