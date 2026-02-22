@@ -1,3 +1,4 @@
+import React from "react"
 import { StarRating } from "./StarRating"
 import type { Review } from "../../types"
 
@@ -6,7 +7,7 @@ interface Props {
   onDelete?: (id: string) => void
 }
 
-export function ReviewList({ reviews, onDelete }: Props): JSX.Element {
+export function ReviewList({ reviews, onDelete }: Props) {
   if (reviews.length === 0) {
     return <p className="text-slate-600">Aucune review.</p>
   }

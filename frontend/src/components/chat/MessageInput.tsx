@@ -1,10 +1,10 @@
-import { useState, FormEvent } from "react"
+import React, { useState, FormEvent } from "react"
 
 interface Props {
   onSend: (content: string) => void
 }
 
-export function MessageInput({ onSend }: Props): JSX.Element {
+export function MessageInput({ onSend }: Props) {
   const [value, setValue] = useState("")
 
   function submit(e: FormEvent) {

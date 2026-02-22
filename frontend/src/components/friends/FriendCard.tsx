@@ -1,3 +1,4 @@
+import React from "react"
 import type { Friend } from "../../types"
 import type { MouseEventHandler } from "react"
 
@@ -6,7 +7,7 @@ interface Props {
   onRemove: MouseEventHandler<HTMLButtonElement>
 }
 
-export function FriendCard({ user, onRemove }: Props): JSX.Element {
+export function FriendCard({ user, onRemove }: Props) {
   return (
     <div className="flex items-center justify-between rounded border p-3">
       <div>

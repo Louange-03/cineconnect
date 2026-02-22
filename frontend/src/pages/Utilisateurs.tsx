@@ -1,6 +1,6 @@
 import React from "react"
 
-export function Utilisateurs(): JSX.Element {
+export function Utilisateurs() {
   return (
     <div>
       <h1 className="text-2xl font-semibold">Utilisateurs</h1>

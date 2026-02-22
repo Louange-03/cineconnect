@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-router"
 
 import { AppLayout } from "./components/layout/AppLayout"
-import { isAuthenticated } from "./lib/auth.ts"
+import { isAuthenticated } from "./lib/auth"
 
 import { Home } from "./pages/Home"
 import { Films } from "./pages/Films"

@@ -1,11 +1,11 @@
-import { useState, FormEvent } from "react"
-import { register } from "../../lib/authApi"
+import { useState, FormEvent, ReactElement } from "react"
+import { register } from "../../lib/auth"
 
 interface RegisterFormProps {
   onSuccess?: () => void
 }
 
-export function RegisterForm({ onSuccess }: RegisterFormProps): JSX.Element {
+export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")

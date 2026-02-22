@@ -107,12 +107,40 @@ Obtenez une clé API TMDb gratuite sur https://www.themoviedb.org/settings/api.
 
 ### Base de données
 
-Exécutez les migrations avec l'outil Drizzle :
+1. Lancez PostgreSQL via Docker Compose (le service est défini dans
+   `docker-compose.yml`) :
 
 ```bash
-pnpm db:generate
-pnpm db:migrate
+docker compose up -d postgres
 ```
+
+2. Vérifiez que `backend/.env` contient une URL valide (`DATABASE_URL`).
+   Vous pouvez aussi définir `FRONTEND_URL` si le port Vite change (5173/5174).
+
+3. Appliquez les migrations Drizzle :
+
+```bash
+# depuis la racine du workspace
+pnpm --dir backend db:migrate
+```
+
+> Si vous voyez des erreurs de connexion, assurez‑vous que le conteneur
+> PostgreSQL est en cours d'exécution et que `DATABASE_URL` pointe vers le
+> bon hôte/port.
+
+4. Lancez les serveurs :
+
+```bash
+pnpm dev
+```
+
+   Le backend écoute sur le port `3001` et la configuration CORS est
+   permissive (`*`) par défaut en développement, donc les requêtes provenant
+   du frontend (`5173`/`5174`) passent sans problème.
+
+   Une fois que vous vous inscrivez ou vous connectez depuis le site, les
+   données sont envoyées au backend et insérées dans la table `users` de la
+   base ; tout problème côté serveur est désormais journalisé dans la console.
 
 ### Serveurs de développement
 
@@ -123,7 +151,7 @@ pnpm dev
 ```
 
 - Frontend : http://localhost:5173
-- Backend : http://localhost:3000
+- Backend : http://localhost:3001
 - Documentation de l'API (Swagger) : http://localhost:3000/api-docs
 
 Pour démarrer un seul service :

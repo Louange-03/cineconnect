@@ -1,12 +1,13 @@
+import React from "react"
 import { Link } from "@tanstack/react-router"
-import { isAuthenticated, logout } from "../../lib/auth.ts"
+import { isAuthenticated, logout } from "../../lib/auth"
 import type { ReactNode } from "react"
 
 interface NavItemProps {
   to: string
   children: ReactNode
 }
-function NavItem({ to, children }: NavItemProps): JSX.Element {
+function NavItem({ to, children }: NavItemProps) {
   return (
     <Link
       to={to}
@@ -18,7 +19,7 @@ function NavItem({ to, children }: NavItemProps): JSX.Element {
   )
 }
 
-export function Navbar(): JSX.Element {
+export function Navbar() {
   const isAuth = isAuthenticated()
 
   return (

@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router"
 import { useFilms } from "../hooks/useFilms"
 import type { OMDBMovie } from "../types"
 
-export function Films(): JSX.Element {
+export function Films() {
   const [query, setQuery] = useState("")
   const { data: films, isLoading, error } = useFilms(query)
 

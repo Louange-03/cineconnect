@@ -4,8 +4,9 @@ import { useQuery } from "@tanstack/react-query"
 import { omdbGetById } from "../lib/omdb"
 import type { OMDBMovieDetail } from "../types"
 
-export function FilmDetail(): JSX.Element {
-  const { id } = useParams<{ id: string }>()
+export function FilmDetail() {
+  // useParams types are finicky; cast to any to avoid verbose generics
+  const { id } = useParams({} as any) as { id: string }
   const { data: film, isLoading, error } = useQuery<OMDBMovieDetail, Error>({
     queryKey: ["film", id],
     queryFn: () => (id ? omdbGetById(id) : Promise.reject(new Error("No id"))),

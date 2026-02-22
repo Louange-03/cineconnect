@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { Link } from "@tanstack/react-router"
 import { useAuth } from "../hooks/useAuth"
 
@@ -16,7 +16,7 @@ import type { Friend } from "../types"
 import { FriendCard } from "../components/friends/FriendCard"
 import { FriendRequestCard } from "../components/friends/FriendRequestCard"
 
-export function Amis(): JSX.Element {
+export function Amis() {
   const { user } = useAuth()
   const myId = user?.id || 1 // fallback local
 

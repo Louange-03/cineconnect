@@ -1,11 +1,13 @@
-import { getToken } from "./token"
+import { getToken } from "./auth"
 import type { ApiRequestOptions } from "../types"
 
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined) || "http://localhost:3000"
+// backend listens on 3001 by default; make the fallback match
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined) || "http://localhost:3001"
 
 if (!import.meta.env.VITE_API_URL) {
-  console.warn("VITE_API_URL not defined, defaulting to http://localhost:3000")
+  console.warn("VITE_API_URL not defined, defaulting to http://localhost:3001")
 }
+
 
 interface RequestOptions {
   method?: string
@@ -13,7 +15,7 @@ interface RequestOptions {
   auth?: boolean
 }
 
-async function request(path: string, { method = "GET", body, auth = true }: RequestOptions = {}) {
+async function request<T = any>(path: string, { method = "GET", body, auth = true }: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" }
 
   if (auth) {
@@ -38,7 +40,7 @@ async function request(path: string, { method = "GET", body, auth = true }: Requ
       throw new Error(data?.message || `Erreur serveur (${res.status})`)
     }
 
-    return data
+    return data as T
   } catch (e) {
     // rethrow with context
     const err = e as Error
@@ -48,7 +50,7 @@ async function request(path: string, { method = "GET", body, auth = true }: Requ
 }
 
 export const apiClient = {
-  get: (path: string, opts?: ApiRequestOptions) => request(path, { ...opts, method: "GET" }),
-  post: (path: string, body?: any, opts?: ApiRequestOptions) =>
-    request(path, { ...opts, method: "POST", body }),
+  get: <T = any>(path: string, opts?: ApiRequestOptions): Promise<T> => request<T>(path, { ...opts, method: "GET" }),
+  post: <T = any>(path: string, body?: any, opts?: ApiRequestOptions): Promise<T> =>
+    request<T>(path, { ...opts, method: "POST", body }),
 }

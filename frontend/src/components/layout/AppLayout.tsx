@@ -1,8 +1,9 @@
+import React from "react"
 import { Outlet } from "@tanstack/react-router"
 import { Navbar } from "./Navbar"
 import { Container } from "./Container"
 
-export function AppLayout(): JSX.Element {
+export function AppLayout() {
   return (
     <div className="min-h-screen">
       <Navbar />

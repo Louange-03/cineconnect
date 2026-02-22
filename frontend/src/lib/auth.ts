@@ -4,7 +4,7 @@ import type { User } from "../types"
 const TOKEN_KEY = "cineconnect_token"
 const USER_KEY = "cineconnect_user"
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001"
+// the API base URL is handled by apiClient; no need for a second constant here
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
@@ -40,30 +40,12 @@ export function logout() {
   clearUser()
 }
 
-/** Helpers HTTP */
-async function apiFetch(path: string, { method = "GET", body, token }: { method?: string; body?: any; token?: string } = {}) {
-  const headers: Record<string, string> = { "Content-Type": "application/json" }
-  if (token) headers.Authorization = `Bearer ${token}`
-
-  const res = await fetch(`${API_URL}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  })
-
-  const data = await res.json().catch(() => ({}))
-
-  if (!res.ok) {
-    throw new Error(data?.message || "Erreur API")
-  }
-  return data
-}
-
 /** Auth API */
 export async function register({ email, username, password }: { email: string; username: string; password: string }) {
-  const data = await apiFetch("/auth/register", {
-    method: "POST",
-    body: { email, username, password },
+  const data = await apiClient.post<{ token: string; user: User }>('/auth/register', {
+    email,
+    username,
+    password,
   })
 
   if (data?.token) setToken(data.token)
@@ -73,9 +55,9 @@ export async function register({ email, username, password }: { email: string; u
 }
 
 export async function login({ email, password }: { email: string; password: string }) {
-  const data = await apiFetch("/auth/login", {
-    method: "POST",
-    body: { email, password },
+  const data = await apiClient.post<{ token: string; user: User }>('/auth/login', {
+    email,
+    password,
   })
 
   if (data?.token) setToken(data.token)
@@ -86,10 +68,11 @@ export async function login({ email, password }: { email: string; password: stri
 
 export async function fetchMe() {
   const token = getToken()
-  if (!token) throw new Error("Non connecté")
+  if (!token) throw new Error('Non connecté')
 
-  const data = await apiFetch("/auth/me", { token })
+  const data = await apiClient.get<{ user: User }>('/auth/me')
 
   if (data?.user) setUser(data.user)
   return data?.user
 }
+

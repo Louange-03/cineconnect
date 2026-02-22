@@ -1,6 +1,6 @@
 import React from "react"
 
-export function Discussion(): JSX.Element {
+export function Discussion() {
   return (
     <div>
       <h1 className="text-2xl font-semibold">Discussion</h1>

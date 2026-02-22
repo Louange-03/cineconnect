@@ -1,3 +1,4 @@
+import React from "react"
 import type { Conversation } from "../../types"
 import type { MouseEventHandler } from "react"
 
@@ -7,7 +8,7 @@ interface Props {
   onSelect: (id: number) => void
 }
 
-export function ConversationList({ conversations, selectedId, onSelect }: Props): JSX.Element {
+export function ConversationList({ conversations, selectedId, onSelect }: Props) {
   return (
     <div className="border-r">
       {conversations.length === 0 ? (

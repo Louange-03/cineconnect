@@ -1,3 +1,4 @@
+import React from "react"
 import { MessageBubble } from "./MessageBubble"
 import { MessageInput } from "./MessageInput"
 import type { Message } from "../../types"
@@ -8,7 +9,7 @@ interface Props {
   onSend: (content: string) => void
 }
 
-export function ChatWindow({ messages, myId, onSend }: Props): JSX.Element {
+export function ChatWindow({ messages, myId, onSend }: Props) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 space-y-2 overflow-y-auto p-4">

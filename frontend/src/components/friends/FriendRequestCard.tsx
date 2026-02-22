@@ -1,3 +1,4 @@
+import React from "react"
 import type { Friend } from "../../types"
 import type { MouseEventHandler } from "react"
 
@@ -7,7 +8,7 @@ interface Props {
   onReject: MouseEventHandler<HTMLButtonElement>
 }
 
-export function FriendRequestCard({ user, onAccept, onReject }: Props): JSX.Element {
+export function FriendRequestCard({ user, onAccept, onReject }: Props) {
   return (
     <div className="flex items-center justify-between gap-3 rounded border p-3">
       <div>

@@ -1,3 +1,4 @@
+import React from "react"
 import type { Message } from "../../types"
 
 interface Props {
@@ -5,7 +6,7 @@ interface Props {
   isMine?: boolean
 }
 
-export function MessageBubble({ message, isMine = false }: Props): JSX.Element {
+export function MessageBubble({ message, isMine = false }: Props) {
   return (
     <div
       className={`max-w-[70%] rounded px-3 py-2 text-sm ${

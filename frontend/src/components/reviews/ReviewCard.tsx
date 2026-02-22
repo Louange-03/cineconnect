@@ -1,3 +1,4 @@
+import React from "react"
 import type { Review } from "../../types"
 import type { MouseEventHandler } from "react"
 
@@ -8,7 +9,7 @@ interface Props {
   onDelete?: MouseEventHandler<HTMLButtonElement>
 }
 
-export function ReviewCard({ review, isMine = false, onEdit, onDelete }: Props): JSX.Element {
+export function ReviewCard({ review, isMine = false, onEdit, onDelete }: Props) {
   return (
     <div className="rounded border p-3">
       <div className="flex items-start justify-between gap-3">

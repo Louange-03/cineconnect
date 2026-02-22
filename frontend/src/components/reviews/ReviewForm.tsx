@@ -1,11 +1,11 @@
-import { useState, FormEvent } from "react"
+import React, { useState, FormEvent } from "react"
 import { StarRating } from "./StarRating"
 
 interface Props {
   onSubmit: (data: { rating: number; comment: string }) => void
 }
 
-export function ReviewForm({ onSubmit }: Props): JSX.Element {
+export function ReviewForm({ onSubmit }: Props) {
   const [rating, setRating] = useState(0)
   const [comment, setComment] = useState("")
 

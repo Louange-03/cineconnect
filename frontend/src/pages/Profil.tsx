@@ -2,7 +2,7 @@ import React from "react"
 import { useAuth } from "../hooks/useAuth"
 import { useLocation } from "@tanstack/react-router"
 
-export function Profil(): JSX.Element {
+export function Profil() {
   const { user } = useAuth()
   const location = useLocation()
   const message = (location.state as any)?.message as string | undefined

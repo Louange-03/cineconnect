@@ -1,11 +1,11 @@
-import { useState, FormEvent } from "react"
-import { login } from "../../lib/authApi"
+import { useState, FormEvent, ReactElement } from "react"
+import { login } from "../../lib/auth"
 
 interface LoginFormProps {
   onSuccess?: () => void
 }
 
-export function LoginForm({ onSuccess }: LoginFormProps): JSX.Element {
+export function LoginForm({ onSuccess }: LoginFormProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)

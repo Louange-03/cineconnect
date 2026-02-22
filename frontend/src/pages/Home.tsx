@@ -1,4 +1,6 @@
-export function Home(): JSX.Element {
+import React from "react"
+
+export function Home() {
   return (
     <div>
       <h1 className="text-2xl font-semibold">Accueil</h1>
