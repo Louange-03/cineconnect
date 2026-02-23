@@ -1,8 +1,12 @@
 
+
 import React from "react"
 import { useParams } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
 import type { Film } from "../types"
+import { ReviewForm } from "../components/reviews/ReviewForm"
+import { ReviewCard } from "../components/reviews/ReviewCard"
+import { useReviews } from "../hooks/useReviews"
 
 async function fetchFilm(id: string): Promise<Film | null> {
   const res = await fetch(`/films/${id}`)
@@ -18,6 +22,7 @@ export function FilmDetail() {
     queryFn: () => fetchFilm(id),
     enabled: !!id,
   })
+  const { data: reviews, isLoading: loadingReviews } = useReviews(id)
 
   if (isLoading) return <p className="mt-6">Chargement...</p>
   if (error) return <p className="mt-6 text-red-600">{error.message}</p>
@@ -32,7 +37,15 @@ export function FilmDetail() {
         <p className="mb-2"><strong>Catégories :</strong> {film.categories.join(", ")}</p>
       )}
       {film.synopsis && <p className="mb-2">{film.synopsis}</p>}
-      {/* Ajoute ici d'autres infos (réalisateur, acteurs, etc.) si dispo */}
+
+      <ReviewForm filmId={id} />
+      <h2 className="text-xl font-semibold mt-8 mb-2">Avis</h2>
+      {loadingReviews ? <p>Chargement des avis...</p> : null}
+      {reviews && reviews.length > 0 ? (
+        reviews.map(r => <ReviewCard key={r.id} review={r} />)
+      ) : (
+        <p className="text-gray-500">Aucun avis pour ce film.</p>
+      )}
     </div>
   )
 }
