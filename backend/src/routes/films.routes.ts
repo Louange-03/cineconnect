@@ -1,7 +1,14 @@
 import { Router, type Request, type Response } from "express"
+import {
+  listFilms,
+  getFilmById,
+  searchFilms,
+  getCategories,
+} from "../controllers/films.controller.js"
 
 const router = Router()
 
+// OMDb proxy endpoints (legacy, used by frontend clubbed in `omdb.ts`)
 const OMDB_KEY = process.env.OMDB_API_KEY || process.env.OMDB_KEY || ""
 const BASE_URL = "https://www.omdbapi.com/"
 
@@ -16,8 +23,22 @@ if (!OMDB_KEY) {
   console.warn("WARNING: OMDB_API_KEY not set, film search will fail")
 }
 
-// GET /films?q=some
-router.get("/", async (req: Request, res: Response): Promise<void> => {
+// --- local database CRUD for films ---
+// GET /films?q=...&category=...&year=...
+router.get("/", listFilms)
+
+// GET /films/search?q=...   (alias for list with q)
+router.get("/search", searchFilms)
+
+// GET /films/categories
+router.get("/categories", getCategories)
+
+// GET /films/:id
+router.get("/:id", getFilmById)
+
+// --- OMDb proxy endpoints (legacy, kept for backward compatibility) ---
+// GET /films/tmdb?q=some
+router.get("/tmdb", async (req: Request, res: Response): Promise<void> => {
   if (!OMDB_KEY) {
     res.status(500).json({ error: "OMDB_API_KEY missing on server" })
     return
@@ -40,9 +61,9 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
   }
 })
 
-// POST /films/search { query }
-router.post("/search", async (req: Request, res: Response): Promise<void> => {
-  console.log("/films/search body:", req.body)
+// POST /films/tmdb/search { query }
+router.post("/tmdb/search", async (req: Request, res: Response): Promise<void> => {
+  console.log("/films/tmdb/search body:", req.body)
   if (!OMDB_KEY) {
     res.status(500).json({ error: "OMDB_API_KEY missing on server" })
     return
@@ -63,8 +84,8 @@ router.post("/search", async (req: Request, res: Response): Promise<void> => {
   }
 })
 
-// GET /films/:id
-router.get("/:id", async (req: Request, res: Response): Promise<void> => {
+// GET /films/tmdb/:id
+router.get("/tmdb/:id", async (req: Request, res: Response): Promise<void> => {
   let id = req.params.id
   if (Array.isArray(id)) {
     id = id[0]
@@ -84,8 +105,8 @@ router.get("/:id", async (req: Request, res: Response): Promise<void> => {
   }
 })
 
-// POST /films/detail { id }
-router.post("/detail", async (req: Request, res: Response): Promise<void> => {
+// POST /films/tmdb/detail { id }
+router.post("/tmdb/detail", async (req: Request, res: Response): Promise<void> => {
   const id = req.body.id as string | undefined
   if (!id) {
     res.status(400).json({ error: "id missing" })
