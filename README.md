@@ -196,11 +196,17 @@ Pour démarrer un seul service :
 - `GET /users/:id` – utilisateur par ID
 - `PATCH /users/me` – mettre à jour le profil
 
-**Films**
-- `GET /films` – lister les films
-- `GET /films/:id` – détails d’un film
-- `GET /films/tmdb/:tmdbId` – récupérer depuis TMDb
-- `POST /films/tmdb` – enregistrer un film via TMDb
+**Films (base interne)**
+- `GET /films` – liste des films, filtres possibles : `q` (titre), `category`, `year`, `limit`
+- `GET /films/search?q=...` – alias de la liste pour recherche rapide
+- `GET /films/categories` – récupérer la liste des catégories
+- `GET /films/:id` – détails d’un film (inclut catégories)
+
+**Films (TMDb/OMDb proxy)**
+- `GET /films/tmdb?q=...` – recherche dans l’API externe
+- `POST /films/tmdb/search` – idem en POST (utilisé par ancien client)
+- `GET /films/tmdb/:id` – détail externe
+- `POST /films/tmdb/detail` – idem en POST
 
 **Avis (Reviews)**
 - `POST /reviews` – créer
