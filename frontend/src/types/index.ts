@@ -78,6 +78,26 @@ export interface OMDBMovieDetail extends OMDBMovie {
   Error?: string
 }
 
+// Types pour la base locale (Drizzle)
+export interface Film {
+  id: string
+  title: string
+  year?: string
+  posterUrl?: string
+  synopsis?: string
+  metadata?: string
+  createdAt?: string
+  updatedAt?: string
+  categories?: string[]
+}
+
+export interface Category {
+  id: string
+  name: string
+  createdAt?: string
+  updatedAt?: string
+}
+
 export interface ApiRequestOptions extends RequestInit {
   token?: string
   auth?: boolean
