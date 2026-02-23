@@ -1,0 +1,4 @@
+packages:
+  - "cineconnect"
+  - "cineconnect/backend"
+  - "cineconnect/frontend"

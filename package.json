@@ -1,0 +1,9 @@
+{
+  "name": "cineconnect-workspace",
+  "private": true,
+  "scripts": {
+    "dev": "cd cineconnect && pnpm dev",
+    "dev:backend": "cd cineconnect && pnpm --filter backend dev",
+    "dev:frontend": "cd cineconnect && pnpm --filter frontend dev"
+  }
+}
