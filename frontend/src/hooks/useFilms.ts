@@ -7,29 +7,20 @@ async function fetchFilms(query: string, category: string, year: string): Promis
   if (category) params.append("category", category)
   if (year) params.append("year", year)
 
-  // ✅ IMPORTANT: utilise une route API (évite conflit avec route frontend /films)
-  const url = `/api/films?${params.toString()}`
-
-  const res = await fetch(url, {
+  const res = await fetch(`/api/films?${params.toString()}`, {
     headers: { Accept: "application/json" },
   })
 
-  // 🔎 Récupérer un bout de texte pour diagnostiquer si c'est du HTML
+  if (!res.ok) throw new Error("Erreur lors du chargement des films")
+
   const contentType = res.headers.get("content-type") || ""
-  const rawText = await res.text()
-
-  if (!res.ok) {
-    throw new Error(`Erreur lors du chargement des films (${res.status})`)
-  }
-
+  const text = await res.text()
   if (!contentType.includes("application/json")) {
-    // typiquement: HTML renvoyé (index.html, page login, erreur serveur, etc.)
-    const preview = rawText.slice(0, 160).replace(/\s+/g, " ")
-    throw new Error(`Réponse API invalide (pas du JSON). Reçu: ${preview}`)
+    throw new Error("Réponse invalide du serveur (pas du JSON)")
   }
 
-  const data = JSON.parse(rawText)
-  return data?.films ?? []
+  const data = JSON.parse(text)
+  return data.films ?? []
 }
 
 export function useFilms(query: string, category = "", year = "") {
