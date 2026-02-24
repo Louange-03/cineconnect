@@ -1,8 +1,13 @@
-a {
-a:hover {
-h1 {
-}
+@tailwind base;
 @tailwind components;
-}
 @tailwind utilities;
+
+/* reset propre */
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background: #050B1C;
+  color: white;
 }
