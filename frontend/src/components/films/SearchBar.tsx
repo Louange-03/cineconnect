@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 
 interface SearchBarProps {
   value: string
@@ -9,25 +9,44 @@ interface SearchBarProps {
 export function SearchBar({ value, onChange, placeholder }: SearchBarProps) {
   const [input, setInput] = useState(value)
 
-  // Debounce: attend 400ms après la dernière frappe avant de déclencher onChange
-  React.useEffect(() => {
+  // debounce recherche
+  useEffect(() => {
     const timeout = setTimeout(() => {
       if (input !== value) onChange(input)
     }, 400)
     return () => clearTimeout(timeout)
   }, [input])
 
-  React.useEffect(() => {
+  useEffect(() => {
     setInput(value)
   }, [value])
 
   return (
-    <input
-      className="w-full rounded border px-3 py-2"
-      type="text"
-      value={input}
-      onChange={e => setInput(e.target.value)}
-      placeholder={placeholder || "Rechercher..."}
-    />
+    <div className="relative w-full">
+      {/* icon */}
+      <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/40">
+        🔍
+      </div>
+
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder={placeholder || "Rechercher un film..."}
+        className="
+          w-full h-[52px]
+          rounded-2xl
+          border border-white/15
+          bg-white/5
+          pl-12 pr-4
+          text-white
+          placeholder:text-white/40
+          outline-none
+          transition
+          focus:border-[#1D6CE0]/70
+          focus:bg-white/10
+        "
+      />
+    </div>
   )
 }
