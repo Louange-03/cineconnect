@@ -1,9 +1,11 @@
 import { Router, type Request, type Response } from "express"
+import { authMiddleware } from "../middlewares/auth.js"
 import {
   listFilms,
   getFilmById,
   searchFilms,
   getCategories,
+  importFilmFromOmdb,
 } from "../controllers/films.controller.js"
 
 const router = Router()
@@ -17,6 +19,9 @@ router.get("/search", searchFilms)
 
 // GET /films/categories
 router.get("/categories", getCategories)
+
+// ✅ IMPORT OMDb -> DB (auth required)
+router.post("/import", authMiddleware, importFilmFromOmdb)
 
 // --- OMDb proxy endpoints (legacy) ---
 // ⚠️ IMPORTANT : ces routes DOIVENT être avant "/:id"
@@ -86,7 +91,7 @@ router.get("/tmdb/:id", async (req: Request, res: Response): Promise<void> => {
     const r = await fetch(url)
     const data = (await r.json()) as OmdbResponse
     if (data?.Response === "False") {
-      res.status(404).json({ error: data.Error || "Not found" })
+      res.status(404).json({ error: (data as any).Error || "Not found" })
     } else {
       res.json(data)
     }
@@ -108,7 +113,7 @@ router.post("/tmdb/detail", async (req: Request, res: Response): Promise<void> =
     const r = await fetch(url)
     const data = (await r.json()) as OmdbResponse
     if (data?.Response === "False") {
-      res.status(404).json({ error: data.Error || "Not found" })
+      res.status(404).json({ error: (data as any).Error || "Not found" })
     } else {
       res.json(data)
     }
