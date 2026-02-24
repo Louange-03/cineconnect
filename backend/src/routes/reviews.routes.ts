@@ -11,10 +11,15 @@ import {
 
 const router = Router()
 
+// ✅ Public read (affichage avis)
+router.get("/film/:filmId", getReviewsByFilm)
+
+// (Optionnel) public read by user
+router.get("/user/:userId", getReviewsByUser)
+
+// ✅ Protected (créer/modifier/supprimer)
 router.post("/", authMiddleware, createReview)
 router.get("/:id", authMiddleware, getReview)
-router.get("/film/:filmId", authMiddleware, getReviewsByFilm)
-router.get("/user/:userId", authMiddleware, getReviewsByUser)
 router.patch("/:id", authMiddleware, updateReview)
 router.delete("/:id", authMiddleware, deleteReview)
 
