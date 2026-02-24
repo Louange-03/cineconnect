@@ -43,6 +43,13 @@
       "when": 1771604929651,
       "tag": "0005_low_quicksilver",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1771956689234,
+      "tag": "0006_keen_pixie",
+      "breakpoints": true
     }
   ]
 }
