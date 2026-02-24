@@ -8,11 +8,21 @@ import {
 
 const router = Router()
 
-// OMDb proxy endpoints (legacy, used by frontend clubbed in `omdb.ts`)
+// --- local database endpoints ---
+// GET /films?q=...&category=...&year=...
+router.get("/", listFilms)
+
+// GET /films/search?q=...
+router.get("/search", searchFilms)
+
+// GET /films/categories
+router.get("/categories", getCategories)
+
+// --- OMDb proxy endpoints (legacy) ---
+// ⚠️ IMPORTANT : ces routes DOIVENT être avant "/:id"
 const OMDB_KEY = process.env.OMDB_API_KEY || process.env.OMDB_KEY || ""
 const BASE_URL = "https://www.omdbapi.com/"
 
-// minimal typing for OMDb responses
 interface OmdbResponse {
   Response?: string
   Error?: string
@@ -23,33 +33,17 @@ if (!OMDB_KEY) {
   console.warn("WARNING: OMDB_API_KEY not set, film search will fail")
 }
 
-// --- local database CRUD for films ---
-// GET /films?q=...&category=...&year=...
-router.get("/", listFilms)
-
-// GET /films/search?q=...   (alias for list with q)
-router.get("/search", searchFilms)
-
-// GET /films/categories
-router.get("/categories", getCategories)
-
-// GET /films/:id
-router.get("/:id", getFilmById)
-
-// --- OMDb proxy endpoints (legacy, kept for backward compatibility) ---
 // GET /films/tmdb?q=some
 router.get("/tmdb", async (req: Request, res: Response): Promise<void> => {
   if (!OMDB_KEY) {
     res.status(500).json({ error: "OMDB_API_KEY missing on server" })
     return
   }
-
   const q = (req.query.q as string | undefined) || ""
   if (!q) {
     res.json({ Search: [] })
     return
   }
-
   try {
     const url = `${BASE_URL}?apikey=${OMDB_KEY}&s=${encodeURIComponent(q)}`
     const r = await fetch(url)
@@ -63,7 +57,6 @@ router.get("/tmdb", async (req: Request, res: Response): Promise<void> => {
 
 // POST /films/tmdb/search { query }
 router.post("/tmdb/search", async (req: Request, res: Response): Promise<void> => {
-  console.log("/films/tmdb/search body:", req.body)
   if (!OMDB_KEY) {
     res.status(500).json({ error: "OMDB_API_KEY missing on server" })
     return
@@ -87,9 +80,7 @@ router.post("/tmdb/search", async (req: Request, res: Response): Promise<void> =
 // GET /films/tmdb/:id
 router.get("/tmdb/:id", async (req: Request, res: Response): Promise<void> => {
   let id = req.params.id
-  if (Array.isArray(id)) {
-    id = id[0]
-  }
+  if (Array.isArray(id)) id = id[0]
   try {
     const url = `${BASE_URL}?apikey=${OMDB_KEY}&i=${encodeURIComponent(id)}&plot=full`
     const r = await fetch(url)
@@ -126,5 +117,8 @@ router.post("/tmdb/detail", async (req: Request, res: Response): Promise<void> =
     res.status(500).json({ error: "server" })
   }
 })
+
+// GET /films/:id  (TOUJOURS EN DERNIER)
+router.get("/:id", getFilmById)
 
 export default router
