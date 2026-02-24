@@ -38,10 +38,12 @@ app.get("/health", async (req: Request, res: Response): Promise<void> => {
 app.use("/auth", authRoutes)
 app.use("/users", usersRoutes)
 app.use("/friends", friendsRoutes)
+
 app.use("/films", filmsRoutes)
+app.use("/api/films", filmsRoutes) // ✅ alias pour le frontend (Vite proxy /api)
+
 app.use("/reviews", reviewsRoutes)
 app.use("/messages", messagesRoutes)
-
 // Optionnel: racine
 app.get("/", (req: Request, res: Response): void => {
   res.json({ ok: true, name: "Cineconnect API" })
