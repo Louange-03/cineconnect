@@ -1,9 +1,10 @@
 import React, { useState } from "react"
-import { useFilms } from "../hooks/useFilms"
+import { useFilms } from "../hooks/useFilms.omdb"
 import { useCategories } from "../hooks/useCategories"
 import { SearchBar } from "../components/films/SearchBar"
 import { FilmGrid } from "../components/films/FilmGrid"
 import { FilterPanel } from "../components/films/FilterPanel"
+import { OmdbImportPanel } from "../components/films/OmdbImportPanel"
 
 export function Films() {
   const [query, setQuery] = useState("")
