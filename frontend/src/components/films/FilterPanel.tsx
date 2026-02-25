@@ -38,7 +38,7 @@ export function FilterPanel({
   onCategoryChange,
 }: FilterPanelProps) {
   return (
-    <div className="mt-8 flex flex-wrap gap-3">
+    <div className="mt-6 flex flex-wrap gap-3">
       <Chip active={!selectedCategory} onClick={() => onCategoryChange("")}>
         Tous
       </Chip>
