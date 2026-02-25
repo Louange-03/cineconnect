@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react"
-import { useFilms } from "../hooks/useFilms.omdb"
+import { useFilms } from "../hooks/useFilms"
 import { useCategories } from "../hooks/useCategories"
 import { SearchBar } from "../components/films/SearchBar"
 import { FilmGrid } from "../components/films/FilmGrid"
@@ -9,83 +9,34 @@ import { OmdbImportPanel } from "../components/films/OmdbImportPanel"
 
 type ViewMode = "grid" | "list"
 
-function IconButton({
-  active,
-  children,
-  onClick,
-}: {
-  active?: boolean
-  children: React.ReactNode
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        "h-[52px] w-[52px] rounded-2xl border transition grid place-items-center font-semibold",
-        active
-          ? "bg-white/10 border-white/20 text-white"
-          : "bg-transparent border-white/15 text-white/80 hover:bg-white/10",
-      ].join(" ")}
-    >
-      {children}
-    </button>
+export function Films() {
   const [query, setQuery] = useState("")
   const [category, setCategory] = useState("")
+  const [view, setView] = useState<ViewMode>("grid")
+
   const { data: categories = [], isLoading: loadingCategories } = useCategories()
-  const { data: films = [], isLoading, error } = useFilms(query, category)
-  const hasNoResults = !isLoading && !loadingCategories && films.length === 0 && (query || category)
+  const { data: films, isLoading, error } = useFilms(query, category, "")
+
+  const list = useMemo(() => (Array.isArray(films) ? films : []), [films])
+
+  const hasNoResults =
+    !isLoading &&
+    !loadingCategories &&
+    !error &&
+    list.length === 0 &&
+    (query || category)
 
   return (
-    <div className="min-h-screen bg-[#0a1832] text-white">
-      <div className="max-w-5xl mx-auto px-4 pt-12">
-        <h1 className="text-5xl font-extrabold mb-2 tracking-tight">
-          Catalogue de <span className="text-[#3ca3f5]">films</span>
-        </h1>
-        <p className="mb-10 text-lg text-blue-100">Recherchez parmi des millions de films du monde entier.</p>
-        <div className="flex flex-col gap-4 mb-6">
-          <SearchBar value={query} onChange={setQuery} placeholder="Rechercher un film, un réalisateur..." />
-        </div>
-        <FilterPanel
-          categories={categories}
-          selectedCategory={category}
-          onCategoryChange={setCategory}
-        />
-        {isLoading || loadingCategories ? (
-          <div className="mt-16 text-white/70 text-lg">Chargement…</div>
-        ) : null}
-        {error && (
-          <div className="mt-16 text-red-400 bg-red-500/10 border border-red-500/20 rounded-2xl p-6">
-            {error.message}
-          </div>
-        )}
-        {hasNoResults && (
-          <div className="mt-24 text-center">
-            <p className="text-xl text-white/70">
-              Aucun film trouvé pour {" "}
-              <span className="text-white font-semibold">"{query || category}"</span>
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setQuery("")
-                setCategory("")
-              }}
-              className="mt-6 px-7 py-3 rounded-2xl bg-[#1D6CE0] hover:brightness-110 font-semibold"
-            >
-              Réinitialiser la recherche
-            </button>
-          </div>
-        )}
-        {!hasNoResults && films.length > 0 && <FilmGrid films={films} />}
-      </div>
-    </div>
-  )
-        {films && <FilmGrid films={films} />}
-      </div>
-    </div>
-  )
+    <div className="mx-auto w-full max-w-6xl px-4 pb-24 pt-12">
+      <h1 className="text-5xl md:text-6xl font-semibold tracking-tight">
+        Catalogue de <span className="text-[#1D6CE0]">films</span>
+      </h1>
+
+      <p className="mt-4 text-lg md:text-xl text-white/70 max-w-2xl">
+        Recherchez parmi des millions de films du monde entier.
+      </p>
+
+      {/* SEARCH */}
       <div className="mt-10 flex flex-col md:flex-row gap-4">
         <div className="flex-1">
           <SearchBar
@@ -102,22 +53,41 @@ function IconButton({
           Rechercher
         </button>
 
-        <IconButton active={view === "grid"} onClick={() => setView("grid")}>
+        <button
+          type="button"
+          onClick={() => setView("grid")}
+          className={[
+            "h-[52px] w-[52px] rounded-2xl border grid place-items-center transition font-semibold",
+            view === "grid"
+              ? "bg-white/10 border-white/20 text-white"
+              : "border-white/15 text-white/80 hover:bg-white/10",
+          ].join(" ")}
+        >
           ▦
-        </IconButton>
-        <IconButton active={view === "list"} onClick={() => setView("list")}>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setView("list")}
+          className={[
+            "h-[52px] w-[52px] rounded-2xl border grid place-items-center transition font-semibold",
+            view === "list"
+              ? "bg-white/10 border-white/20 text-white"
+              : "border-white/15 text-white/80 hover:bg-white/10",
+          ].join(" ")}
+        >
           ≡
-        </IconButton>
+        </button>
       </div>
 
-      {/* CATEGORY CHIPS */}
+      {/* CHIPS */}
       <FilterPanel
         categories={categories}
         selectedCategory={category}
         onCategoryChange={setCategory}
       />
 
-      {/* STATES */}
+      {/* LOADING / ERROR */}
       {(isLoading || loadingCategories) && (
         <div className="mt-16 text-white/70 text-lg">Chargement…</div>
       )}
@@ -128,7 +98,7 @@ function IconButton({
         </div>
       )}
 
-      {/* EMPTY STATE CENTER (exact maquette) */}
+      {/* EMPTY */}
       {hasNoResults && (
         <div className="mt-24 text-center">
           <p className="text-xl text-white/70">
@@ -149,7 +119,6 @@ function IconButton({
             Réinitialiser la recherche
           </button>
 
-          {/* ✅ OMDb fallback (si recherche texte) */}
           {query.trim().length >= 3 && (
             <OmdbImportPanel initialQuery={query} />
           )}
@@ -158,9 +127,9 @@ function IconButton({
 
       {/* RESULTS */}
       {!hasNoResults && list.length > 0 && (
-        <>
+        <div className="mt-10">
           {view === "grid" ? <FilmGrid films={list} /> : <FilmList films={list} />}
-        </>
+        </div>
       )}
     </div>
   )
