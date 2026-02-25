@@ -1,5 +1,6 @@
 import React from "react"
 import type { Film } from "../../types"
+import { Link } from "@tanstack/react-router"
 
 interface FilmCardProps {
   film: Film
@@ -8,46 +9,41 @@ interface FilmCardProps {
 export function FilmCard({ film }: FilmCardProps) {
   const poster =
     film.posterUrl ||
-    "https://via.placeholder.com/300x450/0b1020/ffffff?text=No+Image"
+    "https://via.placeholder.com/900x1350/0b1020/ffffff?text=No+Image"
 
   return (
-    <a href={`/films/${film.id}`} className="group block">
-      <div className="relative overflow-hidden rounded-2xl bg-[#0B1020] border border-white/10 hover:border-white/20 transition">
-        {/* Image */}
-        <div className="aspect-[2/3] overflow-hidden">
-          <img
-            src={poster}
-            alt={film.title}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-            loading="lazy"
-          />
-        </div>
-
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-90" />
-
-        {/* Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-4">
-          <h3 className="text-white font-semibold text-sm md:text-base leading-tight line-clamp-2">
-            {film.title}
-          </h3>
-
-          {film.year && <p className="text-white/70 text-xs mt-1">{film.year}</p>}
-
-          {film.categories && film.categories.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {film.categories.slice(0, 2).map((cat) => (
-                <span
-                  key={cat}
-                  className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/80"
-                >
-                  {cat}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
+    <Link
+      to="/films/$id"
+      params={{ id: film.id }}
+      className="group rounded-2xl border border-white/10 bg-white/5 overflow-hidden hover:bg-white/10 transition"
+    >
+      <div className="relative aspect-[2/3] overflow-hidden">
+        <img
+          src={poster}
+          alt={film.title}
+          className="h-full w-full object-cover group-hover:scale-[1.03] transition duration-300"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
       </div>
-    </a>
+
+      <div className="p-4">
+        <p className="font-semibold text-white line-clamp-1">{film.title}</p>
+        <p className="mt-1 text-sm text-white/60">{film.year || "—"}</p>
+
+        {film.categories?.length ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {film.categories.slice(0, 2).map((c) => (
+              <span
+                key={c}
+                className="text-[11px] px-3 py-1 rounded-full bg-white/10 text-white/75 border border-white/10"
+              >
+                {c}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </Link>
   )
 }

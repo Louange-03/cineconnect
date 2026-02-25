@@ -1,16 +1,20 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useOmdbSearch, useImportOmdbFilm } from "../../hooks/useOmdb"
 
-export function OmdbImportPanel() {
-  const [q, setQ] = useState("")
+export function OmdbImportPanel({ initialQuery }: { initialQuery?: string }) {
+  const [q, setQ] = useState(initialQuery || "")
   const { data, isLoading } = useOmdbSearch(q)
   const importMut = useImportOmdbFilm()
 
+  useEffect(() => {
+    if (initialQuery) setQ(initialQuery)
+  }, [initialQuery])
+
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-      <h3 className="text-lg font-semibold">Importer depuis OMDb</h3>
+    <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-6">
+      <h3 className="text-lg font-semibold">Résultats OMDb</h3>
       <p className="mt-1 text-sm text-white/60">
-        Tape au moins 3 caractères, puis ajoute le film au catalogue local.
+        Aucun film local trouvé. Tu peux importer depuis OMDb.
       </p>
 
       <div className="mt-4">
