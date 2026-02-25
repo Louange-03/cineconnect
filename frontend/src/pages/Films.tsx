@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react"
-import { useFilms } from "../hooks/useFilms"
+import { useFilms } from "../hooks/useFilms.omdb"
 import { useCategories } from "../hooks/useCategories"
 import { SearchBar } from "../components/films/SearchBar"
 import { FilmGrid } from "../components/films/FilmGrid"
@@ -31,13 +31,12 @@ function IconButton({
     >
       {children}
     </button>
-  )
-}
-
-export function Films() {
   const [query, setQuery] = useState("")
   const [category, setCategory] = useState("")
-  const [view, setView] = useState<ViewMode>("grid")
+  const { data: categories = [], isLoading: loadingCategories } = useCategories()
+  const { data: films = [], isLoading, error } = useFilms(query, category)
+  const hasNoResults = !isLoading && !loadingCategories && films.length === 0 && (query || category)
+
   return (
     <div className="min-h-screen bg-[#0a1832] text-white">
       <div className="max-w-5xl mx-auto px-4 pt-12">
@@ -53,8 +52,36 @@ export function Films() {
           selectedCategory={category}
           onCategoryChange={setCategory}
         />
-        {isLoading || loadingCategories ? <p className="mt-6">Chargement...</p> : null}
-        {error && <p className="mt-6 text-red-400">{error.message}</p>}
+        {isLoading || loadingCategories ? (
+          <div className="mt-16 text-white/70 text-lg">Chargement…</div>
+        ) : null}
+        {error && (
+          <div className="mt-16 text-red-400 bg-red-500/10 border border-red-500/20 rounded-2xl p-6">
+            {error.message}
+          </div>
+        )}
+        {hasNoResults && (
+          <div className="mt-24 text-center">
+            <p className="text-xl text-white/70">
+              Aucun film trouvé pour {" "}
+              <span className="text-white font-semibold">"{query || category}"</span>
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("")
+                setCategory("")
+              }}
+              className="mt-6 px-7 py-3 rounded-2xl bg-[#1D6CE0] hover:brightness-110 font-semibold"
+            >
+              Réinitialiser la recherche
+            </button>
+          </div>
+        )}
+        {!hasNoResults && films.length > 0 && <FilmGrid films={films} />}
+      </div>
+    </div>
+  )
         {films && <FilmGrid films={films} />}
       </div>
     </div>
