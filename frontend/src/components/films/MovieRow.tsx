@@ -1,40 +1,43 @@
-import React, { useRef } from "react";
-import type { Film } from "../../types";
-import { FilmCard } from "./FilmCard";
+import React, { useRef } from "react"
+import type { Film } from "../../types"
+import { FilmCard } from "./FilmCard"
+import { Link } from "@tanstack/react-router"
 
 interface MovieRowProps {
-    title: string;
-    films: Film[];
-    showAllLink?: string;
+    title: string
+    films: Film[]
+    showAllLink?: string
 }
 
 export function MovieRow({ title, films, showAllLink }: MovieRowProps) {
-    const scrollRef = useRef<HTMLDivElement>(null);
+    const scrollRef = useRef<HTMLDivElement>(null)
 
-    const scrollLeft = () => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollBy({ left: -600, behavior: "smooth" });
-        }
-    };
+    const scroll = (direction: "left" | "right") => {
+        if (!scrollRef.current) return
 
-    const scrollRight = () => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollBy({ left: 600, behavior: "smooth" });
-        }
-    };
+        const container = scrollRef.current
+        const scrollAmount = container.clientWidth * 0.8
 
-    if (!films || films.length === 0) return null;
+        container.scrollBy({
+            left: direction === "left" ? -scrollAmount : scrollAmount,
+            behavior: "smooth",
+        })
+    }
+
+    if (!films?.length) return null
 
     return (
-        <div className="relative py-8 w-full max-w-7xl mx-auto px-6 md:px-12">
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide">
+        <section className="relative mx-auto w-full max-w-7xl px-6 py-8 md:px-12">
+            {/* Header */}
+            <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-2xl font-bold tracking-wide text-white md:text-3xl">
                     {title}
                 </h2>
+
                 {showAllLink && (
-                    <a
-                        href={showAllLink}
-                        className="text-sm text-gray-400 hover:text-white flex items-center gap-1 transition-colors"
+                    <Link
+                        to={showAllLink}
+                        className="flex items-center gap-1 text-sm text-gray-400 transition-colors hover:text-white"
                     >
                         Voir tout
                         <svg
@@ -43,52 +46,60 @@ export function MovieRow({ title, films, showAllLink }: MovieRowProps) {
                             viewBox="0 0 24 24"
                             strokeWidth={2}
                             stroke="currentColor"
-                            className="w-4 h-4"
+                            className="h-4 w-4"
                         >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m8.25 4.5 7.5 7.5-7.5 7.5"
-                            />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                         </svg>
-                    </a>
+                    </Link>
                 )}
             </div>
 
+            {/* Slider */}
             <div className="group relative">
+                {/* Left button */}
                 <button
-                    onClick={scrollLeft}
-                    className="absolute left-[-20px] top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-black/60 hover:bg-[#1D6CE0] text-white border border-white/10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm"
+                    onClick={() => scroll("left")}
+                    className="absolute left-[-18px] top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/60 text-white opacity-0 backdrop-blur-md transition-all duration-300 hover:bg-[#1D6CE0] group-hover:opacity-100"
+                    aria-label="Scroll gauche"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-6 w-6">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                     </svg>
                 </button>
 
+                {/* Row */}
                 <div
                     ref={scrollRef}
-                    className="flex gap-6 overflow-x-auto scrollbar-hide py-4 snap-x snap-mandatory"
-                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                    className="flex gap-6 overflow-x-auto py-4 scroll-smooth snap-x snap-mandatory"
+                    style={{ scrollbarWidth: "none" }}
                 >
                     {films.map((film) => (
-                        <div key={film.id} className="min-w-[180px] md:min-w-[220px] snap-center shrink-0">
+                        <div
+                            key={film.id}
+                            className="min-w-[180px] shrink-0 snap-start md:min-w-[220px] motion-safe:animate-fade-in"
+                        >
                             <FilmCard film={film} />
                         </div>
                     ))}
                 </div>
 
+                {/* Right button */}
                 <button
-                    onClick={scrollRight}
-                    className="absolute right-[-20px] top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-black/60 hover:bg-[#1D6CE0] text-white border border-white/10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm shadow-xl"
+                    onClick={() => scroll("right")}
+                    className="absolute right-[-18px] top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/60 text-white opacity-0 backdrop-blur-md transition-all duration-300 hover:bg-[#1D6CE0] group-hover:opacity-100"
+                    aria-label="Scroll droite"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-6 w-6">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                     </svg>
                 </button>
 
-                {/* Gradients pour cacher les bords */}
-                <div className="absolute top-0 bottom-0 right-0 w-16 bg-gradient-to-l from-[#050B1C] to-transparent pointer-events-none z-10" />
+                {/* Gradient right */}
+                <div className="pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-20 bg-gradient-to-l from-[#050B1C] to-transparent" />
+
+                {/* Gradient left */}
+                <div className="pointer-events-none absolute left-0 top-0 bottom-0 z-10 w-20 bg-gradient-to-r from-[#050B1C] to-transparent opacity-0 group-hover:opacity-100 transition" />
             </div>
-        </div>
-    );
+        </section>
+    )
 }
