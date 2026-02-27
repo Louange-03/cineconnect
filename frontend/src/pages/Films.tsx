@@ -16,65 +16,77 @@ export function Films() {
 
   const list = useMemo(() => (Array.isArray(films) ? films : []), [films])
 
+  const isBusy = isLoading || loadingCategories
+
   const hasNoResults =
-    !isLoading &&
-    !loadingCategories &&
-    !error &&
-    list.length === 0 &&
-    (query || category)
+    !isBusy && !error && list.length === 0 && (query.trim() !== "" || category !== "")
 
   const isCatalogEmpty =
-    !isLoading &&
-    !loadingCategories &&
-    !error &&
-    list.length === 0 &&
-    !query &&
-    !category
+    !isBusy && !error && list.length === 0 && query.trim() === "" && category === ""
 
-  // Simulation of a featured movie (first one with a poster, or fallback)
-  const featuredFilm = list.find(f => f.posterUrl) || list[0]
+  const canImportFromOmdb = query.trim().length >= 3
 
-  // Simulation of rows based on the API response
-  const mostViewed = list.slice(0, 8);
-  const mostPopular = list.slice(8, 16);
-  const newlyAdded = list.slice(16, 24);
+  const featuredFilm = useMemo(() => {
+    if (list.length === 0) return undefined
+    return list.find((f) => f.posterUrl) ?? list[0]
+  }, [list])
+
+  const rows = useMemo(() => {
+    if (list.length === 0) return { mostViewed: [], mostPopular: [], newlyAdded: [] }
+    return {
+      mostViewed: list.slice(0, 8),
+      mostPopular: list.slice(8, 16),
+      newlyAdded: list.slice(16, 24),
+    }
+  }, [list])
+
+  const showHero = !isBusy && !error && !!featuredFilm && query.trim() === "" && category === ""
 
   return (
-    <div className="min-h-screen bg-[#050B1C] pb-24">
-      {/* LOADING / ERROR STATE BEFORE PAGE */}
-      {(isLoading || loadingCategories) && (
-        <div className="flex h-[50vh] items-center justify-center text-white/70 text-lg">
-          <div className="w-10 h-10 border-4 border-white/20 border-t-[#1D6CE0] rounded-full animate-spin"></div>
+    <main className="min-h-screen bg-[#050B1C] pb-24">
+      {/* Loading */}
+      {isBusy && (
+        <div className="flex h-[50vh] items-center justify-center text-lg text-white/70">
+          <div
+            className="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-[#1D6CE0]"
+            aria-label="Chargement"
+            role="status"
+          />
         </div>
       )}
 
-      {error && (
-        <div className="mt-16 mx-auto max-w-6xl text-red-400 bg-red-500/10 border border-red-500/20 rounded-2xl p-6">
+      {/* Error */}
+      {!isBusy && error && (
+        <div className="mx-auto mt-16 max-w-6xl rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-red-400">
           {error.message}
         </div>
       )}
 
-      {/* HERO SECTION - Only visible if there is a featured film */}
-      {!isLoading && !error && featuredFilm && !query && !category && (
-        <HeroFeature film={featuredFilm} />
-      )}
+      {/* Hero */}
+      {showHero && featuredFilm && <HeroFeature film={featuredFilm} />}
 
-      {/* SEARCH SECTION */}
-      <div className={`mx-auto w-full max-w-7xl px-6 md:px-12 transition-all duration-500 ${!query && !category && featuredFilm ? '-mt-8 relative z-20' : 'pt-24 hover:bg-black/20'}`}>
-        <div className="bg-[#0A132D]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-2 md:p-4 flex flex-col md:flex-row gap-4 items-center shadow-2xl">
-          <div className="flex-1 w-full">
-            <SearchBar
-              value={query}
-              onChange={setQuery}
-              placeholder="Rechercher des films, réalisateurs, genres..."
-            />
-          </div>
+      {/* Search (sticky for better UX) */}
+      <div
+        className={[
+          "mx-auto w-full max-w-7xl px-6 md:px-12",
+          "transition-all duration-500",
+          showHero ? "-mt-8 relative z-20" : "pt-20",
+          "sticky top-0 z-30",
+        ].join(" ")}
+      >
+        <div className="rounded-2xl border border-white/10 bg-[#0A132D]/80 p-2 shadow-2xl backdrop-blur-xl md:p-4">
+          <SearchBar
+            value={query}
+            onChange={setQuery}
+            placeholder="Rechercher des films, réalisateurs, genres..."
+          />
         </div>
       </div>
 
-      {!isLoading && !error && (
+      {/* Content */}
+      {!isBusy && !error && (
         <>
-          {/* CAROUSEL CHIPS - Only visible if not totally empty catalog */}
+          {/* Category pills */}
           {!isCatalogEmpty && (
             <CategoryPills
               categories={categories}
@@ -83,40 +95,46 @@ export function Films() {
             />
           )}
 
-          {/* CATALOG IS COMPLETELY EMPTY */}
+          {/* Empty catalog */}
           {isCatalogEmpty && (
-            <div className="mt-24 text-center max-w-2xl mx-auto px-4 flex flex-col items-center">
-              <div className="w-24 h-24 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(255,255,255,0.05)]">
-                <span className="text-4xl">🍿</span>
+            <section className="mx-auto mt-24 flex max-w-2xl flex-col items-center px-4 text-center">
+              <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-3xl border border-white/10 bg-white/5 shadow-[0_0_30px_rgba(255,255,255,0.05)]">
+                <span className="text-4xl" aria-hidden="true">
+                  🍿
+                </span>
               </div>
-              <h2 className="text-3xl font-black text-white mb-4">Votre catalogue est vide</h2>
-              <p className="text-gray-400 text-lg mb-10 leading-relaxed">
-                CinéConnect est connecté à OMDb. Recherchez n'importe quel film avec la barre de recherche ci-dessus pour commencer à remplir votre base de données locale !
+
+              <h2 className="mb-4 text-3xl font-black text-white">Votre catalogue est vide</h2>
+
+              <p className="mb-10 text-lg leading-relaxed text-gray-400">
+                CinéConnect est connecté à OMDb. Recherchez un film avec la barre ci-dessus
+                pour commencer à remplir votre base de données locale.
               </p>
-              {query.trim().length >= 3 && (
+
+              {canImportFromOmdb && (
                 <div className="w-full text-left">
                   <OmdbImportPanel initialQuery={query} />
                 </div>
               )}
-            </div>
+            </section>
           )}
 
-          {/* SEARCH RETURNED NO RESULTS */}
+          {/* No results */}
           {hasNoResults && (
-            <div className="mt-16 text-center max-w-2xl mx-auto px-4">
-              <p className="text-xl text-white/70 bg-white/5 p-8 rounded-2xl border border-white/10">
+            <section className="mx-auto mt-16 max-w-2xl px-4 text-center">
+              <p className="rounded-2xl border border-white/10 bg-white/5 p-8 text-xl text-white/70">
                 Aucun film local trouvé pour{" "}
-                <span className="text-[#1D6CE0] font-bold">
-                  "{query || category}"
+                <span className="font-bold text-[#1D6CE0]">
+                  "{query.trim() || category}"
                 </span>
               </p>
 
-              {query.trim().length >= 3 ? (
-                <div className="mt-8 text-left animate-fade-in">
+              {canImportFromOmdb ? (
+                <div className="mt-8 text-left motion-safe:animate-fade-in">
                   <OmdbImportPanel initialQuery={query} />
                 </div>
               ) : (
-                <div className="mt-8 text-gray-500 animate-pulse">
+                <div className="mt-8 text-gray-500 motion-safe:animate-pulse">
                   Tapez au moins 3 caractères pour rechercher sur OMDb...
                 </div>
               )}
@@ -127,29 +145,33 @@ export function Films() {
                   setQuery("")
                   setCategory("")
                 }}
-                className="mt-12 px-8 py-3.5 rounded-full border border-white/10 bg-white/5 text-white hover:bg-white/10 font-bold transition-all"
+                className="mt-12 rounded-full border border-white/10 bg-white/5 px-8 py-3.5 font-bold text-white transition-all hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]"
               >
                 Annuler la recherche
               </button>
-            </div>
+            </section>
           )}
 
-          {/* RESULTS ROWS */}
+          {/* Rows */}
           {!hasNoResults && !isCatalogEmpty && list.length > 0 && (
-            <div className="mt-8 space-y-4">
-              {query || category ? (
+            <section className="mt-8 space-y-4">
+              {query.trim() !== "" || category !== "" ? (
                 <MovieRow title="Résultats de recherche" films={list} />
               ) : (
                 <>
-                  <MovieRow title="Les plus vus" films={mostViewed} showAllLink="/films?sort=viewed" />
-                  {mostPopular.length > 0 && <MovieRow title="Tendances actuelles" films={mostPopular} showAllLink="/films?sort=popular" />}
-                  {newlyAdded.length > 0 && <MovieRow title="Nouveautés" films={newlyAdded} showAllLink="/films?sort=recent" />}
+                  <MovieRow title="Les plus vus" films={rows.mostViewed} showAllLink="/films?sort=viewed" />
+                  {rows.mostPopular.length > 0 && (
+                    <MovieRow title="Tendances actuelles" films={rows.mostPopular} showAllLink="/films?sort=popular" />
+                  )}
+                  {rows.newlyAdded.length > 0 && (
+                    <MovieRow title="Nouveautés" films={rows.newlyAdded} showAllLink="/films?sort=recent" />
+                  )}
                 </>
               )}
-            </div>
+            </section>
           )}
         </>
       )}
-    </div>
+    </main>
   )
 }
