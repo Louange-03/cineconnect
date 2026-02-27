@@ -1,246 +1,122 @@
-# CineConnect
+# CinéConnect
 
-Une plateforme collaborative pour découvrir, filtrer, noter et discuter de films avec des amis.
+CinéConnect est une plateforme communautaire moderne dédiée aux passionnés de cinéma. Elle permet de découvrir des films, de gérer un catalogue interactif (connecté à OMDb), de partager ses avis, et d'échanger avec d'autres cinéphiles via une interface de messagerie intégrée. Le tout dans une esthétique professionnelle "Premium Dark Theme", fluide et hautement réactive.
 
-## Structure du projet
+## 🚀 Fonctionnalités Principales
 
+- **Catalogue de Films Intelligent** : Parcourez, filtrez et cherchez directement dans les films de la base de données.
+- **Importation depuis OMDb** : Si le catalogue est vide ou si un film manque, recherchez-le directement depuis l'application via l'API OMDb et ajoutez-le à la volée.
+- **Authentification Sécurisée** : Inscription et connexion gérées avec JWT (JSON Web Tokens), et hachage sécurisé des mots de passe.
+- **Système d'Avis et Notes** : Notez les œuvres et lisez les longues critiques détaillées de la communauté sur de magnifiques fiches de films.
+- **Messagerie Intégrée (Discussions)** : Interface de chat façon *Discord/Messages* pour retrouver vos boîtes de réception et échanger en temps réel avec tous vos amis.
+- **Design Premium** : Interface utilisateur UI/UX refaite à neuf (Tailwind CSS v4) incluant des effets de Glassmorphism (flou), des animations immersives, des lueurs (glows) abstraites en arrière-plan et un support full responsive.
+
+## 🛠️ Stack Technologique
+
+**Frontend (Web & Interface)**
+- **React 18** (TypeScript)
+- **Vite** (Build Tool ultra rapide et Proxy)
+- **TanStack Router** (Système de routage basé sur les fichiers, type-safe)
+- **TanStack Query** (Gestion fine du cache, des mutations et états asynchrones)
+- **Tailwind CSS v4** (Design system utilitaire et flexible)
+
+**Backend (API & Data)**
+- **Node.js** & **Express**
+- **TypeScript**
+- **Drizzle ORM** (Liaisons SQL rapides et type-safe)
+- **PostgreSQL** (Structure de base de données relationnelle robuste)
+- **Zod** (Validation fine des requêtes entrantes)
+
+## 📁 Structure du Projet (Monorepo)
+
+Le dépôt est organisé en mode *Workspace* `pnpm` :
+
+```text
+cineconnect/
+├── backend/               # Serveur API
+│   ├── src/controllers/   # Logique métier pour Auth, Films, Messages, etc.
+│   ├── src/db/            # Connecteur PostgreSQL et schémas Drizzle (schema.ts)
+│   ├── src/middlewares/   # Protections et sécurisation (ex: validation JWT)
+│   ├── src/routes/        # Déclaration de tous les Endpoints REST
+│   └── src/server.ts      # Le cœur de l'application Express
+│
+├── frontend/              # Interface client
+│   ├── src/components/    # Composants d'UI isolés (films, auth, layout, ui)
+│   ├── src/hooks/         # Logique API connectée avec les contextes
+│   ├── src/lib/           # Utilitaires globaux (apiClient, auth manager)
+│   ├── src/pages/         # Mappage avec le routeur (Films, Accueil, Connexion...)
+│   ├── src/routeTree.gen.ts # Routage automatique (Tanstack Router)
+│   └── src/index.css      # Règles CSS globales et Keyframes d'animations
+│
+├── docker-compose.yml     # Conteneur pour s'initialiser facilement avec PostgreSQL
+└── package.json           # Racine du workspace
 ```
-Cineconnect/
-├── backend/               # Express + Drizzle ORM + Socket.io
-├── frontend/              # React + Vite + TanStack Router/Query
-├── docker-compose.yml     # Configuration de PostgreSQL
-├── pnpm-workspace.yaml    # Configuration du monorepo pnpm
-└── README.md              # Ce fichier
-```
 
-> Le dépôt est organisé en workspace pnpm avec des packages frontend et backend séparés.
+## ⚙️ Prérequis et Installation
 
-## Stack technologique
+Pour exécuter et contribuer à ce projet localement, il vous faut :
+- **Node.js** (v20.x ou >)
+- **pnpm** (comme gestionnaire de paquets)
+- **PostgreSQL** (installé en dur, ou lancé via Docker)
 
-- **Frontend** : React 18, TypeScript, Vite, TanStack Router, TanStack Query, Tailwind CSS
-- **Backend** : Node.js, Express, TypeScript, Drizzle ORM, authentification JWT, Socket.io
-- **Base de données** : PostgreSQL (exécuté en Docker via docker-compose)
-- **Tests** : Vitest pour les tests unitaires/intégration, Playwright pour les tests end‑to‑end
-
-## Aperçu de l'architecture
-
-### Backend (Architecture propre / Clean Architecture)
-
-- `backend/src/domain/` – entités métier et interfaces de dépôt
-- `backend/src/application/` – cas d'utilisation implémentant les règles métier
-- `backend/src/infrastructure/` – implémentations Drizzle ORM et container DI
-- `backend/src/routes/` – gestionnaires Express appelant les cas d'utilisation
-
-Principes clés :
-
-1. La logique métier réside dans les cas d'utilisation, pas dans les routes.
-2. Les routes ne gèrent que les aspects HTTP.
-3. L'injection de dépendances via `tsyringe` découple les couches.
-4. Les entités sont des classes TypeScript agnostiques au framework.
-
-### Frontend
-
-- `frontend/src/components/` – composants UI classés par fonctionnalité et primitives génériques
-- `frontend/src/hooks/` – hooks personnalisés encapsulant TanStack Query
-- `frontend/src/lib/` – clients API, utilitaires, gestion des tokens
-- `frontend/src/pages/` – composants de pages utilisés par TanStack Router
-- `frontend/src/router.tsx` – configuration du routage avec routes protégées
-- `frontend/src/types/` – types TypeScript partagés
-
-Schémas :
-
-- Hooks personnalisés pour l'interaction avec l'API
-- Contextes pour l'authentification et la connexion socket
-- Composants par fonctionnalité séparés de l'UI générique
-
-## Démarrage
-
-### Prérequis
-
-- Node.js ≥ 20.0.0
-- pnpm ≥ 9.0.0
-- Docker (pour PostgreSQL)
-
-### Installation
-
+### 1. Clonage et Installation
 ```bash
-# cloner le dépôt
-git clone https://github.com/YOUR_USERNAME/Cineconnect.git
-cd Cineconnect
-
-# installer les dépendances du workspace
+git clone https://github.com/Louange-03/cineconnect.git
+cd cineconnect
 pnpm install
 ```
 
-### Variables d'environnement
+### 2. Configuration des .env
+Copiez (ou créez) les fichiers d'environnement.
 
-Copiez les exemples de fichiers env et ajustez-les :
+Dans le dossier **`backend/`**, créez ou éditez `.env` :
+```env
+PORT=3001
+DATABASE_URL=postgresql://user:motdepasse@localhost:5432/cineconnect
+JWT_SECRET=super_secret_phrase_au_moins_32_caracteres_min
+FRONTEND_URL=http://localhost:5173
+OMDB_API_KEY=votre_cle_omdb
+```
 
+Dans le dossier **`frontend/`**, créez ou éditez `.env` :
+```env
+VITE_API_URL=http://localhost:3001
+VITE_OMDB_API_KEY=votre_cle_omdb # Optionnel (si fetché directement via le back)
+```
+*(Une clé d'API OMDb gratuite est obtenable sur [omdbapi.com](http://www.omdbapi.com/apikey.aspx))*
+
+
+### 3. Base de données
+Assurez-vous d'avoir une instance Postgres lancée :
 ```bash
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
-```
-
-Remplissez `backend/.env` :
-
-```
-NODE_ENV=development
-PORT=3000
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/cineconnect
-JWT_SECRET=your-super-secret-jwt-key-at-least-32-chars-long
-JWT_EXPIRES_IN=7d
-JWT_REFRESH_EXPIRES_IN=30d
-FRONTEND_URL=http://localhost:5173   # utilisé par le backend pour configurer CORS
-OMDB_API_KEY=your_omdb_api_key      # requis pour la recherche de films via l'API backend
-```
-
-> Après chaque modification du fichier `.env`, redémarrez le serveur backend (`pnpm dev:backend`).
-
-Remplissez `frontend/.env` :
-
-```
-VITE_OMDB_API_KEY=your_omdb_api_key    # utilisé uniquement par l'ancien code, le backend proxy sera préféré
-VITE_API_URL=http://localhost:3000
-```
-
-Obtenez une clé API TMDb gratuite sur https://www.themoviedb.org/settings/api.
-
-### Base de données
-
-1. Lancez PostgreSQL via Docker Compose (le service est défini dans
-   `docker-compose.yml`) :
-
-```bash
+# Optionnel : lancer le docker natif si vous ne l'avez pas
 docker compose up -d postgres
 ```
-
-2. Vérifiez que `backend/.env` contient une URL valide (`DATABASE_URL`).
-   Vous pouvez aussi définir `FRONTEND_URL` si le port Vite change (5173/5174).
-
-3. Appliquez les migrations Drizzle :
-
+Poursuivez avec la structuration et la migration (`Drizzle`) :
 ```bash
-# depuis la racine du workspace
 pnpm --dir backend db:migrate
 ```
 
-> Si vous voyez des erreurs de connexion, assurez‑vous que le conteneur
-> PostgreSQL est en cours d'exécution et que `DATABASE_URL` pointe vers le
-> bon hôte/port.
-
-4. Lancez les serveurs :
-
+### 4. Démarrer l'application (Dev)
+Grâce au package root, vous pouvez lancer les deux serveurs en parallèle :
 ```bash
 pnpm dev
 ```
+- Le **Frontend** tournera sur : `http://localhost:5173`
+- Le **Backend** tournera silencieusement sur : `http://localhost:3001`
 
-   Le backend écoute sur le port `3001` et la configuration CORS est
-   permissive (`*`) par défaut en développement, donc les requêtes provenant
-   du frontend (`5173`/`5174`) passent sans problème.
+*(Vite gère le proxy `/api` via `vite.config.ts`, empêchant la grande majorité des soucis CORS au développement).*
 
-   Une fois que vous vous inscrivez ou vous connectez depuis le site, les
-   données sont envoyées au backend et insérées dans la table `users` de la
-   base ; tout problème côté serveur est désormais journalisé dans la console.
+## 📡 Rendu sur l'API
 
-### Serveurs de développement
+L'application expose une collection de routes REST solides, par exemple :
+- **Authentification** : `/api/auth/register`, `/api/auth/login`
+- **Contenu Modéré** : `/api/films`, `/api/films/:id`
+- **Recherches et Importation Externe** : `/api/films/tmdb?q=...`, `/api/films/import`
+- **Contributions (Réseau social)** : `/api/reviews`, `/api/messages`, `/api/users`
 
-Lancez simultanément le frontend et le backend :
-
-```bash
-pnpm dev
-```
-
-- Frontend : http://localhost:5173
-- Backend : http://localhost:3001
-- Documentation de l'API (Swagger) : http://localhost:3000/api-docs
-
-Pour démarrer un seul service :
-
-- `pnpm dev:frontend`
-- `pnpm dev:backend`
-
-## Scripts
-
-| Commande            | Description                                  |
-|--------------------|----------------------------------------------|
-| `pnpm dev`         | Lance frontend & backend en mode dev         |
-| `pnpm dev:frontend`| Frontend uniquement                          |
-| `pnpm dev:backend` | Backend uniquement                           |
-| `pnpm build`       | Compile tous les packages                    |
-| `pnpm test`        | Execute tous les tests (unitaires+intégration) |
-| `pnpm test:frontend` | Tests frontend                             |
-| `pnpm test:backend` | Tests backend                               |
-| `pnpm test:e2e`    | Tests end‑to‑end Playwright                  |
-| `pnpm lint`        | Vérification ESLint                          |
-| `pnpm db:generate` | Génère des migrations Drizzle                |
-| `pnpm db:migrate`  | Applique les migrations                      |
-| `pnpm db:studio`   | Ouvre Drizzle Studio                         |
-
-## Schéma de la base de données (vue d'ensemble)
-
-- `users` : id, email, nom d'utilisateur, password_hash, avatar_url, timestamps
-- `films` : id, tmdb_id, titre, année, affiche, synopsis, métadonnées, timestamps
-- `reviews` : id, user_id, film_id, note, commentaire, timestamps
-- `messages` : id, sender_id, receiver_id, contenu, lu, created_at
-- `friends` : id, sender_id, receiver_id, statut, timestamps
-
-## Endpoints de l'API (v1)
-
-**Authentification**
-- `POST /auth/register` – enregistrer un nouvel utilisateur
-- `POST /auth/login` – se connecter
-- `POST /auth/refresh` – renouveler les tokens
-
-**Utilisateurs**
-- `GET /users/me` – utilisateur courant
-- `GET /users/:id` – utilisateur par ID
-- `PATCH /users/me` – mettre à jour le profil
-
-**Films (base interne)**
-- `GET /films` – liste des films, filtres possibles : `q` (titre), `category`, `year`, `limit`
-- `GET /films/search?q=...` – alias de la liste pour recherche rapide
-- `GET /films/categories` – récupérer la liste des catégories
-- `GET /films/:id` – détails d’un film (inclut catégories)
-
-**Films (TMDb/OMDb proxy)**
-- `GET /films/tmdb?q=...` – recherche dans l’API externe
-- `POST /films/tmdb/search` – idem en POST (utilisé par ancien client)
-- `GET /films/tmdb/:id` – détail externe
-- `POST /films/tmdb/detail` – idem en POST
-
-**Avis (Reviews)**
-- `POST /reviews` – créer
-- `GET /reviews/:id` – avis unique
-- `GET /reviews/film/:filmId` – avis d’un film
-- `GET /reviews/user/:userId` – avis d’un utilisateur
-- `PATCH /reviews/:id` – modifier
-- `DELETE /reviews/:id` – supprimer
-- Endpoints de réaction pour likes/commentaires
-
-**Messages & Amis**
-- divers endpoints pour conversations, envoi de messages, demandes d’amitié
-
-## Événements WebSocket
-
-- `connect`, `disconnect`, `message`, `typing`, `online`, `join_room`, `leave_room`
-
-## Sécurité & Bonnes pratiques
-
-- Authentification JWT avec tokens d’accès/rafraîchissement.
-- Token d’accès en localStorage, rafraîchissement via cookie sécurisé.
-- Toutes les connexions socket exigent un JWT valide.
-- Limitation de débit sur la messagerie et les routes sensibles.
-- Sanitation des entrées pour éviter les XSS.
-- CORS limité à l’origine du frontend.
-
-## Tests
-
-- Tests unitaires & d’intégration sous `src/__tests__/`.
-- Tests E2E Playwright simulant des parcours utilisateurs.
-- Couverture maintenue à 100 % dans le CI.
-
-## Contribution
-
-Voir `docs/CONTRIBUTING.md` pour l’intégration et les consignes.
+Tous les appels sécurisés attendent un `Authorization: Bearer <votre_token_jwt>` obtenu suivant la connexion. Le tout est injecté automatiquement la fonction `apiClient()` construite dans le Front.
 
 ---
+
+> Projet réalisé dans le cadre académique de développement de la structure "WebApplication complète", **HETIC Web2**.
