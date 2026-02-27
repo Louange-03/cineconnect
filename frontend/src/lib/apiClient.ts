@@ -2,12 +2,12 @@ import { getToken } from "./auth"
 import type { ApiRequestOptions } from "../types"
 
 // backend listens on 3001 by default; make the fallback match
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined) || "http://localhost:3001"
+const RAW_API_URL = (import.meta.env.VITE_API_URL as string | undefined) || "http://localhost:3001"
+const API_URL = RAW_API_URL.replace(/\/$/, '') // Remove trailing slash if present
 
 if (!import.meta.env.VITE_API_URL) {
   console.warn("VITE_API_URL not defined, defaulting to http://localhost:3001")
 }
-
 
 interface RequestOptions {
   method?: string
@@ -23,7 +23,9 @@ async function request<T = any>(path: string, { method = "GET", body, auth = tru
     if (token) headers.Authorization = `Bearer ${token}`
   }
 
-  const url = `${API_URL}${path}`
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  const url = `${API_URL}${normalizedPath}`
+
   console.log("apiClient request", { url, method, body, auth, headers })
   try {
     const res = await fetch(url, {

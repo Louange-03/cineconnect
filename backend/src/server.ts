@@ -36,14 +36,23 @@ app.get("/health", async (req: Request, res: Response): Promise<void> => {
 
 // ✅ Routes API
 app.use("/auth", authRoutes)
+app.use("/api/auth", authRoutes)
+
 app.use("/users", usersRoutes)
+app.use("/api/users", usersRoutes)
+
 app.use("/friends", friendsRoutes)
+app.use("/api/friends", friendsRoutes)
 
 app.use("/films", filmsRoutes)
 app.use("/api/films", filmsRoutes) // ✅ alias pour le frontend (Vite proxy /api)
 
 app.use("/reviews", reviewsRoutes)
+app.use("/api/reviews", reviewsRoutes)
+
 app.use("/messages", messagesRoutes)
+app.use("/api/messages", messagesRoutes)
+
 // Optionnel: racine
 app.get("/", (req: Request, res: Response): void => {
   res.json({ ok: true, name: "Cineconnect API" })
