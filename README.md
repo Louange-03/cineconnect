@@ -2,7 +2,7 @@
 
 CinéConnect est une plateforme communautaire moderne dédiée aux passionnés de cinéma. Elle permet de découvrir des films, de gérer un catalogue interactif (connecté à OMDb), de partager ses avis, et d'échanger avec d'autres cinéphiles via une interface de messagerie intégrée. Le tout dans une esthétique professionnelle "Premium Dark Theme", fluide et hautement réactive.
 
-## 🚀 Fonctionnalités Principales
+##  Fonctionnalités Principales
 
 - **Catalogue de Films Intelligent** : Parcourez, filtrez et cherchez directement dans les films de la base de données.
 - **Importation depuis OMDb** : Si le catalogue est vide ou si un film manque, recherchez-le directement depuis l'application via l'API OMDb et ajoutez-le à la volée.
@@ -27,7 +27,7 @@ CinéConnect est une plateforme communautaire moderne dédiée aux passionnés d
 - **PostgreSQL** (Structure de base de données relationnelle robuste)
 - **Zod** (Validation fine des requêtes entrantes)
 
-## 📁 Structure du Projet (Monorepo)
+##  Structure du Projet (Monorepo)
 
 Le dépôt est organisé en mode *Workspace* `pnpm` :
 
@@ -52,7 +52,7 @@ cineconnect/
 └── package.json           # Racine du workspace
 ```
 
-## ⚙️ Prérequis et Installation
+##  Prérequis et Installation
 
 Pour exécuter et contribuer à ce projet localement, il vous faut :
 - **Node.js** (v20.x ou >)
