@@ -1,5 +1,5 @@
 export interface User {
-  id: number
+  id: string
   email: string
   username: string
   createdAt?: string
@@ -12,21 +12,21 @@ export interface AuthResponse {
 
 export interface Message {
   id: string
-  senderId: number
-  receiverId: number
+  senderId: string
+  receiverId: string
   content: string
   createdAt: string
 }
 
 export interface Conversation {
-  userId: number
+  userId: string
   lastMessage: string
   updatedAt: string
 }
 
 export interface Review {
   id: string
-  userId: number
+  userId: string
   username: string
   rating: number
   comment: string
@@ -34,14 +34,14 @@ export interface Review {
 }
 
 export interface Friend {
-  id: number
+  id: string
   username: string
   email: string
 }
 
 export interface FriendRequest {
-  id: number
-  requesterId: number
+  id: string
+  requesterId: string
   requesterUsername: string
   createdAt: string
 }
