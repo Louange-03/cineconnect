@@ -10,7 +10,8 @@
     "allowJs": true,
     "checkJs": false,
     "noEmit": true,
-    "types": ["node"]
+    "jsx": "react-jsx",      
+    "types": ["node", "react", "react-dom"]  
   },
   "include": ["backend", "frontend"]
 }
