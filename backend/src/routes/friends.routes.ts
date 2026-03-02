@@ -47,6 +47,25 @@ router.get("/requests", authMiddleware, async (req: Request, res: Response): Pro
   res.json({ requests: rows })
 })
 
+// GET /friends/sent
+router.get("/sent", authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const meId = req.user!.id as string
+
+  const rows = await db
+    .select({
+      friendshipId: friendships.id,
+      toUserId: users.id,
+      toUsername: users.username,
+      createdAt: friendships.createdAt,
+    })
+    .from(friendships)
+    .innerJoin(users, eq(users.id, friendships.addresseeId))
+    .where(and(eq(friendships.requesterId, meId), eq(friendships.status, "pending")))
+    .orderBy(friendships.createdAt)
+
+  res.json({ sent: rows })
+})
+
 // POST /friends/request { userId }
 router.post("/request", authMiddleware, async (req: Request, res: Response): Promise<void> => {
   const meId = req.user!.id
@@ -62,14 +81,12 @@ router.post("/request", authMiddleware, async (req: Request, res: Response): Pro
     return
   }
 
-  // l'autre existe ?
   const other = await db.select({ id: users.id }).from(users).where(eq(users.id, userId)).limit(1)
   if (!other.length) {
     res.status(404).json({ message: "User not found" })
     return
   }
 
-  // relation existante (2 sens)
   const existing = await db
     .select({
       id: friendships.id,
@@ -94,7 +111,6 @@ router.post("/request", authMiddleware, async (req: Request, res: Response): Pro
     }
     
     if (rel.status === "pending") {
-      // auto-accept si l'autre t'a déjà demandé
       if (rel.requesterId === userId) {
         const updated = await db
           .update(friendships)
@@ -111,12 +127,7 @@ router.post("/request", authMiddleware, async (req: Request, res: Response): Pro
     if (rel.status === "rejected") {
       const updated = await db
         .update(friendships)
-        .set({
-          requesterId: meId,
-          addresseeId: userId,
-          status: "pending",
-          updatedAt: sql`now()`,
-        })
+        .set({ requesterId: meId, addresseeId: userId, status: "pending", updatedAt: sql`now()` })
         .where(eq(friendships.id, rel.id))
         .returning()
       res.json({ status: "pending", friendship: updated[0] })
@@ -132,7 +143,7 @@ router.post("/request", authMiddleware, async (req: Request, res: Response): Pro
   res.status(201).json({ status: "pending", friendship: inserted[0] })
 })
 
-// POST /friends/accept { userId }  (userId = celui qui a envoyé)
+// POST /friends/accept { userId }
 router.post("/accept", authMiddleware, async (req: Request, res: Response): Promise<void> => {
   const meId = req.user!.id
   const { userId } = req.body ?? {}
@@ -178,6 +189,23 @@ router.post("/reject", authMiddleware, async (req: Request, res: Response): Prom
   }
   
   res.json({ status: "rejected", friendship: updated[0] })
+})
+
+// DELETE /friends/:userId
+router.delete("/:userId", authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const meId = req.user!.id
+  const userId = req.params.userId as string  // ← cast ici
+  
+  await db
+    .delete(friendships)
+    .where(
+      or(
+        and(eq(friendships.requesterId, meId), eq(friendships.addresseeId, userId)),
+        and(eq(friendships.requesterId, userId), eq(friendships.addresseeId, meId))
+      )
+    )
+
+  res.json({ message: "Relation supprimée" })
 })
 
 export default router
