@@ -6,6 +6,7 @@ import { OmdbImportPanel } from "../components/films/OmdbImportPanel"
 import { HeroFeature } from "../components/films/HeroFeature"
 import { MovieRow } from "../components/films/MovieRow"
 import { CategoryPills } from "../components/films/CategoryPills"
+import type { Film, Category } from "../types"
 
 export function Films() {
   const [query, setQuery] = useState("")
@@ -14,7 +15,11 @@ export function Films() {
   const { data: categories = [], isLoading: loadingCategories } = useCategories()
   const { data: films, isLoading, error } = useFilms(query, category, "")
 
-  const list = useMemo(() => (Array.isArray(films) ? films : []), [films])
+  const list = useMemo<Film[]>(
+    () => (Array.isArray(films) ? (films as Film[]) : []),
+    [films]
+  )
+
   const isBusy = isLoading || loadingCategories
 
   const hasNoResults =
@@ -27,20 +32,33 @@ export function Films() {
 
   const featuredFilm = useMemo(() => {
     if (list.length === 0) return undefined
-    return list.find((f) => f.posterUrl) ?? list[0]
+    // posterUrl peut être null -> check safe
+    return (
+      list.find((f) => typeof f.posterUrl === "string" && f.posterUrl.trim() !== "") ??
+      list[0]
+    )
   }, [list])
 
-  // Regroupe les films par catégorie
-  const filmsByCategory = useMemo(() => {
-    if (!Array.isArray(films)) return {}
-    const map = {} as Record<string, typeof list>
-    categories.forEach(cat => {
-      map[cat.name] = films.filter(f => f.categories?.includes(cat.name))
-    })
-    return map
-  }, [films, categories])
+  // Regroupe les films par catégorie (typé)
+  const filmsByCategory = useMemo<Record<string, Film[]>>(() => {
+    const map: Record<string, Film[]> = {}
+    const cats = categories as Category[]
 
-  const showHero = !isBusy && !error && !!featuredFilm && query.trim() === "" && category === ""
+    // init (optionnel)
+    for (const c of cats) map[c.name] = []
+
+    for (const f of list) {
+      for (const c of f.categories ?? []) {
+        if (!map[c]) map[c] = []
+        map[c].push(f)
+      }
+    }
+
+    return map
+  }, [list, categories])
+
+  const showHero =
+    !isBusy && !error && !!featuredFilm && query.trim() === "" && category === ""
 
   return (
     <main className="min-h-screen bg-[#050B1C] pb-24">
@@ -65,7 +83,7 @@ export function Films() {
       {/* Hero */}
       {showHero && featuredFilm && <HeroFeature film={featuredFilm} />}
 
-      {/* Search (sticky for better UX) */}
+      {/* Search */}
       <div
         className={[
           "mx-auto w-full max-w-7xl px-6 md:px-12",
@@ -83,10 +101,8 @@ export function Films() {
         </div>
       </div>
 
-      {/* Content */}
       {!isBusy && !error && (
         <>
-          {/* Category pills */}
           {!isCatalogEmpty && (
             <CategoryPills
               categories={categories}
@@ -152,23 +168,17 @@ export function Films() {
             </section>
           )}
 
-          {/* Affichage dynamique par catégorie */}
+          {/* Rows */}
           {!hasNoResults && !isCatalogEmpty && list.length > 0 && (
             <section className="mt-8 space-y-8">
-              {/* Si recherche ou catégorie sélectionnée, affiche les résultats filtrés */}
               {(query.trim() !== "" || category !== "") ? (
                 <MovieRow title="Résultats de recherche" films={list} />
               ) : (
-                // Sinon, affiche un MovieRow pour chaque catégorie avec des films
-                categories.map(cat => (
-                  filmsByCategory[cat.name] && filmsByCategory[cat.name].length > 0 && (
-                    <MovieRow
-                      key={cat.id}
-                      title={cat.name}
-                      films={filmsByCategory[cat.name]}
-                    />
-                  )
-                ))
+                (categories as Category[]).map((cat) => {
+                  const row = filmsByCategory[cat.name] ?? []
+                  if (row.length === 0) return null
+                  return <MovieRow key={cat.id} title={cat.name} films={row} />
+                })
               )}
             </section>
           )}
