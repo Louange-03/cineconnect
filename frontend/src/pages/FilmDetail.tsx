@@ -1,4 +1,3 @@
-// frontend/src/pages/FilmDetail.tsx
 import React, { useMemo } from "react"
 import { useNavigate, useParams } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
@@ -37,7 +36,6 @@ async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> 
 }
 
 export function FilmDetail() {
-  // NOTE: 'from' must match the route path in router.ts -> "/film/$id"
   const { id } = useParams({ from: "/film/$id" })
   const navigate = useNavigate()
 
@@ -107,13 +105,12 @@ export function FilmDetail() {
         alert("Lien copié ✅")
       }
     } catch {
-      // ignore user cancel or errors
+      // ignore cancel/errors
     }
   }
 
   return (
     <main className="relative min-h-[85vh] w-full overflow-hidden bg-[#050B1C] px-4 pb-20 pt-10">
-      {/* Background blurred poster for ambiance */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-0 top-0 z-0 h-[55vh] w-full opacity-20 blur-[110px]"
@@ -129,10 +126,14 @@ export function FilmDetail() {
       />
 
       <div className="relative z-10 mx-auto max-w-6xl">
-        {/* Back (client-side navigate to /films to avoid Link typing issues) */}
         <div className="mb-8">
           <button
-            onClick={() => navigate({ to: "/films", search: { q: "", category: "", type: "all", sort: "" } })}
+            onClick={() =>
+              navigate({
+                to: "/films",
+                search: { q: "", category: "", type: "all", sort: "" },
+              })
+            }
             className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-gray-400 hover:bg-white/10 hover:text-white transition-colors"
             aria-label="Retour au catalogue"
           >
@@ -145,16 +146,18 @@ export function FilmDetail() {
               className="h-5 w-5"
               aria-hidden="true"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+              />
             </svg>
             Retour au catalogue
           </button>
         </div>
 
-        {/* HERO */}
         <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a1128]/80 shadow-2xl backdrop-blur-xl">
           <div className="grid gap-0 md:grid-cols-[360px_1fr]">
-            {/* Poster */}
             <div className="relative h-full">
               <div className="aspect-[2/3] overflow-hidden p-4 pb-0 md:aspect-auto md:h-full md:p-6 md:pb-6">
                 <img
@@ -166,7 +169,6 @@ export function FilmDetail() {
               </div>
             </div>
 
-            {/* Content */}
             <div className="relative flex flex-col justify-center p-6 md:p-10 md:pl-6">
               <h1 className="mb-4 text-4xl font-black tracking-tight text-white md:text-6xl">
                 {film.title}
@@ -175,29 +177,45 @@ export function FilmDetail() {
               <div className="mb-6 flex flex-wrap items-center gap-4 font-medium text-gray-300">
                 {film.year && (
                   <span className="flex items-center gap-1.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5 text-[#1D6CE0]" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="h-5 w-5 text-[#1D6CE0]"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
+                      />
                     </svg>
                     {film.year}
                   </span>
                 )}
 
                 {film.createdAt && (
-                  <span className="border-l border-white/20 pl-4 text-sm">Ajouté récemment au catalogue</span>
+                  <span className="border-l border-white/20 pl-4 text-sm">
+                    Ajouté récemment au catalogue
+                  </span>
                 )}
               </div>
 
               {film.categories?.length ? (
                 <div className="mb-8 flex flex-wrap gap-2">
                   {film.categories.map((c) => (
-                    <span key={c} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-[#FFC107]">
+                    <span
+                      key={c}
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-[#FFC107]"
+                    >
                       {c}
                     </span>
                   ))}
                 </div>
               ) : null}
 
-              {/* Actions */}
               <div className="mb-10 flex flex-wrap gap-4">
                 <button
                   type="button"
@@ -216,7 +234,6 @@ export function FilmDetail() {
                 </button>
               </div>
 
-              {/* Synopsis */}
               <div>
                 <h2 className="mb-3 text-xl font-bold text-white">Synopsis</h2>
                 <p className="max-w-2xl text-lg font-light leading-relaxed text-gray-400">
@@ -227,13 +244,16 @@ export function FilmDetail() {
           </div>
         </section>
 
-        {/* REVIEWS */}
         <div className="mt-16 grid gap-12 lg:grid-cols-[1fr_380px]">
           <section>
             <div className="mb-8 flex items-center justify-between border-b border-white/10 pb-4">
               <h2 className="text-3xl font-bold text-white">Suggestions et Avis</h2>
               {loadingReviews ? (
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-[#FFC107]" aria-label="Chargement des avis" role="status" />
+                <div
+                  className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-[#FFC107]"
+                  aria-label="Chargement des avis"
+                  role="status"
+                />
               ) : (
                 <span className="rounded-full border border-[#FFC107]/20 bg-[#FFC107]/10 px-3 py-1 text-sm font-bold text-[#FFC107]">
                   {reviews?.length || 0} avis
@@ -247,7 +267,9 @@ export function FilmDetail() {
               ) : (
                 <div className="rounded-3xl border border-white/10 border-dashed bg-white/5 p-12 text-center">
                   <span className="mb-4 block text-5xl opacity-50">⭐</span>
-                  <p className="text-lg text-gray-400">Soyez le premier à partager votre avis sur ce film !</p>
+                  <p className="text-lg text-gray-400">
+                    Soyez le premier à partager votre avis sur ce film !
+                  </p>
                 </div>
               )}
             </div>
@@ -255,7 +277,9 @@ export function FilmDetail() {
 
           <aside className="sticky top-28 h-fit rounded-3xl border border-white/10 bg-[#0a1128]/80 p-8 shadow-xl backdrop-blur-xl">
             <h3 className="mb-2 text-2xl font-bold text-white">Donnez votre avis</h3>
-            <p className="mb-8 text-gray-400">Partagez votre critique avec la communauté CinéConnect.</p>
+            <p className="mb-8 text-gray-400">
+              Partagez votre critique avec la communauté CinéConnect.
+            </p>
             <ReviewForm filmId={id} />
           </aside>
         </div>
