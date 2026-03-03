@@ -32,7 +32,15 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       setSuccess("Connecté avec succès !")
       onSuccess?.()
     } catch (err: any) {
-      setError(err?.message || "Erreur lors de la connexion.")
+      if (err?.message?.includes("Identifiants incorrects")) {
+        setError("Adresse e-mail ou mot de passe incorrect.")
+      } else if (err?.message?.includes("Données invalides")) {
+        setError("Veuillez remplir tous les champs correctement.")
+      } else if (err?.message?.includes("Erreur serveur")) {
+        setError("Erreur serveur, veuillez réessayer plus tard.")
+      } else {
+        setError(err?.message || "Erreur lors de la connexion.")
+      }
     } finally {
       setLoading(false)
     }
@@ -98,16 +106,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         disabled={!canSubmit}
         className="group relative w-full overflow-hidden rounded-xl bg-[#1D6CE0] py-3 font-bold text-white shadow-[0_0_20px_rgba(29,108,224,0.3)] transition-all hover:-translate-y-0.5 hover:bg-[#3EA6FF] hover:shadow-[0_0_25px_rgba(29,108,224,0.5)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <div className="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-300 ease-out group-hover:translate-y-0" />
-        <span className="relative flex items-center justify-center gap-2">
-          {loading ? (
-            <>
-              <Spinner /> Connexion…
-            </>
-          ) : (
-            "Se connecter"
-          )}
-        </span>
+        {loading ? <Spinner /> : "Se connecter"}
       </button>
     </form>
   )

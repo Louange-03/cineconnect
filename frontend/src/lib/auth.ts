@@ -42,7 +42,7 @@ export function logout() {
 
 /** Auth API */
 export async function register({ email, username, password }: { email: string; username: string; password: string }) {
-  const data = await apiClient.post<{ token: string; user: User }>('/auth/register', {
+  const data = await apiClient.post<{ token: string; user: User }>('/api/auth/register', {
     email,
     username,
     password,
@@ -55,7 +55,7 @@ export async function register({ email, username, password }: { email: string; u
 }
 
 export async function login({ email, password }: { email: string; password: string }) {
-  const data = await apiClient.post<{ token: string; user: User }>('/auth/login', {
+  const data = await apiClient.post<{ token: string; user: User }>('/api/auth/login', {
     email,
     password,
   })
@@ -70,7 +70,7 @@ export async function fetchMe() {
   const token = getToken()
   if (!token) throw new Error('Non connecté')
 
-  const data = await apiClient.get<{ user: User }>('/auth/me')
+  const data = await apiClient.get<{ user: User }>('/api/auth/me')
 
   if (data?.user) setUser(data.user)
   return data?.user

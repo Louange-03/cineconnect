@@ -37,7 +37,15 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       setSuccess("Inscription réussie !")
       onSuccess?.()
     } catch (err: any) {
-      setError(err?.message || "Erreur lors de l'inscription.")
+      if (err?.message?.includes("déjà utilisé")) {
+        setError("Email ou nom d'utilisateur déjà utilisé.")
+      } else if (err?.message?.includes("Données invalides")) {
+        setError("Veuillez remplir tous les champs correctement.")
+      } else if (err?.message?.includes("Erreur serveur")) {
+        setError("Erreur serveur, veuillez réessayer plus tard.")
+      } else {
+        setError(err?.message || "Erreur lors de l'inscription.")
+      }
     } finally {
       setLoading(false)
     }
@@ -62,19 +70,17 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
       <Field label="Nom d'utilisateur">
         <Input
+          type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="cinephile99"
+          placeholder="Votre pseudo"
           autoComplete="username"
           leftIcon={
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6.75a3 3 0 11-6 0 3 3 0 016 0zm-12 12a9 9 0 1118 0H3.75z" />
             </svg>
           }
         />
-        <div className="ml-1 text-xs text-white/45">
-          Minimum <span className="font-semibold text-white/60">3 caractères</span>.
-        </div>
       </Field>
 
       <Field label="Mot de passe">
@@ -91,9 +97,6 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           }
           rightSlot={<EyeButton pressed={showPwd} onClick={() => setShowPwd((v) => !v)} />}
         />
-        <div className="ml-1 text-xs text-white/45">
-          Minimum <span className="font-semibold text-white/60">6 caractères</span>.
-        </div>
       </Field>
 
       <div className="min-h-[24px]">
@@ -104,18 +107,9 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       <button
         type="submit"
         disabled={!canSubmit}
-        className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] py-3 font-bold text-white shadow-[0_0_20px_rgba(29,108,224,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_0_25px_rgba(29,108,224,0.5)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="group relative w-full overflow-hidden rounded-xl bg-[#1D6CE0] py-3 font-bold text-white shadow-[0_0_20px_rgba(29,108,224,0.3)] transition-all hover:-translate-y-0.5 hover:bg-[#3EA6FF] hover:shadow-[0_0_25px_rgba(29,108,224,0.5)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <div className="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-300 ease-out group-hover:translate-y-0" />
-        <span className="relative flex items-center justify-center gap-2">
-          {loading ? (
-            <>
-              <Spinner /> Création…
-            </>
-          ) : (
-            "Créer mon compte"
-          )}
-        </span>
+        {loading ? <Spinner /> : "S'inscrire"}
       </button>
     </form>
   )

@@ -15,7 +15,6 @@ export function Films() {
   const { data: films, isLoading, error } = useFilms(query, category, "")
 
   const list = useMemo(() => (Array.isArray(films) ? films : []), [films])
-
   const isBusy = isLoading || loadingCategories
 
   const hasNoResults =
@@ -31,14 +30,15 @@ export function Films() {
     return list.find((f) => f.posterUrl) ?? list[0]
   }, [list])
 
-  const rows = useMemo(() => {
-    if (list.length === 0) return { mostViewed: [], mostPopular: [], newlyAdded: [] }
-    return {
-      mostViewed: list.slice(0, 8),
-      mostPopular: list.slice(8, 16),
-      newlyAdded: list.slice(16, 24),
-    }
-  }, [list])
+  // Regroupe les films par catégorie
+  const filmsByCategory = useMemo(() => {
+    if (!Array.isArray(films)) return {}
+    const map = {} as Record<string, typeof list>
+    categories.forEach(cat => {
+      map[cat.name] = films.filter(f => f.categories?.includes(cat.name))
+    })
+    return map
+  }, [films, categories])
 
   const showHero = !isBusy && !error && !!featuredFilm && query.trim() === "" && category === ""
 
@@ -152,21 +152,23 @@ export function Films() {
             </section>
           )}
 
-          {/* Rows */}
+          {/* Affichage dynamique par catégorie */}
           {!hasNoResults && !isCatalogEmpty && list.length > 0 && (
-            <section className="mt-8 space-y-4">
-              {query.trim() !== "" || category !== "" ? (
+            <section className="mt-8 space-y-8">
+              {/* Si recherche ou catégorie sélectionnée, affiche les résultats filtrés */}
+              {(query.trim() !== "" || category !== "") ? (
                 <MovieRow title="Résultats de recherche" films={list} />
               ) : (
-                <>
-                  <MovieRow title="Les plus vus" films={rows.mostViewed} showAllLink="/films?sort=viewed" />
-                  {rows.mostPopular.length > 0 && (
-                    <MovieRow title="Tendances actuelles" films={rows.mostPopular} showAllLink="/films?sort=popular" />
-                  )}
-                  {rows.newlyAdded.length > 0 && (
-                    <MovieRow title="Nouveautés" films={rows.newlyAdded} showAllLink="/films?sort=recent" />
-                  )}
-                </>
+                // Sinon, affiche un MovieRow pour chaque catégorie avec des films
+                categories.map(cat => (
+                  filmsByCategory[cat.name] && filmsByCategory[cat.name].length > 0 && (
+                    <MovieRow
+                      key={cat.id}
+                      title={cat.name}
+                      films={filmsByCategory[cat.name]}
+                    />
+                  )
+                ))
               )}
             </section>
           )}
