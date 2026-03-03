@@ -6,12 +6,24 @@ interface FilmCardProps {
   film: Film
 }
 
-export function FilmCard({ film }: FilmCardProps) {
-  const poster =
-    film.posterUrl ||
-    "https://via.placeholder.com/600x900/0b1020/ffffff?text=No+Image"
+const FALLBACK_POSTER =
+  "https://via.placeholder.com/600x900/0b1020/ffffff?text=No+Image"
 
+function safePosterUrl(posterUrl?: string | null) {
+  const p = (posterUrl ?? "").trim()
+  if (!p) return FALLBACK_POSTER
+  if (p.toLowerCase() === "n/a") return FALLBACK_POSTER
+  return p
+}
+
+export function FilmCard({ film }: FilmCardProps) {
+  const poster = safePosterUrl(film.posterUrl)
   const categories = film.categories?.slice(0, 2) ?? []
+
+  const yearLabel =
+    film.year === null || film.year === undefined || String(film.year).trim() === ""
+      ? "—"
+      : String(film.year)
 
   return (
     <Link
@@ -27,6 +39,9 @@ export function FilmCard({ film }: FilmCardProps) {
           alt={film.title}
           className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.08]"
           loading="lazy"
+          onError={(e) => {
+            ;(e.currentTarget as HTMLImageElement).src = FALLBACK_POSTER
+          }}
         />
 
         {/* Cinematic overlays */}
@@ -36,7 +51,7 @@ export function FilmCard({ film }: FilmCardProps) {
         {/* Top meta (year + categories) */}
         <div className="absolute left-3 right-3 top-3 flex items-center justify-between gap-2">
           <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[11px] font-semibold text-white/90 backdrop-blur-md">
-            {film.year || "—"}
+            {yearLabel}
           </span>
 
           {categories.length > 0 && (
