@@ -13,3 +13,7 @@ body {
   background-color: #00072d;
   color: #a6e1fa;
 }
+
+.min-h-screen{
+  margin-top: 100px ;
+}

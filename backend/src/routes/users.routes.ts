@@ -2,7 +2,8 @@ import { Router, type Request, type Response } from "express"
 import { db } from "../db/client.js"
 import { users } from "../db/schema.js"
 import { authMiddleware } from "../middlewares/auth.js"
-import { ilike, and, sql } from "drizzle-orm"
+import { ilike, and, sql, eq } from "drizzle-orm"
+import bcrypt from "bcrypt"
 
 const router = Router()
 
@@ -50,5 +51,46 @@ router.get("/search", authMiddleware, async (req: Request, res: Response): Promi
   res.json({ users: rows })
 })
 
+// PATCH /users/me -> modifier email et mot de passe
+router.patch("/me", authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const meId = req.user!.id
+  const { email, password } = req.body ?? {}
+
+  if (!email && !password) {
+    res.status(400).json({ message: "Rien à mettre à jour" })
+    return
+  }
+
+  const updates: Partial<{ email: string; passwordHash: string }> = {}
+
+  if (email) {
+    const trimmed = email.toString().trim()
+    if (!trimmed.includes("@")) {
+      res.status(400).json({ message: "Email invalide" })
+      return
+    }
+    updates.email = trimmed
+  }
+
+  if (password) {
+    if (password.length < 6) {
+      res.status(400).json({ message: "Le mot de passe doit faire au moins 6 caractères" })
+      return
+    }
+    updates.passwordHash = await bcrypt.hash(password, 10)
+  }
+
+  const [updated] = await db
+    .update(users)
+    .set(updates)
+    .where(eq(users.id, meId))
+    .returning({
+      id: users.id,
+      email: users.email,
+      username: users.username,
+    })
+
+  res.json({ user: updated })
+})
+
 export default router
-//

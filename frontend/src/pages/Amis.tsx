@@ -128,7 +128,7 @@ export function Amis(): JSX.Element {
           to="/utilisateurs"
           className="rounded border px-3 py-2 text-sm hover:bg-slate-50"
         >
-          Trouver des utilisateurs
+          A la recherche de copain
         </Link>
       </div>
 

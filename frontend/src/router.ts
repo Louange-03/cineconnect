@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-router"
 
 import { AppLayout } from "./components/layout/AppLayout"
-import { isAuthenticated } from "./lib/auth.ts"
+import { isAuthenticated } from "./lib/auth"
 
 import { Home } from "./pages/Home"
 import { Films } from "./pages/Films"
@@ -17,6 +17,7 @@ import { Profil } from "./pages/Profil"
 import { Discussion } from "./pages/Discussion"
 import { Amis } from "./pages/Amis"
 import { Utilisateurs } from "./pages/Utilisateurs"
+import { Settings } from "./pages/Settings"
 
 const rootRoute = createRootRoute({
   component: AppLayout,
@@ -63,6 +64,15 @@ const profilRoute = createRoute({
   component: Profil,
 })
 
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/settings",
+  beforeLoad: () => {
+    if (!isAuthenticated()) throw redirect({ to: "/login" })
+  },
+  component: Settings,
+})
+
 const discussionRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/discussion",
@@ -101,6 +111,7 @@ const routeTree = rootRoute.addChildren([
   registerRoute,
   profilRoute,
   discussionRoute,
+  settingsRoute,
 ])
 
 export const router = createRouter({ routeTree })
