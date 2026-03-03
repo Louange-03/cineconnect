@@ -82,3 +82,19 @@ export interface ApiRequestOptions extends RequestInit {
   token?: string
   auth?: boolean
 }
+
+export interface ChatConversation {
+  id: string          
+  name: string        
+  lastMessage: string
+  unread: number      
+  status?: string     
+}
+export interface ChatMessage {
+  id: string
+  conversationId: string
+  senderId: number
+  content: string
+  fromMe?: boolean     
+  createdAt: string
+}

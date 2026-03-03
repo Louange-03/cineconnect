@@ -1,18 +1,20 @@
-import jwt from "jsonwebtoken"
 import "dotenv/config"
 import express, { type Request, type Response } from "express"
 import cors from "cors"
+import jwt from "jsonwebtoken"
 import { createServer } from "http"
 import { Server } from "socket.io"
-import conversationsRoutes from "./routes/conversations.routes.js"
+
 import { pool } from "./db/client.js"
 
 import authRoutes from "./routes/auth.routes.js"
 import usersRoutes from "./routes/users.routes.js"
 import friendsRoutes from "./routes/friends.routes.js"
 import filmsRoutes from "./routes/films.routes.js"
+import conversationsRoutes from "./routes/conversations.routes.js"
+
 const app = express()
-app.use("/conversations", conversationsRoutes)
+
 const FRONTEND_ORIGIN =
   process.env.FRONTEND_URL || "http://localhost:5173"
 
@@ -25,12 +27,17 @@ app.use(
 
 app.use(express.json())
 
+app.use("/auth", authRoutes)
+app.use("/users", usersRoutes)
+app.use("/friends", friendsRoutes)
+app.use("/films", filmsRoutes)
+app.use("/conversations", conversationsRoutes)
+
 app.get("/health", async (req: Request, res: Response): Promise<void> => {
   try {
     const r = await pool.query("SELECT 1 as ok")
     res.json({ ok: true, db: r.rows[0].ok })
   } catch (e) {
-    console.error("HEALTH ERROR:", e)
     const error = e as Error
     res.status(500).json({
       ok: false,
@@ -38,11 +45,6 @@ app.get("/health", async (req: Request, res: Response): Promise<void> => {
     })
   }
 })
-
-app.use("/auth", authRoutes)
-app.use("/users", usersRoutes)
-app.use("/friends", friendsRoutes)
-app.use("/films", filmsRoutes)
 
 app.get("/", (req: Request, res: Response): void => {
   res.json({ ok: true, name: "Cineconnect API" })
@@ -57,14 +59,8 @@ const io = new Server(httpServer, {
   },
 })
 
-/* =========================
-   ONLINE USERS MAP (UUID)
-========================= */
 const onlineUsers = new Map<string, Set<string>>()
 
-/* =========================
-   SOCKET AUTH MIDDLEWARE
-========================= */
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token
 
@@ -80,28 +76,21 @@ io.use((socket, next) => {
 
     socket.data.user = decoded
     next()
-  } catch (err) {
+  } catch {
     next(new Error("Unauthorized"))
   }
 })
 
-/* =========================
-   SOCKET CONNECTION
-========================= */
 io.on("connection", async (socket) => {
   const userId = socket.data.user?.id as string
 
-  console.log("User connected:", userId)
-
-  /* === ONLINE STATUS === */
   if (!onlineUsers.has(userId)) {
     onlineUsers.set(userId, new Set())
   }
-  onlineUsers.get(userId)!.add(socket.id)
 
+  onlineUsers.get(userId)!.add(socket.id)
   io.emit("user-online", { userId })
 
-  /* === JOIN CONVERSATION ROOMS === */
   try {
     const conversations = await pool.query(
       `
@@ -115,11 +104,8 @@ io.on("connection", async (socket) => {
     conversations.rows.forEach((row) => {
       socket.join(`conversation-${row.conversation_id}`)
     })
-  } catch (error) {
-    console.error("Error joining rooms:", error)
-  }
+  } catch {}
 
-  /* === SEND MESSAGE REALTIME === */
   socket.on("send-message", async ({ conversationId, text }) => {
     try {
       const memberCheck = await pool.query(
@@ -130,9 +116,7 @@ io.on("connection", async (socket) => {
         [conversationId, userId]
       )
 
-      if (memberCheck.rowCount === 0) {
-        return
-      }
+      if (memberCheck.rowCount === 0) return
 
       const result = await pool.query(
         `
@@ -149,12 +133,9 @@ io.on("connection", async (socket) => {
         "new-message",
         message
       )
-    } catch (error) {
-      console.error("Send message error:", error)
-    }
+    } catch {}
   })
 
-  /* === DISCONNECT === */
   socket.on("disconnect", async () => {
     const sockets = onlineUsers.get(userId)
     if (!sockets) return
@@ -169,18 +150,14 @@ io.on("connection", async (socket) => {
           `UPDATE users SET last_seen = NOW() WHERE id = $1`,
           [userId]
         )
-      } catch (error) {
-        console.error("Last seen update error:", error)
-      }
+      } catch {}
 
       io.emit("user-offline", { userId })
     }
-
-    console.log("User disconnected:", userId)
   })
 })
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 3001
 
 httpServer.listen(PORT, () => {
   console.log(`Server + Socket running on port ${PORT}`)

@@ -1,23 +1,18 @@
-import { Server } from "socket.io"
 import jwt from "jsonwebtoken"
-import { db } from "./db/client"
-import { users } from "./db/schema"
-import { eq } from "drizzle-orm"
+import { pool } from "./db/client.js"
+import type { Server } from "socket.io"
 
-interface JwtPayload {
-  id: number
-}
-
-const onlineUsers = new Map<number, Set<string>>()
-
-export const initSocket = (io: Server) => {
-
+export function initSocket(io: Server) {
   io.use((socket, next) => {
-    const token = socket.handshake.auth.token
+    const token = socket.handshake.auth?.token
     if (!token) return next(new Error("Unauthorized"))
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET as string
+      ) as { id: string }
+
       socket.data.userId = decoded.id
       next()
     } catch {
@@ -26,32 +21,31 @@ export const initSocket = (io: Server) => {
   })
 
   io.on("connection", async (socket) => {
-    const userId = socket.data.userId as number
+    const userId = socket.data.userId
 
-    // Ajouter socket
-    if (!onlineUsers.has(userId)) {
-      onlineUsers.set(userId, new Set())
-    }
-    onlineUsers.get(userId)!.add(socket.id)
+    const conversations = await pool.query(
+      `SELECT conversation_id FROM conversation_members WHERE user_id = $1`,
+      [userId]
+    )
 
-    io.emit("user-online", { userId })
+    conversations.rows.forEach((row) => {
+      socket.join(`conversation-${row.conversation_id}`)
+    })
 
-    socket.on("disconnect", async () => {
-      const sockets = onlineUsers.get(userId)
-      if (!sockets) return
+    socket.on("send-message", async ({ conversationId, text }) => {
+      const result = await pool.query(
+        `
+        INSERT INTO messages (conversation_id, sender_id, text)
+        VALUES ($1, $2, $3)
+        RETURNING *
+        `,
+        [conversationId, userId, text]
+      )
 
-      sockets.delete(socket.id)
-
-      if (sockets.size === 0) {
-        onlineUsers.delete(userId)
-
-        await db
-          .update(users)
-          .set({ lastSeen: new Date() })
-          .where(eq(users.id, userId))
-
-        io.emit("user-offline", { userId })
-      }
+      io.to(`conversation-${conversationId}`).emit(
+        "new-message",
+        result.rows[0]
+      )
     })
   })
 }
