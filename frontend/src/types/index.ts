@@ -2,7 +2,7 @@ export interface User {
   id: string
   email: string
   username: string
-  createdAt?: string
+  createdAt?: string | null
 }
 
 export interface AuthResponse {
@@ -82,23 +82,23 @@ export interface OMDBMovieDetail extends OMDBMovie {
 export interface Film {
   id: string
   title: string
-  year?: string
-  posterUrl?: string
-  synopsis?: string
-  metadata?: string
-  createdAt?: string
-  updatedAt?: string
-  categories?: string[]
+  year?: string | null
+  posterUrl?: string | null
+  synopsis?: string | null
+  metadata?: string | null
+  createdAt?: string | null
+  updatedAt?: string | null
+  categories?: string[] | null
 }
 
 export interface Category {
   id: string
   name: string
-  createdAt?: string
-  updatedAt?: string
+  createdAt?: string | null
+  updatedAt?: string | null
 }
 
 export interface ApiRequestOptions extends RequestInit {
-  token?: string
-  auth?: boolean
+  token?: string | null
+  auth?: boolean | null
 }
