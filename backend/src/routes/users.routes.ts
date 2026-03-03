@@ -1,13 +1,19 @@
 import { Router } from "express"
-import { authMiddleware } from "../middlewares/auth.js"
-import { getUsers, searchUsers } from "../controllers/users.controller.js"
+import { db } from "../db"
+import { users } from "../db/schema"
 
-const router = Router()
+export const usersRoutes = Router()
 
-// GET /users?limit=20
-router.get("/", authMiddleware, getUsers)
+usersRoutes.get("/", async (_req, res) => {
+    try {
+        const list = await db
+            .select({ id: users.id, email: users.email, username: users.username, createdAt: users.createdAt })
+            .from(users)
+            .limit(200)
 
-// GET /users/search?q=abc
-router.get("/search", authMiddleware, searchUsers)
-
-export default router
+        res.json({ users: list })
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ message: "Erreur récupération utilisateurs" })
+    }
+})

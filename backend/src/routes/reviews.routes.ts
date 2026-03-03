@@ -1,26 +1,53 @@
 import { Router } from "express"
-import { authMiddleware } from "../middlewares/auth.js"
-import {
-  createReview,
-  getReview,
-  getReviewsByFilm,
-  getReviewsByUser,
-  updateReview,
-  deleteReview,
-} from "../controllers/reviews.controller.js"
+import { db } from "../db"
+import { reviews } from "../db/schema"
+import { eq, desc } from "drizzle-orm"
 
-const router = Router()
+export const reviewsRoutes = Router()
 
-// ✅ Public read (affichage avis)
-router.get("/film/:filmId", getReviewsByFilm)
+// GET /api/reviews/film/:filmId
+reviewsRoutes.get("/film/:filmId", async (req, res) => {
+  try {
+    const { filmId } = req.params
+    const rows = await db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.filmId, filmId))
+      .orderBy(desc(reviews.createdAt))
+      .limit(200)
 
-// (Optionnel) public read by user
-router.get("/user/:userId", getReviewsByUser)
+    res.json({ reviews: rows })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: "Erreur récupération avis" })
+  }
+})
 
-// ✅ Protected (créer/modifier/supprimer)
-router.post("/", authMiddleware, createReview)
-router.get("/:id", authMiddleware, getReview)
-router.patch("/:id", authMiddleware, updateReview)
-router.delete("/:id", authMiddleware, deleteReview)
+// POST /api/reviews
+reviewsRoutes.post("/", async (req, res) => {
+  try {
+    const { userId, filmId, rating, comment } = req.body ?? {}
+    if (!userId || !filmId || typeof rating !== "number") {
+      return res.status(400).json({ message: "userId, filmId, rating requis" })
+    }
 
-export default router
+    const inserted = await db
+      .insert(reviews)
+      .values({
+        userId,
+        filmId,
+        rating,
+        comment: comment ? String(comment) : null,
+      })
+      .returning()
+
+    res.json({ review: inserted[0] })
+  } catch (err: any) {
+    const msg = String(err?.message || err)
+    if (msg.toLowerCase().includes("unique")) {
+      return res.status(409).json({ message: "Vous avez déjà noté ce film" })
+    }
+    console.error(err)
+    res.status(500).json({ message: "Erreur ajout avis" })
+  }
+})

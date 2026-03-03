@@ -1,25 +1,74 @@
 import { Router } from "express"
-import { authMiddleware } from "../middlewares/auth.js"
-import { getFriends, getPendingRequests, sendFriendRequest, respondFriendRequest, removeFriend } from "../controllers/friends.controller.js"
+import { db } from "../db"
+import { friendships } from "../db/schema"
+import { eq, and } from "drizzle-orm"
 
-const router = Router()
+export const friendsRoutes = Router()
 
-// GET /friends -> amis (accepted)
-router.get("/", authMiddleware, getFriends)
+// Liste (simple) : toutes les demandes d’un user (à sécuriser plus tard avec JWT)
+friendsRoutes.get("/", async (req, res) => {
+    try {
+        const userId = typeof req.query.userId === "string" ? req.query.userId : ""
+        if (!userId) return res.status(400).json({ message: "userId requis" })
 
-// GET /friends/requests -> demandes reçues (pending)
-router.get("/requests", authMiddleware, getPendingRequests)
+        const rows = await db
+            .select()
+            .from(friendships)
+            .where(eq(friendships.requesterId, userId))
+            .limit(200)
 
-// POST /friends/request { userId }
-router.post("/request", authMiddleware, sendFriendRequest)
+        res.json({ friendships: rows })
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ message: "Erreur récupération amis" })
+    }
+})
 
-// POST /friends/accept { id }
-router.post("/accept/:id", authMiddleware, respondFriendRequest)
+// Envoyer une demande
+friendsRoutes.post("/request", async (req, res) => {
+    try {
+        const { requesterId, addresseeId } = req.body ?? {}
+        if (!requesterId || !addresseeId) {
+            return res.status(400).json({ message: "requesterId et addresseeId requis" })
+        }
 
-// POST /friends/reject { id }
-router.post("/reject/:id", authMiddleware, respondFriendRequest)
+        const inserted = await db
+            .insert(friendships)
+            .values({
+                requesterId,
+                addresseeId,
+                status: "pending",
+            })
+            .returning()
 
-// DELETE /friends/:id
-router.delete("/:id", authMiddleware, removeFriend)
+        res.json({ friendship: inserted[0] })
+    } catch (err: any) {
+        const msg = String(err?.message || err)
+        if (msg.toLowerCase().includes("unique")) {
+            return res.status(409).json({ message: "Demande déjà envoyée" })
+        }
+        console.error(err)
+        res.status(500).json({ message: "Erreur demande ami" })
+    }
+})
 
-export default router
+// Accepter une demande (simple)
+friendsRoutes.post("/accept", async (req, res) => {
+    try {
+        const { requesterId, addresseeId } = req.body ?? {}
+        if (!requesterId || !addresseeId) {
+            return res.status(400).json({ message: "requesterId et addresseeId requis" })
+        }
+
+        const updated = await db
+            .update(friendships)
+            .set({ status: "accepted" })
+            .where(and(eq(friendships.requesterId, requesterId), eq(friendships.addresseeId, addresseeId)))
+            .returning()
+
+        res.json({ friendship: updated[0] ?? null })
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ message: "Erreur acceptation" })
+    }
+})
