@@ -2,6 +2,7 @@ import { Router } from "express"
 import { db } from "../db"
 import { films, filmCategories, categories } from "../db/schema"
 import { eq, ilike, inArray, and, type SQL } from "drizzle-orm"
+import { getFilmById } from "../controllers/films.controller" // Ajouté
 
 export const filmsRoutes = Router()
 
@@ -28,11 +29,6 @@ filmsRoutes.get("/", async (req, res) => {
 
     if (q) {
       whereParts.push(ilike(films.title, `%${q}%`))
-    }
-
-    if (type !== "all") {
-      // films.type est un enum "movie" | "series"
-      whereParts.push(eq(films.type, type))
     }
 
     if (category) {
@@ -84,3 +80,5 @@ filmsRoutes.get("/categories", async (_req, res) => {
     res.status(500).json({ message: "Erreur récupération catégories" })
   }
 })
+
+filmsRoutes.get("/:id", getFilmById)

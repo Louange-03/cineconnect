@@ -177,11 +177,12 @@ export const importFilmFromOmdb = async (req: any, res: any): Promise<void> => {
     const inserted = await db
       .insert(films)
       .values({
-        title,
-        year,
-        posterUrl,
-        synopsis,
-        metadata: JSON.stringify({ ...data, imdbID }),
+        tmdbId: req.body.tmdbId || "", // Ajouté pour éviter l'erreur
+        title: req.body.title,
+        year: req.body.year,
+        posterUrl: req.body.posterUrl,
+        synopsis: req.body.synopsis,
+        metadata: req.body.metadata || "",
       })
       .returning()
 

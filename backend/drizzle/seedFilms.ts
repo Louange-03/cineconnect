@@ -1,58 +1,106 @@
-// Script de seed pour films et catégories
-// À compléter avec 50+ films et catégories
+// Script d'import massif de films et catégories depuis TMDB
+// Lance : npx ts-node backend/drizzle/seedFilms.ts
 
-import { db } from '../src/db/client'
-import { films, categories, filmCategories } from '../src/db/schema'
+import fetch from "node-fetch"
+import { db } from "../src/db/client"
+import { films, categories, filmCategories } from "../src/db/schema"
+import { eq } from "drizzle-orm"
 
-async function seed() {
-  // Exemples de catégories
-  const catData = [
-    { name: 'Action' },
-    { name: 'Comédie' },
-    { name: 'Drame' },
-    { name: 'Science-fiction' },
-    { name: 'Animation' },
-    { name: 'Horreur' },
-    { name: 'Documentaire' },
-    { name: 'Romance' },
-    { name: 'Aventure' },
-    { name: 'Thriller' }
-  ]
-  const cats = await Promise.all(catData.map(c => db.insert(categories).values(c).returning()))
+const TMDB_API_KEY = "97c5a6eca15af80051a0de91421bdcbd" // Clé TMDB fournie
+const BASE_URL = "https://api.themoviedb.org/3"
 
-  // Exemples de films (à compléter)
-  const filmData = [
-    {
-      tmdbId: '1',
-      title: 'Inception',
-      year: '2010',
-      posterUrl: 'https://image.tmdb.org/t/p/original/inception.jpg',
-      synopsis: 'Un voleur utilise la technologie pour infiltrer les rêves.',
-      metadata: '{}'
-    },
-    {
-      tmdbId: '2',
-      title: 'Le Roi Lion',
-      year: '1994',
-      posterUrl: 'https://image.tmdb.org/t/p/original/lionking.jpg',
-      synopsis: 'Un lionceau doit reprendre sa place dans la savane.',
-      metadata: '{}'
-    }
-    // ... ajouter 48+ films
-  ]
-  const filmsInserted = await Promise.all(filmData.map(f => db.insert(films).values(f).returning()))
-
-  // Exemple d'association film-catégorie
-  await db.insert(filmCategories).values({
-    filmId: filmsInserted[0][0].id,
-    categoryId: cats[3][0].id // Science-fiction
-  })
-  await db.insert(filmCategories).values({
-    filmId: filmsInserted[1][0].id,
-    categoryId: cats[4][0].id // Animation
-  })
-
-  console.log('Seed terminé')
+async function fetchPopularMovies(page = 1) {
+  const url = `${BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}&language=fr-FR&page=${page}`
+  const res = await fetch(url)
+  if (!res.ok) {
+    console.error("TMDB popular error", await res.text())
+    return []
+  }
+  try {
+    const data: any = await res.json()
+    return Array.isArray(data.results) ? data.results : []
+  } catch (e) {
+    console.error("TMDB popular parse error", e)
+    return []
+  }
 }
 
-seed().then(() => process.exit(0))
+async function fetchMovieDetails(tmdbId: number) {
+  const url = `${BASE_URL}/movie/${tmdbId}?api_key=${TMDB_API_KEY}&language=fr-FR`
+  const res = await fetch(url)
+  if (!res.ok) {
+    console.error("TMDB details error", tmdbId, await res.text())
+    return {}
+  }
+  try {
+    return await res.json() as any
+  } catch (e) {
+    console.error("TMDB details parse error", tmdbId, e)
+    return {}
+  }
+}
+
+const categoryCache = new Map<string, string>() // name -> id
+
+async function getOrCreateCategory(name: string) {
+  if (categoryCache.has(name)) return categoryCache.get(name)!
+  let existing = null
+  try {
+    existing = await db.select().from(categories).where(eq(categories.name, name)).limit(1)
+  } catch (e) {
+    console.error("DB select category error", name, e)
+  }
+  if (existing && existing[0]) {
+    categoryCache.set(name, existing[0].id)
+    return existing[0].id
+  }
+  let inserted = null
+  try {
+    inserted = await db.insert(categories).values({ name }).returning({ id: categories.id })
+  } catch (e) {
+    console.error("DB insert category error", name, e)
+    return null
+  }
+  const id = inserted?.[0]?.id
+  if (id) categoryCache.set(name, id)
+  return id
+}
+
+async function importMovies() {
+  let totalImported = 0
+  for (let page = 1; page <= 2; page++) { // Commence par 2 pages pour debug
+    const movies = await fetchPopularMovies(page)
+    console.log(`Page ${page}: ${movies.length} films trouvés`)
+    if (!movies.length) break
+    for (const m of movies) {
+      try {
+        const details = await fetchMovieDetails(m.id)
+        const filmRes = await db.insert(films).values({
+          tmdbId: String(m.id),
+          title: m.title,
+          year: m.release_date?.slice(0, 4),
+          posterUrl: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : null,
+          synopsis: m.overview,
+        }).onConflictDoNothing().returning({ id: films.id })
+        const filmId = filmRes[0]?.id
+        if (filmId && Array.isArray(details.genres)) {
+          for (const genre of details.genres) {
+            const catId = await getOrCreateCategory(genre.name)
+            if (catId) {
+              await db.insert(filmCategories).values({ filmId, categoryId: catId }).onConflictDoNothing()
+            }
+          }
+        }
+        totalImported++
+        console.log(`Film importé: ${m.title} (${m.id})`)
+      } catch (e) {
+        console.error("Erreur import film", m.title, m.id, e)
+      }
+    }
+    console.log(`Page ${page} importée (${totalImported} films au total)`)
+  }
+  console.log("Import terminé !")
+}
+
+importMovies()
+

@@ -6,12 +6,13 @@
     "moduleResolution": "Bundler",
     "strict": true,
     "skipLibCheck": true,
-    "noEmit": true,
+    "composite": true,
+    "noEmit": false,
     "types": ["node"],
 
     "allowJs": false,
     "checkJs": false
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "drizzle"]
+  "include": ["src/**/*", "drizzle/**/*"],
+  "exclude": ["node_modules"]
 }
