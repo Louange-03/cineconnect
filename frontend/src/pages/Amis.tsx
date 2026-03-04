@@ -1,11 +1,30 @@
 import React from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
-
-
-import type { Friend, FriendRequest } from "../types"
 import { FriendCard } from "../components/friends/FriendCard"
 import { FriendRequestCard } from "../components/friends/FriendRequestCard"
+
+type Friend = {
+  id: string
+  username: string
+  email: string
+}
+
+type FriendRequest = {
+  friendshipId: string
+  fromUserId: string
+  fromUsername: string
+  email: string
+  sentAt: string
+}
+
+type FriendsResponse = {
+  friends: Friend[]
+}
+
+type RequestsResponse = {
+  requests: FriendRequest[]
+}
 
 const API = "http://localhost:3001"
 
@@ -16,16 +35,16 @@ function authHeader(): HeadersInit {
   }
 }
 
-async function fetchFriends(): Promise<{ friends: Friend[] }> {
+async function fetchFriends(): Promise<FriendsResponse> {
   const res = await fetch(`${API}/friends`, { headers: authHeader() })
   if (!res.ok) throw new Error("Erreur chargement amis")
-  return res.json() as Promise<{ friends: Friend[] }>
+  return res.json()
 }
 
-async function fetchRequests(): Promise<{ requests: FriendRequest[] }> {
+async function fetchRequests(): Promise<RequestsResponse> {
   const res = await fetch(`${API}/friends/requests`, { headers: authHeader() })
   if (!res.ok) throw new Error("Erreur chargement demandes")
-  return res.json() as Promise<{ requests: FriendRequest[] }>
+  return res.json()
 }
 
 async function postAccept(userId: string): Promise<void> {
@@ -68,8 +87,8 @@ export function Amis() {
     queryFn: fetchRequests,
   })
 
-  const friends: Friend[] = friendsData?.friends ?? []
-  const requests: FriendRequest[] = requestsData?.requests ?? []
+  const friends = friendsData?.friends ?? []
+  const requests = requestsData?.requests ?? []
 
   const invalidate = (): void => {
     queryClient.invalidateQueries({ queryKey: ["friends"] })
@@ -78,12 +97,12 @@ export function Amis() {
   }
 
   const acceptMutation = useMutation({
-    mutationFn: (userId: string) => postAccept(userId),
+    mutationFn: postAccept,
     onSuccess: invalidate,
   })
 
   const rejectMutation = useMutation({
-    mutationFn: (userId: string) => postReject(userId),
+    mutationFn: postReject,
     onSuccess: invalidate,
   })
 
@@ -96,33 +115,33 @@ export function Amis() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Mes amis</h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <h1 className="text-2xl font-semibold text-frost">Mes amis</h1>
+          <p className="mt-1 text-sm text-frost/60">
             Gère tes amis et tes demandes.
           </p>
         </div>
 
         <Link
           to="/utilisateurs"
-          className="rounded border px-3 py-2 text-sm hover:bg-slate-50"
+          className="rounded border border-ocean/30 px-3 py-2 text-sm text-frost hover:bg-ocean/10 transition-colors"
         >
-          Trouver des utilisateurs
+          A la recherche de copain
         </Link>
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Demandes reçues</h2>
+        <h2 className="text-lg font-semibold text-frost">Demandes reçues</h2>
 
         {requests.length === 0 ? (
-          <p className="text-slate-600">Aucune demande en attente.</p>
+          <p className="text-frost/60">Aucune demande en attente.</p>
         ) : (
           <div className="space-y-3">
             {requests.map((r) => (
               <FriendRequestCard
-                key={r.id}
-                user={{ id: r.id, username: r.requesterUsername, email: "" }}
-                onAccept={(e) => acceptMutation.mutate(r.id)}
-                onReject={(e) => rejectMutation.mutate(r.id)}
+                key={r.friendshipId}
+                user={r}
+                onAccept={(userId) => acceptMutation.mutate(userId)}
+                onReject={(userId) => rejectMutation.mutate(userId)}
               />
             ))}
           </div>
@@ -130,10 +149,10 @@ export function Amis() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Amis</h2>
+        <h2 className="text-lg font-semibold text-frost">Amis</h2>
 
         {friends.length === 0 ? (
-          <p className="text-slate-600">Tu n'as pas encore d'amis.</p>
+          <p className="text-frost/60">Tu n'as pas encore d'amis.</p>
         ) : (
           <div className="space-y-3">
             {friends.map((f) => (

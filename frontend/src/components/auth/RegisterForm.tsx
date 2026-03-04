@@ -107,7 +107,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       <button
         type="submit"
         disabled={!canSubmit}
-        className="group relative w-full overflow-hidden rounded-xl bg-[#1D6CE0] py-3 font-bold text-white shadow-[0_0_20px_rgba(29,108,224,0.3)] transition-all hover:-translate-y-0.5 hover:bg-[#3EA6FF] hover:shadow-[0_0_25px_rgba(29,108,224,0.5)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full mt-6 rounded-2xl bg-gradient-to-r from-imperial to-ocean px-6 py-5 font-semibold text-frost transition-all hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(14,107,168,0.4)] disabled:opacity-50 disabled:hover:translate-y-0"
       >
         {loading ? <Spinner /> : "S'inscrire"}
       </button>

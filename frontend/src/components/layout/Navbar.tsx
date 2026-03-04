@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from "react"
 import { Link, useRouterState } from "@tanstack/react-router"
+import { isAuthenticated, logout } from "../../lib/auth"
+import type { ReactNode } from "react"
 
-type NavLinkItem = { to: any; label: string; search?: any }
+type NavLinkItem = { to: any; label: string; search?: any; requireAuth?: boolean }
 
 function usePathname() {
   return useRouterState({ select: (s) => s.location.pathname })
@@ -38,19 +40,28 @@ function NavItem({ to, label, search }: NavLinkItem) {
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const isAuth = isAuthenticated()
 
   const nav = useMemo<NavLinkItem[]>(
     () => [
       { to: "/", label: "Accueil" },
       { to: "/films", label: "Films", search: { q: "", category: "", type: "movie", sort: "" } },
-      { to: "/discussion", label: "Discussion" },
-      { to: "/profil", label: "Profil" },
+      { to: "/amis", label: "Amis", requireAuth: true },
+      { to: "/discussion", label: "Discussion", requireAuth: true },
+      { to: "/profil", label: "Profil", requireAuth: true },
     ],
     [],
   )
 
+  const visibleNav = nav.filter((n) => !n.requireAuth || isAuth)
+
+  const handleLogout = () => {
+    logout()
+    window.location.href = "/login"
+  }
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#050B1C]/80 backdrop-blur-xl">
+    <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-[#050B1C]/80 backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 md:px-12">
         {/* Brand */}
         <Link to="/" className="group flex items-center gap-3">
@@ -80,7 +91,7 @@ export function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-1 md:flex">
-          {nav.map((item) => (
+          {visibleNav.map((item) => (
             <NavItem key={item.to} {...item} />
           ))}
         </nav>
@@ -107,12 +118,21 @@ export function Navbar() {
             </svg>
           </Link>
 
-          <Link
-            to="/login"
-            className="rounded-full bg-[#1D6CE0] px-6 py-2.5 text-sm font-bold text-white shadow-[0_0_15px_rgba(29,108,224,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#3EA6FF] hover:shadow-[0_0_22px_rgba(29,108,224,0.45)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3EA6FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]"
-          >
-            Connexion
-          </Link>
+          {!isAuth ? (
+            <Link
+              to="/login"
+              className="rounded-full bg-[#1D6CE0] px-6 py-2.5 text-sm font-bold text-white shadow-[0_0_15px_rgba(29,108,224,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#3EA6FF] hover:shadow-[0_0_22px_rgba(29,108,224,0.45)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3EA6FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]"
+            >
+              Connexion
+            </Link>
+          ) : (
+            <button
+              onClick={handleLogout}
+              className="rounded-full bg-red-600/90 px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
+            >
+              Déconnexion
+            </button>
+          )}
 
           {/* Mobile menu button */}
           <button
@@ -140,7 +160,7 @@ export function Navbar() {
           <div className="mx-auto max-w-7xl px-6 pb-5 md:px-12">
             <div className="mt-3 rounded-2xl border border-white/10 bg-[#0A132D]/60 p-3 backdrop-blur-xl motion-safe:animate-fade-in">
               <div className="flex flex-col gap-2">
-                {nav.map((item) => (
+                {visibleNav.map((item) => (
                   <Link
                     key={item.to}
                     to={item.to}

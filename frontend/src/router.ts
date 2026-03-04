@@ -17,6 +17,7 @@ import { Profil } from "./pages/Profil"
 import { Discussion } from "./pages/Discussions"
 import { Amis } from "./pages/Amis"
 import { Utilisateurs } from "./pages/Utilisateurs"
+import { Settings } from "./pages/Settings"
 
 type FilmsSearch = {
   q: string
@@ -88,6 +89,15 @@ export const profilRoute = createRoute({
   component: Profil,
 })
 
+export const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/settings",
+  beforeLoad: () => {
+    if (!isAuthenticated()) throw redirect({ to: "/login" })
+  },
+  component: Settings,
+})
+
 export const discussionRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/discussion",
@@ -118,6 +128,7 @@ export const routeTree = rootRoute.addChildren([
   discussionRoute,
   amisRoute,
   utilisateursRoute,
+  settingsRoute,
 ])
 
 export const router = createRouter({ routeTree })

@@ -47,66 +47,44 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex w-full flex-col gap-5">
-      <Field label="Adresse e-mail">
-        <Input
-          type="email"
+    <form onSubmit={onSubmit} className="flex flex-col gap-5">
+      <div className="space-y-2">
+        <label className="text-sm text-frost/60 uppercase tracking-wider">Email</label>
+        <input
+          className="w-full rounded-2xl border border-imperial bg-prussian/50 px-6 py-5 text-frost placeholder-frost/40 outline-none transition-all focus:border-ocean focus:bg-prussian focus:shadow-[0_0_30px_rgba(14,107,168,0.2)]"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="vous@exemple.com"
-          autoComplete="email"
-          leftIcon={
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-            </svg>
-          }
+          placeholder="votre@email.com"
         />
-      </Field>
+      </div>
 
-      <Field label="Mot de passe">
-        <Input
-          type={showPwd ? "text" : "password"}
+      <div className="space-y-2">
+        <label className="text-sm text-frost/60 uppercase tracking-wider">Mot de passe</label>
+        <input
+          className="w-full rounded-2xl border border-imperial bg-prussian/50 px-6 py-5 text-frost placeholder-frost/40 outline-none transition-all focus:border-ocean focus:bg-prussian focus:shadow-[0_0_30px_rgba(14,107,168,0.2)]"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
-          autoComplete="current-password"
-          leftIcon={
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-            </svg>
-          }
-          rightSlot={<EyeButton pressed={showPwd} onClick={() => setShowPwd((v) => !v)} />}
+          type="password"
         />
-      </Field>
-
-      <div className="mt-2 flex items-center justify-between">
-        <label className="flex cursor-pointer items-center gap-2">
-          <input
-            type="checkbox"
-            className="rounded border-white/10 bg-white/5 text-[#1D6CE0] focus:ring-[#1D6CE0]"
-          />
-          <span className="text-sm text-gray-400">Se souvenir de moi</span>
-        </label>
-
-        <a
-          href="#"
-          className="text-sm text-[#1D6CE0] transition-colors hover:text-[#3EA6FF]"
-        >
-          Mot de passe oublié ?
-        </a>
       </div>
 
-      <div className="min-h-[24px]">
-        {error ? <Alert variant="error">{error}</Alert> : null}
-        {!error && success ? <Alert variant="success">{success}</Alert> : null}
-      </div>
+      {error && (
+        <div className="px-5 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="px-5 py-2 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+          {success}
+        </div>
+      )}
 
       <button
-        type="submit"
-        disabled={!canSubmit}
-        className="group relative w-full overflow-hidden rounded-xl bg-[#1D6CE0] py-3 font-bold text-white shadow-[0_0_20px_rgba(29,108,224,0.3)] transition-all hover:-translate-y-0.5 hover:bg-[#3EA6FF] hover:shadow-[0_0_25px_rgba(29,108,224,0.5)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full mt-6 rounded-2xl bg-gradient-to-r from-imperial to-ocean px-6 py-5 font-semibold text-frost transition-all hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(14,107,168,0.4)] disabled:opacity-50 disabled:hover:translate-y-0"
+        disabled={loading}
       >
-        {loading ? <Spinner /> : "Se connecter"}
+        {loading ? "Connexion en cours..." : "Se connecter"}
       </button>
     </form>
   )

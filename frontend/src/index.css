@@ -1,25 +1,36 @@
 @import "tailwindcss";
 
+@theme {
+  --color-prussian: #00072d;
+  --color-navy: #001c55;
+  --color-imperial: #0a2472;
+  --color-ocean: #0e6ba8;
+  --color-frost: #a6e1fa;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 }
 
-/* Base clean */
 html,
 body,
 #root {
+  min-height: 100vh;
   height: 100%;
 }
 
 body {
-  background: #050b1c;
-  color: white;
+  background-color: var(--color-prussian);
+  color: var(--color-frost);
 }
 
-/* Bonus UX */
 :focus-visible {
   outline: 2px solid rgba(62, 166, 255, 0.8);
   outline-offset: 3px;
+}
+
+.min-h-screen {
+  margin-top: 100px;
 }
