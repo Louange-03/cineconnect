@@ -21,13 +21,9 @@
     "dev:frontend": "pnpm --dir frontend dev"
   },
   "devDependencies": {
-<<<<<<< HEAD
     "@types/node": "^25.3.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-=======
-    "@types/node": "^25.3.0",
->>>>>>> origin/oceanne
     "concurrently": "^9.0.1"
   },
   "dependencies": {

@@ -5,10 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-<<<<<<< HEAD
     "typecheck": "tsc --project tsconfig.json --noEmit",
-=======
->>>>>>> origin/oceanne
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -16,7 +13,6 @@
   "dependencies": {
     "@tanstack/react-query": "^5.90.16",
     "@tanstack/react-router": "^1.147.3",
-<<<<<<< HEAD
     "axios": "^1.13.6",
     "lucide-react": "^0.577.0",
     "react": "^19.2.0",
@@ -31,30 +27,13 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.27",
-=======
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@tailwindcss/postcss": "^4.2.0",
-    "@types/react": "^19.2.5",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
-    "autoprefixer": "^10.4.23",
->>>>>>> origin/oceanne
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
-<<<<<<< HEAD
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.0.0",
-=======
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.18",
->>>>>>> origin/oceanne
     "vite": "^7.2.4"
   }
 }
