@@ -1,175 +1,212 @@
-import { io, Socket } from "socket.io-client"
 import { useEffect, useState } from "react"
-import Sidebar from "../components/chat/Sidebar" 
-import ChatWindow from "../components/chat/ChatWindow"
-import { ChatConversation } from "../types"
-export function Discussions() {
-  const [socket, setSocket] = useState<Socket | null>(null)
-  const [conversations, setConversations] = useState<ChatConversation[]>([])
-  const [activeConversation, setActiveConversation] =
-    useState<ChatConversation | null>(null)
+import { Send } from "lucide-react"
+import { socket } from "../socket"
+import axios from "axios"
+import type { Conversation, Message } from "../types"
 
-
-  useEffect(() => {
-    const newSocket = io("http://localhost:3000", {
-      auth: { token: localStorage.getItem("jwt") },
-    })
-
-    newSocket.on("connect", () => console.log("✅ Socket connecté", newSocket.id))
-
-    setSocket(newSocket)
-
-    return () => {
-      newSocket.disconnect()
-    }
-  }, [])
-
-  // Mock conversations pour tester l'affichage
-  useEffect(() => {
-    setConversations([
-      { id: "1", name: "Alice", lastMessage: "Salut !", unread: 2 },
-      { id: "2", name: "Bob", lastMessage: "Hello !", unread: 0 },
-    ])
-  }, [])
-
-  if (!socket) return <div>Chargement du chat...</div>
-
-  return (
-    <div className="flex h-screen bg-prussian-blue">
-      <Sidebar
-        conversations={conversations}
-        activeConversation={activeConversation}
-        setActiveConversation={setActiveConversation}
-        setConversations={setConversations}
-      />
-
-      <ChatWindow
-        conversation={activeConversation}
-        socket={socket}
-      />
-    </div>
-  )
-}import { useEffect, useState } from "react"
-import { useSearch } from "@tanstack/react-router"
-
-type Message = {
-  id: string
-  senderId: string
-  content: string
-  createdAt: string
+interface UserStatusPayload {
+  userId: string
 }
 
-type ConversationResponse = {
-  conversationId: string
-  messages: Message[]
-}
-
-const API = "http://localhost:3001"
-
-function authHeader(): HeadersInit {
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${localStorage.getItem("cineconnect_token")}`,
-  }
-}
-
-export function Discussion(): JSX.Element {
-  const { userId } = useSearch({ from: "/discussion" }) as {
-    userId?: string
-  }
-
-  const [conversationId, setConversationId] = useState<string | null>(null)
+export function Discussion() {
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [selected, setSelected] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([])
+  const [typingUsers, setTypingUsers] = useState<string[]>([])
+
+  const token = localStorage.getItem("token")
+  const currentUserId = localStorage.getItem("userId")
 
   useEffect(() => {
-    if (!userId) return
-
-    const initConversation = async (): Promise<void> => {
-      try {
-        const res = await fetch(`${API}/conversations/start`, {
-          method: "POST",
-          headers: authHeader(),
-          body: JSON.stringify({ userId }),
-        })
-
-        if (!res.ok) {
-          setError("Impossible d’ouvrir la conversation")
-          return
-        }
-
-        const data = (await res.json()) as ConversationResponse
-        setConversationId(data.conversationId)
-        setMessages(data.messages)
-      } catch {
-        setError("Erreur serveur")
-      }
+    const fetchConversations = async () => {
+      const res = await axios.get<Conversation[]>(
+        "http://localhost:3001/conversations",
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setConversations(res.data)
     }
 
-    initConversation()
-  }, [userId])
+    fetchConversations()
+  }, [token])
 
-  const sendMessage = async (): Promise<void> => {
-    if (!conversationId || !newMessage.trim()) return
+  useEffect(() => {
+    if (!selected) return
 
-    const res = await fetch(`${API}/messages`, {
-      method: "POST",
-      headers: authHeader(),
-      body: JSON.stringify({
-        conversationId,
-        content: newMessage,
-      }),
+    const fetchMessages = async () => {
+      const res = await axios.get<Message[]>(
+        `http://localhost:3001/conversations/${selected.id}/messages`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setMessages(res.data)
+    }
+
+    fetchMessages()
+
+    socket.emit("mark-as-seen", { conversationId: selected.id })
+  }, [selected, token])
+
+  useEffect(() => {
+    socket.on("new-message", (message: Message) => {
+      setMessages((prev) => [...prev, message])
     })
 
-    if (!res.ok) return
+    socket.on("user-online", (data: UserStatusPayload) => {
+      setOnlineUsers((prev) =>
+        prev.includes(data.userId) ? prev : [...prev, data.userId]
+      )
+    })
 
-    const message = (await res.json()) as Message
-    setMessages((prev) => [...prev, message])
+    socket.on("user-offline", (data: UserStatusPayload) => {
+      setOnlineUsers((prev) =>
+        prev.filter((id) => id !== data.userId)
+      )
+    })
+
+    socket.on("user-typing", (data: UserStatusPayload) => {
+      setTypingUsers((prev) =>
+        prev.includes(data.userId) ? prev : [...prev, data.userId]
+      )
+    })
+
+    socket.on("user-stop-typing", (data: UserStatusPayload) => {
+      setTypingUsers((prev) =>
+        prev.filter((id) => id !== data.userId)
+      )
+    })
+
+    socket.on("messages-seen", () => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.sender_id === currentUserId
+            ? { ...m, seen: true }
+            : m
+        )
+      )
+    })
+
+    return () => {
+      socket.off("new-message")
+      socket.off("user-online")
+      socket.off("user-offline")
+      socket.off("user-typing")
+      socket.off("user-stop-typing")
+      socket.off("messages-seen")
+    }
+  }, [currentUserId])
+
+  const sendMessage = () => {
+    if (!selected || !newMessage.trim()) return
+
+    socket.emit("send-message", {
+      conversationId: selected.id,
+      text: newMessage,
+    })
+
     setNewMessage("")
   }
 
-  if (!userId) {
-    return (
-      <div className="p-6 text-slate-600">
-        Sélectionne un ami pour commencer une discussion.
-      </div>
-    )
+  const handleTyping = () => {
+    if (!selected) return
+    socket.emit("typing", { conversationId: selected.id })
   }
 
-  if (error) {
-    return <div className="p-6 text-red-600">{error}</div>
+  const handleStopTyping = () => {
+    if (!selected) return
+    socket.emit("stop-typing", { conversationId: selected.id })
   }
 
   return (
-    <div className="flex flex-col h-[80vh] border rounded-lg">
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className="rounded-lg bg-slate-100 p-3 w-fit max-w-[70%]"
-          >
-            <p>{msg.content}</p>
-            <span className="text-xs text-slate-500">
-              {new Date(msg.createdAt).toLocaleTimeString()}
-            </span>
-          </div>
-        ))}
+    <div className="flex h-screen bg-prussian text-white">
+      <div className="w-80 bg-navy flex flex-col">
+        <div className="p-4 text-xl font-semibold border-b border-imperial">
+          Messages
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {conversations.map((conv) => (
+            <div
+              key={conv.id}
+              onClick={() => setSelected(conv)}
+              className="p-4 hover:bg-imperial cursor-pointer flex justify-between"
+            >
+              <div>
+                <div>{conv.name}</div>
+                <div className="text-sm text-frosted">
+                  {conv.last_message}
+                </div>
+              </div>
+
+              {conv.unread_count > 0 && (
+                <div className="bg-ocean text-xs px-2 py-1 rounded-full">
+                  {conv.unread_count}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="flex border-t p-3 gap-2">
-        <input
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Écris un message..."
-          className="flex-1 border rounded-lg px-3 py-2"
-        />
-        <button
-          onClick={sendMessage}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-        >
-          Envoyer
-        </button>
+      <div className="flex-1 flex flex-col bg-white text-black">
+        {selected ? (
+          <>
+            <div className="p-4 border-b">
+              {selected.name}
+            </div>
+
+            <div className="flex-1 p-6 bg-frosted overflow-y-auto space-y-4">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`max-w-xs p-3 rounded-2xl ${
+                    msg.sender_id === currentUserId
+                      ? "ml-auto bg-ocean text-white"
+                      : "bg-white"
+                  }`}
+                >
+                  {msg.text}
+
+                  {msg.seen &&
+                    msg.sender_id === currentUserId && (
+                      <div className="text-xs mt-1 opacity-70">
+                        Vu
+                      </div>
+                    )}
+                </div>
+              ))}
+
+              {typingUsers.length > 0 && (
+                <div className="text-sm text-gray-500">
+                  En train d’écrire...
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t flex gap-3">
+              <input
+                value={newMessage}
+                onChange={(e) => {
+                  setNewMessage(e.target.value)
+                  handleTyping()
+                }}
+                onBlur={handleStopTyping}
+                className="flex-1 border rounded-full px-4 py-2"
+                placeholder="Écris un message..."
+              />
+              <button
+                onClick={sendMessage}
+                className="bg-imperial p-3 rounded-full text-white"
+              >
+                <Send size={18} />
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-gray-400">
+            Sélectionne une conversation
+          </div>
+        )}
       </div>
     </div>
   )
