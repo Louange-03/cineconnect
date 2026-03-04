@@ -6,7 +6,7 @@ import { getFilmById } from "../controllers/films.controller" // Ajouté
 
 export const filmsRoutes = Router()
 
-type FilmType = "movie" | "series" | "all"
+
 
 function toStringQuery(value: unknown): string {
   return typeof value === "string" ? value : ""
@@ -22,7 +22,6 @@ filmsRoutes.get("/", async (req, res) => {
   try {
     const q = toStringQuery(req.query.q).trim()
     const category = toStringQuery(req.query.category).trim()
-    const type = (toStringQuery(req.query.type) || "all") as FilmType
     const limit = toNumberQuery(req.query.limit, 60)
 
     const whereParts: SQL[] = []

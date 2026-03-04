@@ -12,17 +12,34 @@ export interface AuthResponse {
 
 export interface Message {
   id: string
+  conversationId: string
   senderId: string
-  receiverId: string
-  content: string
+  text: string
+  seen: boolean
   createdAt: string
+  fromMe?: boolean
+  // raw SQL properties
+  conversation_id?: string
+  sender_id?: string
+  created_at?: string
 }
 
 export interface Conversation {
-  userId: string
-  lastMessage: string
+  id: string
+  name: string | null
+  createdAt: string
   updatedAt: string
+  userId?: string // used in some context
+  lastMessage?: string
+  unread?: number
+  status?: string
+  // raw SQL properties
+  last_message?: string
+  unread_count?: number
 }
+
+export interface ChatMessage extends Message { }
+export interface ChatConversation extends Conversation { }
 
 export interface Review {
   id: string
@@ -78,7 +95,6 @@ export interface OMDBMovieDetail extends OMDBMovie {
   Error?: string
 }
 
-// Types pour la base locale (Drizzle)
 export interface Film {
   id: string
   title: string
@@ -100,5 +116,9 @@ export interface Category {
 
 export interface ApiRequestOptions extends RequestInit {
   token?: string | null
-  auth?: boolean | null
+  auth?: boolean
+}
+
+export interface UserStatusPayload {
+  userId: string
 }

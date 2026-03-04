@@ -119,4 +119,4 @@ Tous les appels sécurisés attendent un `Authorization: Bearer <votre_token_jwt
 
 ---
 
-> Projet réalisé dans le cadre académique de développement de la structure "WebApplication complète", **HETIC Web2**.
+Projet réalisé dans le cadre académique de développement de la structure "WebApplication complète", **HETIC Web2**.

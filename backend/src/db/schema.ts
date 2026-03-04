@@ -18,6 +18,7 @@ export const users = pgTable("users", {
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),//optionel
+  lastSeen: timestamp("last_seen"),
 })
 
 export const friendshipStatus = pgEnum("friendship_status", [
@@ -93,11 +94,35 @@ export const reviews = pgTable("reviews", {
 
 export const messages = pgTable("messages", {
   id: uuid("id").defaultRandom().primaryKey(),
+  conversationId: uuid("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
   senderId: uuid("sender_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  receiverId: uuid("receiver_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  content: text("content").notNull(),
-  read: boolean("read").default(false).notNull(),
+  text: text("text").notNull(),
+  seen: boolean("seen").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })
+
+export const conversations = pgTable("conversations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const conversationMembers = pgTable(
+  "conversation_members",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    memberUniq: uniqueIndex("conv_member_uniq").on(t.conversationId, t.userId),
+  })
+)
 //

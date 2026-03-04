@@ -1,4 +1,4 @@
-import { Router } from "express"
+import { Router, Request } from "express"
 import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs"
 import { db } from "../db"
@@ -18,7 +18,7 @@ function signToken(payload: { userId: string }) {
     return jwt.sign(payload, secret, { expiresIn: "7d" })
 }
 
-function getBearerToken(req: any): string | null {
+function getBearerToken(req: Request): string | null {
     const h = req.headers?.authorization
     if (!h || typeof h !== "string") return null
     const [type, token] = h.split(" ")
@@ -49,9 +49,10 @@ authRoutes.post("/register", async (req, res) => {
         const token = signToken({ userId: user.id })
 
         res.json({ token, user })
-    } catch (err: any) {
+    } catch (err: unknown) {
         // unique constraint (email/username) -> message clean
-        const msg = String(err?.message || err)
+        const error = err as Error
+        const msg = String(error?.message || err)
         if (msg.toLowerCase().includes("unique")) {
             return res.status(409).json({ message: "Email ou username déjà utilisé" })
         }

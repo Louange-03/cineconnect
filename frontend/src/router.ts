@@ -14,7 +14,7 @@ import { FilmDetail } from "./pages/FilmDetail"
 import { Login } from "./pages/Login"
 import { Register } from "./pages/Register"
 import { Profil } from "./pages/Profil"
-import { Discussion } from "./pages/Discussion"
+import { Discussion } from "./pages/Discussions"
 import { Amis } from "./pages/Amis"
 import { Utilisateurs } from "./pages/Utilisateurs"
 

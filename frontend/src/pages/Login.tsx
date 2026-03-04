@@ -26,7 +26,7 @@ export function Login() {
     >
       <LoginForm
         onSuccess={() => {
-          navigate({ to: "/films" })
+          navigate({ to: "/films", search: { q: "", category: "", type: "movie", sort: "" } })
         }}
       />
     </AuthShell>

@@ -23,6 +23,7 @@ export const listFilms = async (req: Request, res: Response): Promise<void> => {
   const limit = Math.min(parseInt(limitParam ?? "50", 10) || 50, 100)
 
   // build base query
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query: any = db.select(filmSelect).from(films)
 
   if (q) {
@@ -119,7 +120,7 @@ const importSchema = z.object({
   imdbID: z.string().min(3),
 })
 
-export const importFilmFromOmdb = async (req: any, res: any): Promise<void> => {
+export const importFilmFromOmdb = async (req: Request, res: Response): Promise<void> => {
   const parsed = importSchema.safeParse(req.body)
   if (!parsed.success) {
     res.status(400).json({ message: "Invalid data", errors: parsed.error.issues })
@@ -137,6 +138,7 @@ export const importFilmFromOmdb = async (req: any, res: any): Promise<void> => {
   try {
     const url = `https://www.omdbapi.com/?apikey=${OMDB_KEY}&i=${encodeURIComponent(imdbID)}&plot=full`
     const r = await fetch(url)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data: any = await r.json()
 
     if (data?.Response === "False") {
@@ -177,11 +179,11 @@ export const importFilmFromOmdb = async (req: any, res: any): Promise<void> => {
     const inserted = await db
       .insert(films)
       .values({
-        tmdbId: req.body.tmdbId || "", // Ajouté pour éviter l'erreur
-        title: req.body.title,
-        year: req.body.year,
-        posterUrl: req.body.posterUrl,
-        synopsis: req.body.synopsis,
+        tmdbId: req.body.tmdbId || "",
+        title: title,
+        year: year,
+        posterUrl: posterUrl,
+        synopsis: synopsis,
         metadata: req.body.metadata || "",
       })
       .returning()

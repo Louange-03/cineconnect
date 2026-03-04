@@ -1,19 +1,20 @@
 import React, { useMemo, useState } from "react"
 import { Link, useRouterState } from "@tanstack/react-router"
 
-type NavLinkItem = { to: string; label: string }
+type NavLinkItem = { to: any; label: string; search?: any }
 
 function usePathname() {
   return useRouterState({ select: (s) => s.location.pathname })
 }
 
-function NavItem({ to, label }: NavLinkItem) {
+function NavItem({ to, label, search }: NavLinkItem) {
   const pathname = usePathname()
   const active = pathname === to || (to !== "/" && pathname.startsWith(to))
 
   return (
     <Link
       to={to}
+      search={search}
       aria-current={active ? "page" : undefined}
       className={[
         "relative rounded-full px-5 py-2 text-sm font-medium transition-all duration-300",
@@ -41,7 +42,7 @@ export function Navbar() {
   const nav = useMemo<NavLinkItem[]>(
     () => [
       { to: "/", label: "Accueil" },
-      { to: "/films", label: "Films" },
+      { to: "/films", label: "Films", search: { q: "", category: "", type: "movie", sort: "" } },
       { to: "/discussion", label: "Discussion" },
       { to: "/profil", label: "Profil" },
     ],
@@ -88,6 +89,7 @@ export function Navbar() {
         <div className="flex items-center gap-3">
           <Link
             to="/films"
+            search={{ q: "", category: "", type: "movie", sort: "" }}
             className="hidden h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-300/70 transition-colors hover:bg-white/10 hover:text-white sm:flex"
             title="Rechercher"
             aria-label="Aller au catalogue"

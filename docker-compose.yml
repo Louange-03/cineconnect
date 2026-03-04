@@ -3,7 +3,7 @@ services:
     image: postgres:16
     container_name: cineconnect-db
     ports:
-      - "5432:5432"
+      - "5437:5432"
     environment:
       POSTGRES_USER: cineconnect
       POSTGRES_PASSWORD: cineconnect

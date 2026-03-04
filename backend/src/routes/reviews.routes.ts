@@ -42,8 +42,9 @@ reviewsRoutes.post("/", async (req, res) => {
       .returning()
 
     res.json({ review: inserted[0] })
-  } catch (err: any) {
-    const msg = String(err?.message || err)
+  } catch (err: unknown) {
+    const error = err as Error
+    const msg = String(error?.message || err)
     if (msg.toLowerCase().includes("unique")) {
       return res.status(409).json({ message: "Vous avez déjà noté ce film" })
     }

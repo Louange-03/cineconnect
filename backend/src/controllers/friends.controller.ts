@@ -4,6 +4,7 @@ import type { Request, Response } from "express"
 import { db } from "../db/client.js"
 import { users, friendships } from "../db/schema.js"
 
+/* ...existing code... */
 export const getFriends = async (req: Request, res: Response): Promise<void> => {
   const meId = req.user!.id
 
@@ -166,3 +167,5 @@ export const removeFriend = async (req: Request, res: Response): Promise<void> =
     res.status(500).json({ error: "server" })
   }
 }
+/* ...existing code... */
+

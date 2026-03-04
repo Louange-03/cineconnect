@@ -29,6 +29,7 @@ export function FilmsByCategory() {
 
           <Link
             to="/films"
+            search={{ q: "", category: "", type: "movie", sort: "" }}
             className="rounded-full bg-white/10 px-4 py-2 text-sm text-white/90 hover:bg-white/15"
           >
             Réinitialiser la recherche
@@ -57,6 +58,7 @@ export function FilmsByCategory() {
 
               <Link
                 to="/films"
+                search={{ q: "", category: "", type: "movie", sort: "" }}
                 className="mt-6 inline-flex items-center justify-center rounded-2xl bg-[#1D6CE0] px-6 py-3 font-semibold hover:brightness-110"
               >
                 Réinitialiser la recherche

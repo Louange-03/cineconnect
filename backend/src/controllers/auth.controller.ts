@@ -43,7 +43,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   } catch (err) {
     // differentiate constraint errors from other problems
     console.error("Registration error:", err)
-    if ((err as any)?.code === "23505") {
+    if ((err as { code?: string })?.code === "23505") {
       // unique violation
       res.status(400).json({ message: "Email ou username déjà utilisé" })
     } else {
@@ -82,6 +82,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   res.json({ token, user: safeUser })
 }
 
-export const me = (req: Request, res: Response): void => {
+export const me = (req: Request & { user?: SafeUser }, res: Response): void => {
   res.json({ user: req.user })
 }
