@@ -118,9 +118,9 @@ export function Discussion() {
   }
 
   return (
-    <div className="flex h-screen bg-prussian text-white">
+    <div className="flex h-screen bg-prussian text-blue">
       <div className="w-80 bg-navy flex flex-col">
-        <div className="p-4 text-xl font-semibold border-b border-imperial">
+        <div className="p-4 text-xl font-bold border-b border-imperial">
           Messages
         </div>
 
