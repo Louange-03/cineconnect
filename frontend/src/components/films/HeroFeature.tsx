@@ -25,6 +25,12 @@ export function HeroFeature({ film }: HeroFeatureProps) {
       ? null
       : String(film.year)
 
+  const [toast, setToast] = React.useState<string | null>(null)
+  function showToast(msg: string) {
+    setToast(msg)
+    window.setTimeout(() => setToast(null), 1600)
+  }
+
   return (
     <section className="relative flex h-[60vh] items-end overflow-hidden md:h-[70vh] lg:h-[80vh]">
       {/* Background */}
@@ -35,7 +41,7 @@ export function HeroFeature({ film }: HeroFeatureProps) {
           className="h-full w-full object-cover opacity-90 motion-safe:animate-fade-in motion-safe:scale-[1.02]"
           loading="eager"
           onError={(e) => {
-            ;(e.currentTarget as HTMLImageElement).src = FALLBACK_HERO
+            ; (e.currentTarget as HTMLImageElement).src = FALLBACK_HERO
           }}
         />
 
@@ -44,17 +50,6 @@ export function HeroFeature({ film }: HeroFeatureProps) {
         <div className="absolute inset-0 bg-gradient-to-r from-[#050B1C] via-[#050B1C]/35 to-transparent" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.06),rgba(5,11,28,0.85)_60%,rgba(5,11,28,1)_100%)]" />
       </div>
-
-      {/* ✅ Clickable layer (doesn't block buttons) */}
-      <Link
-        to="/film/$id"
-        params={{ id: film.id }}
-        className="absolute inset-0 z-[5]"
-        aria-label={`Ouvrir la fiche du film ${film.title}`}
-        tabIndex={-1}
-      >
-        <span className="sr-only">Ouvrir la fiche</span>
-      </Link>
 
       {/* Content */}
       <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-16 pt-10 md:px-12 md:pb-20">
@@ -80,15 +75,19 @@ export function HeroFeature({ film }: HeroFeatureProps) {
           )}
         </div>
 
-        {/* Title */}
-        <h1 className="max-w-4xl text-5xl font-black tracking-tight text-white drop-shadow-2xl sm:text-6xl md:text-7xl lg:text-8xl">
-          {film.title}
-        </h1>
+        {/* Title (cliquable, mieux qu’un overlay global) */}
+        <Link to="/film/$id" params={{ id: film.id }} className="inline-block">
+          <h1 className="max-w-4xl text-5xl font-black tracking-tight text-white drop-shadow-2xl sm:text-6xl md:text-7xl lg:text-8xl hover:text-white/95 transition-colors">
+            {film.title}
+          </h1>
+        </Link>
 
-        {/* Synopsis */}
-        <p className="mt-6 max-w-2xl text-base leading-relaxed text-gray-200/85 sm:text-lg md:text-xl line-clamp-3">
-          {film.synopsis || "Un chef-d'œuvre cinématographique à découvrir."}
-        </p>
+        {/* Synopsis (meilleure lisibilité) */}
+        <div className="mt-6 max-w-2xl rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur-md">
+          <p className="text-base leading-relaxed text-gray-200/85 sm:text-lg md:text-xl line-clamp-3">
+            {film.synopsis || "Un chef-d'œuvre cinématographique à découvrir."}
+          </p>
+        </div>
 
         {/* Actions */}
         <div className="relative z-20 mt-10 flex flex-wrap items-center gap-4">
@@ -113,17 +112,17 @@ export function HeroFeature({ film }: HeroFeatureProps) {
                 d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
               />
             </svg>
-            Voir le film
+            Voir la fiche
           </Link>
 
           <button
             type="button"
             className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]"
-            aria-label="Ajouter à ma liste (à connecter)"
+            aria-label="Ajouter à ma liste"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
-              alert("À connecter : watchlist ✅")
+              showToast("Ajout à ma liste : à connecter ✅")
             }}
           >
             <svg
@@ -140,6 +139,15 @@ export function HeroFeature({ film }: HeroFeatureProps) {
           </button>
         </div>
       </div>
+
+      {/* mini toast */}
+      {toast && (
+        <div className="pointer-events-none absolute left-1/2 top-6 z-30 -translate-x-1/2">
+          <div className="rounded-full border border-white/10 bg-black/60 px-4 py-2 text-xs font-semibold text-white/90 backdrop-blur-md shadow-lg">
+            {toast}
+          </div>
+        </div>
+      )}
     </section>
   )
 }
