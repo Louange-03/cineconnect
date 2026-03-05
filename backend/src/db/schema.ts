@@ -92,6 +92,15 @@ export const reviews = pgTable("reviews", {
   userFilmUnique: uniqueIndex("reviews_user_film_unique").on(t.userId, t.filmId),
 }))
 
+export const favorites = pgTable("favorites", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  filmId: uuid("film_id").notNull().references(() => films.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => ({
+  userFilmFavoritUniq: uniqueIndex("favorites_user_film_uniq").on(t.userId, t.filmId),
+}))
+
 export const messages = pgTable("messages", {
   id: uuid("id").defaultRandom().primaryKey(),
   conversationId: uuid("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),

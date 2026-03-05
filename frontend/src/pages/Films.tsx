@@ -4,8 +4,8 @@ import { useCategories } from "../hooks/useCategories"
 import { SearchBar } from "../components/films/SearchBar"
 import { OmdbImportPanel } from "../components/films/OmdbImportPanel"
 import { HeroFeature } from "../components/films/HeroFeature"
-import { MovieRow } from "../components/films/MovieRow"
 import { CategoryPills } from "../components/films/CategoryPills"
+import { FilmCard } from "../components/films/FilmCard"
 import type { Film, Category } from "../types"
 
 export function Films() {
@@ -88,8 +88,8 @@ export function Films() {
         className={[
           "mx-auto w-full max-w-7xl px-6 md:px-12",
           "transition-all duration-500",
-          showHero ? "-mt-8 relative z-20" : "pt-20",
-          "sticky top-0 z-30",
+          showHero ? "-mt-8 relative z-20" : "pt-24",
+          "sticky top-20 z-30",
         ].join(" ")}
       >
         <div className="rounded-2xl border border-white/10 bg-[#0A132D]/80 p-2 shadow-2xl backdrop-blur-xl md:p-4">
@@ -168,18 +168,21 @@ export function Films() {
             </section>
           )}
 
-          {/* Rows */}
+          {/* Grid Layout (Netflix style vertical scrolling) */}
           {!hasNoResults && !isCatalogEmpty && list.length > 0 && (
-            <section className="mt-8 space-y-8">
-              {(query.trim() !== "" || category !== "") ? (
-                <MovieRow title="Résultats de recherche" films={list} />
-              ) : (
-                (categories as Category[]).map((cat) => {
-                  const row = filmsByCategory[cat.name] ?? []
-                  if (row.length === 0) return null
-                  return <MovieRow key={cat.id} title={cat.name} films={row} />
-                })
-              )}
+            <section className="mx-auto max-w-7xl px-6 mt-12 pb-24">
+              <div className="mb-6 flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-white">
+                  {query || category ? "Résultats de recherche" : "Tout le catalogue"}
+                </h3>
+                <span className="text-sm font-medium text-white/50">{list.length} titre{list.length > 1 ? 's' : ''}</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-6">
+                {list.map((film) => (
+                  <FilmCard key={film.id} film={film} />
+                ))}
+              </div>
             </section>
           )}
         </>

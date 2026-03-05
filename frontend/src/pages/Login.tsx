@@ -6,7 +6,7 @@ export function Login() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative">
+    <div className="min-h-screen flex items-center justify-center px-4 relative pt-24 pb-12">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-ocean/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative w-full max-w-lg p-16 rounded-3xl bg-navy/80 backdrop-blur-xl border border-ocean/20 shadow-2xl">

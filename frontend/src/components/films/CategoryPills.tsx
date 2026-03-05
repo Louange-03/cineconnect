@@ -19,15 +19,15 @@ function Pill({
     const base =
         "shrink-0 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 border"
     const activeCls =
-        "bg-[#FFC107] text-[#050B1C] border-[#FFC107]/40 shadow-[0_0_15px_rgba(255,193,7,0.35)]"
+        "bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] text-white border-transparent shadow-[0_0_15px_rgba(29,108,224,0.4)]"
     const idleCls =
-        "bg-white/5 text-gray-300/70 border-white/10 hover:bg-white/10 hover:text-white"
+        "bg-white/5 text-gray-300 border-white/10 hover:bg-white/10 hover:text-white"
 
     return (
         <button
             type="button"
             onClick={onClick}
-            className={`${base} ${active ? activeCls : idleCls} focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FFC107]/40`}
+            className={`${base} ${active ? activeCls : idleCls} focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3EA6FF]/50`}
         >
             {children}
         </button>

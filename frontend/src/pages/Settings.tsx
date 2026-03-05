@@ -13,7 +13,7 @@ type FieldState =
 
 // --- Fetch ---
 
-const API = "http://localhost:3001"
+const API = "http://localhost:3001/api"
 
 function authHeader(): HeadersInit {
   return {

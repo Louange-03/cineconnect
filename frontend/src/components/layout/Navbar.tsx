@@ -121,14 +121,14 @@ export function Navbar() {
           {!isAuth ? (
             <Link
               to="/login"
-              className="rounded-full bg-[#1D6CE0] px-6 py-2.5 text-sm font-bold text-white shadow-[0_0_15px_rgba(29,108,224,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#3EA6FF] hover:shadow-[0_0_22px_rgba(29,108,224,0.45)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3EA6FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]"
+              className="rounded-full bg-gradient-to-r from-red-600 to-rose-500 px-6 py-2.5 text-sm font-bold text-white shadow-[0_0_15px_rgba(220,38,38,0.35)] transition-all duration-300 hover:-translate-y-0.5 hover:from-red-500 hover:to-rose-400 hover:shadow-[0_0_22px_rgba(220,38,38,0.55)] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]"
             >
               Connexion
             </Link>
           ) : (
             <button
               onClick={handleLogout}
-              className="rounded-full bg-red-600/90 px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
+              className="rounded-full bg-white/10 px-6 py-2.5 text-sm font-bold text-white shadow-lg backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/20 hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             >
               Déconnexion
             </button>

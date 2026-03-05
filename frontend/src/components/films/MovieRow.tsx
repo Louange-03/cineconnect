@@ -76,7 +76,7 @@ export function MovieRow({ title, films, showAllLink }: MovieRowProps) {
                     {films.map((film) => (
                         <div
                             key={film.id}
-                            className="min-w-[180px] shrink-0 snap-start md:min-w-[220px] motion-safe:animate-fade-in"
+                            className="min-w-[130px] shrink-0 snap-start md:min-w-[160px] motion-safe:animate-fade-in"
                         >
                             <FilmCard film={film} />
                         </div>

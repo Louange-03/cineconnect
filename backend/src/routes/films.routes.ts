@@ -56,14 +56,42 @@ filmsRoutes.get("/", async (req, res) => {
       whereParts.push(inArray(films.id, filmIds))
     }
 
-    const query = db.select().from(films)
+    let resultFilms;
+    if (whereParts.length > 0) {
+      resultFilms = await db.select().from(films).where(and(...whereParts)).limit(limit);
+    } else {
+      resultFilms = await db.select().from(films).limit(limit);
+    }
 
-    const result =
-      whereParts.length > 0
-        ? await query.where(and(...whereParts)).limit(limit)
-        : await query.limit(limit)
+    // Now manually attach categories (since SQLite/PG array_agg can be tricky to type cleanly with simple select)
+    // We can do a second query to get all categories for the returning films
+    const filmIds = resultFilms.map(f => f.id);
+    let filmsWithCategories: any[] = resultFilms.map(f => ({ ...f, categories: [] as string[] }));
 
-    res.json({ films: result })
+    if (filmIds.length > 0) {
+      const allLinks = await db
+        .select({
+          filmId: filmCategories.filmId,
+          categoryName: categories.name
+        })
+        .from(filmCategories)
+        .innerJoin(categories, eq(filmCategories.categoryId, categories.id))
+        .where(inArray(filmCategories.filmId, filmIds));
+
+      // grouped
+      const catsMap = new Map<string, string[]>();
+      for (const link of allLinks) {
+        if (!catsMap.has(link.filmId)) catsMap.set(link.filmId, []);
+        catsMap.get(link.filmId)!.push(link.categoryName);
+      }
+
+      filmsWithCategories = resultFilms.map(f => ({
+        ...f,
+        categories: catsMap.get(f.id) || []
+      }));
+    }
+
+    res.json({ films: filmsWithCategories })
   } catch (err) {
     console.error(err)
     res.status(500).json({ message: "Erreur récupération films" })
