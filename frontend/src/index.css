@@ -8,13 +8,17 @@
   --color-frost: #e2e8f0;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap");
 
 :root {
-  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  font-family: "Outfit", system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 html,
@@ -36,10 +40,31 @@ body {
   outline-offset: 3px;
 }
 
+/* Layout helper */
+.container-page {
+  max-width: 80rem;
+  /* ~max-w-7xl */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  /* px-6 */
+  padding-right: 1.5rem;
+  /* px-6 */
+}
+
+@media (min-width: 768px) {
+  .container-page {
+    padding-left: 3rem;
+    /* md:px-12 */
+    padding-right: 3rem;
+    /* md:px-12 */
+  }
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {

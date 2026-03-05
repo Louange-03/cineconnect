@@ -50,14 +50,20 @@ export function Films() {
       {/* HERO */}
       {showHero && featuredFilm && <HeroFeature film={featuredFilm} />}
 
-      {/* PAGE HEADER + SEARCH (stable layout) */}
-      <section className={["mx-auto max-w-7xl px-6 md:px-12", showHero ? "-mt-10 relative z-20" : "pt-20"].join(" ")}>
+      {/* PAGE HEADER + STICKY FILTERS */}
+      <section
+        className={[
+          "mx-auto max-w-7xl px-6 md:px-12",
+          showHero ? "-mt-10 relative z-20" : "pt-20",
+        ].join(" ")}
+      >
         <div className="mb-6 flex flex-col gap-2">
           <h1 className="text-3xl md:text-4xl font-black tracking-tight">{titleLabel}</h1>
           <p className="text-white/60">{subtitleLabel}</p>
         </div>
 
-        <div className="sticky top-4 z-30">
+        {/* Sticky group: Search + Category pills */}
+        <div className="sticky top-4 z-30 space-y-3">
           <div className="rounded-2xl border border-white/10 bg-[#0A132D]/80 p-2 shadow-2xl backdrop-blur-xl md:p-4">
             <SearchBar
               value={query}
@@ -65,6 +71,16 @@ export function Films() {
               placeholder="Rechercher des films, séries, réalisateurs, genres…"
             />
           </div>
+
+          {!isCatalogEmpty && (
+            <div className="rounded-2xl border border-white/10 bg-[#0A132D]/70 p-2 backdrop-blur-xl">
+              <CategoryPills
+                categories={categories}
+                selectedCategory={category}
+                onCategoryChange={setCategory}
+              />
+            </div>
+          )}
         </div>
       </section>
 
@@ -91,27 +107,19 @@ export function Films() {
       {/* CONTENT */}
       {!isBusy && !error && (
         <>
-          {/* CATEGORY PILLS */}
-          {!isCatalogEmpty && (
-            <div className="mx-auto max-w-7xl px-6 md:px-12 mt-8">
-              <CategoryPills
-                categories={categories}
-                selectedCategory={category}
-                onCategoryChange={setCategory}
-              />
-            </div>
-          )}
-
           {/* EMPTY CATALOG */}
           {isCatalogEmpty && (
             <section className="mx-auto mt-14 max-w-2xl px-6 text-center">
               <div className="mb-6 mx-auto flex h-24 w-24 items-center justify-center rounded-3xl border border-white/10 bg-white/5 shadow-[0_0_30px_rgba(255,255,255,0.05)]">
-                <span className="text-4xl" aria-hidden="true">🍿</span>
+                <span className="text-4xl" aria-hidden="true">
+                  🍿
+                </span>
               </div>
 
               <h2 className="mb-3 text-3xl font-black">Votre catalogue est vide</h2>
               <p className="mb-8 text-base md:text-lg leading-relaxed text-white/60">
-                Recherchez un film avec la barre ci-dessus pour commencer à remplir votre base locale (import OMDb).
+                Recherchez un film avec la barre ci-dessus pour commencer à remplir votre base locale
+                (import OMDb).
               </p>
 
               {canImportFromOmdb ? (
@@ -119,7 +127,9 @@ export function Films() {
                   <OmdbImportPanel initialQuery={query} />
                 </div>
               ) : (
-                <div className="text-white/40">Tape au moins 3 caractères pour activer l’import OMDb.</div>
+                <div className="text-white/40">
+                  Tape au moins 3 caractères pour activer l’import OMDb.
+                </div>
               )}
             </section>
           )}
@@ -138,7 +148,9 @@ export function Films() {
                     <OmdbImportPanel initialQuery={query} />
                   </div>
                 ) : (
-                  <div className="mt-6 text-white/40">Tape au moins 3 caractères pour rechercher sur OMDb…</div>
+                  <div className="mt-6 text-white/40">
+                    Tape au moins 3 caractères pour rechercher sur OMDb…
+                  </div>
                 )}
 
                 <button
