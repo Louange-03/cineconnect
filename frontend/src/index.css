@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap");
+
 @import "tailwindcss";
 
 @theme {
@@ -8,7 +10,6 @@
   --color-frost: #e2e8f0;
 }
 
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap");
 
 :root {
   font-family: "Outfit", system-ui, -apple-system, sans-serif;
@@ -26,6 +27,7 @@ body,
 #root {
   min-height: 100vh;
   height: 100%;
+  margin: 100px;
 }
 
 body {
@@ -51,6 +53,8 @@ body {
   padding-right: 1.5rem;
   /* px-6 */
 }
+
+
 
 @media (min-width: 768px) {
   .container-page {

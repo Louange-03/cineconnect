@@ -13,7 +13,7 @@ import { initSocket } from "./socket"
 
 const app = express()
 
-const FRONTEND_ORIGIN = process.env.FRONTEND_URL || "*"
+const FRONTEND_ORIGIN = process.env.FRONTEND_URL || "http://localhost:5173"
 app.use(cors({ origin: FRONTEND_ORIGIN, credentials: true }))
 app.use(express.json())
 
