@@ -1,3 +1,4 @@
+import React from "react"
 import type { MouseEventHandler } from "react"
 
 interface Props {
@@ -6,7 +7,7 @@ interface Props {
   readonly?: boolean
 }
 
-export function StarRating({ value = 0, onChange, readonly = false }: Props): JSX.Element {
+export function StarRating({ value = 0, onChange, readonly = false }: Props) {
   return (
     <div className="flex gap-1">
       {[1, 2, 3, 4, 5].map((star) => (

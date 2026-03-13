@@ -17,90 +17,124 @@ import { Profil } from "./pages/Profil"
 import { Discussion } from "./pages/Discussions"
 import { Amis } from "./pages/Amis"
 import { Utilisateurs } from "./pages/Utilisateurs"
+import { Settings } from "./pages/Settings"
 
-const rootRoute = createRootRoute({
+type FilmsSearch = {
+  q: string
+  category: string
+  type: "movie" | "series" | "all"
+  sort: "" | "viewed" | "popular" | "recent"
+}
+
+const requireAuth = () => {
+  if (!isAuthenticated()) {
+    throw redirect({ to: "/login" })
+  }
+}
+
+export const rootRoute = createRootRoute({
   component: AppLayout,
 })
 
-const indexRoute = createRoute({
+export const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
   component: Home,
 })
 
-const filmsRoute = createRoute({
+export const filmsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/films",
+  validateSearch: (search: Record<string, unknown>): FilmsSearch => {
+    const q = typeof search.q === "string" ? search.q : ""
+    const category = typeof search.category === "string" ? search.category : ""
+
+    const rawType = typeof search.type === "string" ? search.type : "movie"
+    const type: FilmsSearch["type"] =
+      rawType === "series" || rawType === "all" ? rawType : "movie"
+
+    const rawSort = typeof search.sort === "string" ? search.sort : ""
+    const sort: FilmsSearch["sort"] =
+      rawSort === "viewed" || rawSort === "popular" || rawSort === "recent"
+        ? rawSort
+        : ""
+
+    return { q, category, type, sort }
+  },
   component: Films,
 })
 
-const filmDetailRoute = createRoute({
+export const filmDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/film/$id",
   component: FilmDetail,
 })
 
-const loginRoute = createRoute({
+export const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/login",
   component: Login,
 })
 
-const registerRoute = createRoute({
+export const registerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/register",
   component: Register,
 })
 
-const profilRoute = createRoute({
+export const profilRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/profil",
-  beforeLoad: () => {
-    if (!isAuthenticated()) {
-      throw redirect({ to: "/login" })
-    }
-  },
+  beforeLoad: requireAuth,
   component: Profil,
 })
 
-const discussionRoute = createRoute({
+export const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/settings",
+  beforeLoad: () => {
+    if (!isAuthenticated()) throw redirect({ to: "/login" })
+  },
+  component: Settings,
+})
+
+export const discussionRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/discussion",
   component: Discussion,
 })
 
-const amisRoute = createRoute({
+export const amisRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/amis",
-  beforeLoad: () => {
-    if (!isAuthenticated()) {
-      throw redirect({ to: "/login" })
-    }
-  },
+  beforeLoad: requireAuth,
   component: Amis,
 })
 
-const utilisateursRoute = createRoute({
+export const utilisateursRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/utilisateurs",
-  beforeLoad: () => {
-    if (!isAuthenticated()) {
-      throw redirect({ to: "/login" })
-    }
-  },
+  beforeLoad: requireAuth,
   component: Utilisateurs,
 })
 
-const routeTree = rootRoute.addChildren([
+export const routeTree = rootRoute.addChildren([
   indexRoute,
   filmsRoute,
   filmDetailRoute,
-  amisRoute,
-  utilisateursRoute,
   loginRoute,
   registerRoute,
   profilRoute,
   discussionRoute,
+  amisRoute,
+  utilisateursRoute,
+  settingsRoute,
 ])
 
 export const router = createRouter({ routeTree })
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router
+  }
+}

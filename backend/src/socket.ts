@@ -54,10 +54,12 @@ export const initSocket = (httpServer: HttpServer, frontendOrigin: string) => {
         [userId]
       )
 
-      conversations.rows.forEach((row) => {
+      conversations.rows.forEach((row: { conversation_id: string }) => {
         socket.join(`conversation-${row.conversation_id}`)
       })
-    } catch {}
+    } catch (e) {
+      console.error(e)
+    }
 
     socket.on("send-message", async ({ conversationId, text }) => {
       try {
@@ -86,7 +88,9 @@ export const initSocket = (httpServer: HttpServer, frontendOrigin: string) => {
           "new-message",
           message
         )
-      } catch {}
+      } catch (e) {
+        console.error(e)
+      }
     })
 
     socket.on("disconnect", async () => {
@@ -103,7 +107,9 @@ export const initSocket = (httpServer: HttpServer, frontendOrigin: string) => {
             `UPDATE users SET last_seen = NOW() WHERE id = $1`,
             [userId]
           )
-        } catch {}
+        } catch (e) {
+          console.error(e)
+        }
 
         io.emit("user-offline", { userId })
       }

@@ -1,8 +1,8 @@
 export interface User {
-  id: number
+  id: string
   email: string
   username: string
-  createdAt?: string
+  createdAt?: string | null
 }
 
 export interface AuthResponse {
@@ -10,9 +10,40 @@ export interface AuthResponse {
   user: User
 }
 
+export interface Message {
+  id: string
+  conversationId: string
+  senderId: string
+  text: string
+  seen: boolean
+  createdAt: string
+  fromMe?: boolean
+  // raw SQL properties
+  conversation_id?: string
+  sender_id?: string
+  created_at?: string
+}
+
+export interface Conversation {
+  id: string
+  name: string | null
+  createdAt: string
+  updatedAt: string
+  userId?: string // used in some context
+  lastMessage?: string
+  unread?: number
+  status?: string
+  // raw SQL properties
+  last_message?: string
+  unread_count?: number
+}
+
+export interface ChatMessage extends Message { }
+export interface ChatConversation extends Conversation { }
+
 export interface Review {
   id: string
-  userId: number
+  userId: string
   username: string
   rating: number
   comment: string
@@ -20,14 +51,14 @@ export interface Review {
 }
 
 export interface Friend {
-  id: number
+  id: string
   username: string
   email: string
 }
 
 export interface FriendRequest {
-  id: number
-  requesterId: number
+  id: string
+  requesterId: string
   requesterUsername: string
   createdAt: string
 }
@@ -64,42 +95,30 @@ export interface OMDBMovieDetail extends OMDBMovie {
   Error?: string
 }
 
+export interface Film {
+  id: string
+  title: string
+  year?: string | null
+  posterUrl?: string | null
+  synopsis?: string | null
+  metadata?: string | null
+  createdAt?: string | null
+  updatedAt?: string | null
+  categories?: string[] | null
+}
+
+export interface Category {
+  id: string
+  name: string
+  createdAt?: string | null
+  updatedAt?: string | null
+}
+
 export interface ApiRequestOptions extends RequestInit {
-  token?: string
+  token?: string | null
   auth?: boolean
 }
 
-export interface ChatConversation {
-  id: string          
-  name: string        
-  lastMessage: string
-  unread: number      
-  status?: string     
-}
-export interface ChatMessage {
-  id: string
-  conversationId: string
-  senderId: number
-  content: string
-  fromMe?: boolean     
-  createdAt: string
-}
- export interface Conversation {
-  id: string
-  name: string
-  last_message: string
-  unread_count: number
-}
-
- export interface Message {
-  id: string
-  conversation_id: string
-  sender_id: string
-  text: string
-  seen: boolean
-  created_at: string
-}
-
- export interface UserStatusPayload {
+export interface UserStatusPayload {
   userId: string
 }

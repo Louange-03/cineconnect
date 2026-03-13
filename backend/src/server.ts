@@ -1,60 +1,43 @@
-import "dotenv/config"
-import express, { type Request, type Response } from "express"
+import express from "express"
 import cors from "cors"
 import { createServer } from "http"
 
-import { pool } from "./db/client.js"
-import { initSocket } from "./socket.js"
-
-import authRoutes from "./routes/auth.routes.js"
-import usersRoutes from "./routes/users.routes.js"
-import friendsRoutes from "./routes/friends.routes.js"
-import filmsRoutes from "./routes/films.routes.js"
-import conversationsRoutes from "./routes/conversations.routes.js"
+import { authRoutes } from "./routes/auth.routes"
+import { filmsRoutes } from "./routes/films.routes"
+import { usersRoutes } from "./routes/users.routes"
+import { reviewsRoutes } from "./routes/reviews.routes"
+import friendsRoutes from "./routes/friends.routes"
+import messagesRoutes from "./routes/messages.routes"
+import conversationsRoutes from "./routes/conversations.routes"
+import { initSocket } from "./socket"
 
 const app = express()
 
-const FRONTEND_ORIGIN =
-  process.env.FRONTEND_URL || "http://localhost:5173"
-
-app.use(
-  cors({
-    origin: FRONTEND_ORIGIN,
-    credentials: true,
-  })
-)
-
+const FRONTEND_ORIGIN = process.env.FRONTEND_URL || "*"
+app.use(cors({ origin: FRONTEND_ORIGIN, credentials: true }))
 app.use(express.json())
 
-app.use("/auth", authRoutes)
-app.use("/users", usersRoutes)
-app.use("/friends", friendsRoutes)
-app.use("/films", filmsRoutes)
-app.use("/conversations", conversationsRoutes)
+app.get("/health", (_req, res) => res.json({ ok: true }))
 
-app.get("/health", async (req: Request, res: Response): Promise<void> => {
-  try {
-    const r = await pool.query("SELECT 1 as ok")
-    res.json({ ok: true, db: r.rows[0].ok })
-  } catch (e) {
-    const error = e as Error
-    res.status(500).json({
-      ok: false,
-      error: error?.message || String(e),
-    })
-  }
+// Optionally respond to the root URL for people checking if the API is up
+app.get("/", (_req, res) => {
+	res.json({ ok: true, name: "Cineconnect API is running" })
 })
 
-app.get("/", (req: Request, res: Response): void => {
-  res.json({ ok: true, name: "Cineconnect API" })
-})
+// API routes
+app.use("/api/auth", authRoutes)
+app.use("/api/films", filmsRoutes)
+app.use("/api/users", usersRoutes)
+app.use("/api/reviews", reviewsRoutes)
+app.use("/api/friends", friendsRoutes)
+app.use("/api/messages", messagesRoutes)
+app.use("/api/conversations", conversationsRoutes)
 
+const port = Number(process.env.PORT ?? 3001)
 const httpServer = createServer(app)
 
-initSocket(httpServer, FRONTEND_ORIGIN)
+initSocket(httpServer, FRONTEND_ORIGIN as string)
 
-const PORT = process.env.PORT || 3001
-
-httpServer.listen(PORT, () => {
-  console.log(`Server + Socket running on port ${PORT}`)
+httpServer.listen(port, () => {
+	console.log(`API listening on http://localhost:${port}`)
 })

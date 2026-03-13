@@ -1,4 +1,4 @@
-import { Router } from "express"
+import { Router, Request, Response, NextFunction } from "express"
 import jwt from "jsonwebtoken"
 import { pool } from "../db/client.js"
 
@@ -7,7 +7,7 @@ const router = Router()
 /* =========================
    AUTH MIDDLEWARE REST
 ========================= */
-function authMiddleware(req: any, res: any, next: any) {
+function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -20,7 +20,7 @@ function authMiddleware(req: any, res: any, next: any) {
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET as string
-    ) as { id: string }
+    ) as { id: string; email: string; username: string }
 
     req.user = decoded
     next()
@@ -35,9 +35,9 @@ function authMiddleware(req: any, res: any, next: any) {
 router.get(
   "/:id/messages",
   authMiddleware,
-  async (req: any, res) => {
+  async (req: Request, res: Response) => {
     const conversationId = req.params.id
-    const userId = req.user.id
+    const userId = req.user!.id
 
     const limit = parseInt(req.query.limit as string) || 20
     const cursor = req.query.cursor as string | undefined
@@ -60,7 +60,7 @@ router.get(
         SELECT * FROM messages
         WHERE conversation_id = $1
       `
-      const values: any[] = [conversationId]
+      const values: unknown[] = [conversationId]
 
       if (cursor) {
         query += ` AND created_at < $2`

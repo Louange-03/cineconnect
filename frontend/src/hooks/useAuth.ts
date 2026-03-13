@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { isAuthenticated } from "../lib/token"
+import { isAuthenticated } from "../lib/auth"
 import { fetchMe } from "../lib/userApi"
 import type { User } from "../types"
 

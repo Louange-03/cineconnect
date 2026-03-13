@@ -27,6 +27,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   }
 
   const { email, username, password } = parsed.data
+  console.log("[auth] register request", { email, username })
   const passwordHash = await bcrypt.hash(password, 10)
 
   try {
@@ -39,8 +40,15 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const token = signToken(user)
 
     res.status(201).json({ token, user })
-  } catch {
-    res.status(400).json({ message: "Email ou username déjà utilisé" })
+  } catch (err) {
+    // differentiate constraint errors from other problems
+    console.error("Registration error:", err)
+    if ((err as { code?: string })?.code === "23505") {
+      // unique violation
+      res.status(400).json({ message: "Email ou username déjà utilisé" })
+    } else {
+      res.status(500).json({ message: "Erreur serveur" })
+    }
   }
 }
 
@@ -52,6 +60,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 
   const { email, password } = parsed.data
+  console.log("[auth] login attempt", { email })
 
   const found = await db.select().from(users).where(eq(users.email, email)).limit(1)
   const user = found[0]
@@ -73,6 +82,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   res.json({ token, user: safeUser })
 }
 
-export const me = (req: Request, res: Response): void => {
+export const me = (req: Request & { user?: SafeUser }, res: Response): void => {
   res.json({ user: req.user })
 }

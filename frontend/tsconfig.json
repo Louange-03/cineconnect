@@ -1,7 +1,16 @@
 {
+  "extends": "../tsconfig.json",
   "compilerOptions": {
+    "types": [
+      "node",
+      "react"
+    ],
     "target": "ESNext",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
     "allowJs": false,
     "checkJs": false,
     "jsx": "react-jsx",
@@ -12,11 +21,16 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
+    "noEmit": false,
+    "composite": true,
     "baseUrl": "src",
     "paths": {
-      "~/*": ["*"]
+      "~/*": [
+        "*"
+      ]
     }
   },
-  "include": ["src", "../backend/src/server.ts"]
+  "include": [
+    "src"
+  ]
 }

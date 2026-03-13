@@ -1,4 +1,4 @@
-import { eq, ilike, sql, and } from "drizzle-orm"
+import { ilike, sql, and } from "drizzle-orm"
 import type { Request, Response } from "express"
 
 import { db } from "../db/client.js"

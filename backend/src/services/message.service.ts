@@ -19,7 +19,7 @@ export async function startConversation(
     [userId, otherUserId]
   )
 
-  if (existing.rowCount > 0) {
+  if ((existing.rowCount ?? 0) > 0) {
     return existing.rows[0].id
   }
 

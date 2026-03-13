@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1769526113339,
-      "tag": "0000_odd_jubilee",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1769528782990,
-      "tag": "0001_chief_timeslip",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1769678494200,
-      "tag": "0002_superb_wasp",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1769773297426,
-      "tag": "0003_quick_rogue",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1771446269022,
-      "tag": "0004_white_lady_mastermind",
+      "when": 1772715588248,
+      "tag": "0000_premium_ricochet",
       "breakpoints": true
     }
   ]

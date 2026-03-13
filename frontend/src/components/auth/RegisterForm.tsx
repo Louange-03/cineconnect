@@ -1,65 +1,115 @@
-import { useState, FormEvent } from "react"
-import { register } from "../../lib/authApi"
+import React, { useMemo, useState } from "react"
+import type { FormEvent } from "react"
+import { register } from "../../lib/auth"
+import { Alert, EyeButton, Field, Input, Spinner } from "./AuthFields"
 
 interface RegisterFormProps {
   onSuccess?: () => void
 }
 
-export function RegisterForm({ onSuccess }: RegisterFormProps): JSX.Element {
+export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [showPwd, setShowPwd] = useState(false)
+
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  const canSubmit = useMemo(() => {
+    return (
+      email.trim().length > 0 &&
+      username.trim().length >= 3 &&
+      password.trim().length >= 6 &&
+      !loading
+    )
+  }, [email, username, password, loading])
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
+    setSuccess(null)
     setLoading(true)
+
     try {
       await register({ email, username, password })
       setSuccess("Inscription réussie !")
       onSuccess?.()
     } catch (err: any) {
-      setError(err.message)
+      if (err?.message?.includes("déjà utilisé")) {
+        setError("Email ou nom d'utilisateur déjà utilisé.")
+      } else if (err?.message?.includes("Données invalides")) {
+        setError("Veuillez remplir tous les champs correctement.")
+      } else if (err?.message?.includes("Erreur serveur")) {
+        setError("Erreur serveur, veuillez réessayer plus tard.")
+      } else {
+        setError(err?.message || "Erreur lors de l'inscription.")
+      }
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3">
-      <input
-        className="w-full rounded border px-3 py-2"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-      />
+    <form onSubmit={onSubmit} className="flex w-full flex-col gap-5">
+      <Field label="Adresse e-mail">
+        <Input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="vous@exemple.com"
+          autoComplete="email"
+          leftIcon={
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+          }
+        />
+      </Field>
 
-      <input
-        className="w-full rounded border px-3 py-2"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        placeholder="Username"
-      />
+      <Field label="Nom d'utilisateur">
+        <Input
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Votre pseudo"
+          autoComplete="username"
+          leftIcon={
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6.75a3 3 0 11-6 0 3 3 0 016 0zm-12 12a9 9 0 1118 0H3.75z" />
+            </svg>
+          }
+        />
+      </Field>
 
-      <input
-        className="w-full rounded border px-3 py-2"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Mot de passe"
-        type="password"
-      />
+      <Field label="Mot de passe">
+        <Input
+          type={showPwd ? "text" : "password"}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          autoComplete="new-password"
+          leftIcon={
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+          }
+          rightSlot={<EyeButton pressed={showPwd} onClick={() => setShowPwd((v) => !v)} />}
+        />
+      </Field>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {success && <p className="text-sm text-green-600">{success}</p>}
+      <div className="min-h-[24px]">
+        {error ? <Alert variant="error">{error}</Alert> : null}
+        {!error && success ? <Alert variant="success">{success}</Alert> : null}
+      </div>
 
       <button
-        className="rounded bg-black px-4 py-2 text-white"
-        disabled={loading}
+        type="submit"
+        disabled={!canSubmit}
+        className="w-full mt-6 rounded-2xl bg-gradient-to-r from-imperial to-ocean px-6 py-5 font-semibold text-frost transition-all hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(14,107,168,0.4)] disabled:opacity-50 disabled:hover:translate-y-0"
       >
-        {loading ? "Création..." : "Créer un compte"}
+        {loading ? <Spinner /> : "S'inscrire"}
       </button>
     </form>
   )

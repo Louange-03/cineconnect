@@ -1,8 +1,23 @@
 import { Router } from "express"
-import { getFriendsController } from "../controllers/friends.controller.js"
+import { searchUsers } from "../controllers/friends.controller"
+import {
+  getFriends,
+  getPendingRequests,
+  sendFriendRequest,
+  respondFriendRequest,
+  removeFriend
+} from "../controllers/friends.controller"
 
 const router = Router()
 
-router.get("/", getFriendsController)
+router.get("/", getFriends)
+
+router.get("/pending", getPendingRequests)
+
+router.post("/request", sendFriendRequest)
+
+router.post("/respond/:id", respondFriendRequest)
+router.get("/search", searchUsers)
+router.delete("/:id", removeFriend)
 
 export default router

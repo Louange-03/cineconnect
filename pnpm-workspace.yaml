@@ -1,4 +1,8 @@
 packages:
-  - "."
-  - "backend"
+  - .
+  - backend
+  - frontend
 
+ignoredBuiltDependencies:
+  - bcrypt
+  - esbuild

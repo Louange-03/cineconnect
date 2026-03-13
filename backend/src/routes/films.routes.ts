@@ -1,98 +1,111 @@
-import { Router, type Request, type Response } from "express"
+import { Router } from "express"
+import { db } from "../db"
+import { films, filmCategories, categories } from "../db/schema"
+import { eq, ilike, inArray, and, type SQL } from "drizzle-orm"
+import { getFilmById } from "../controllers/films.controller" // Ajouté
 
-const router = Router()
+export const filmsRoutes = Router()
 
-const OMDB_KEY = process.env.OMDB_API_KEY || process.env.OMDB_KEY || ""
-const BASE_URL = "https://www.omdbapi.com/"
 
-if (!OMDB_KEY) {
-  console.warn("WARNING: OMDB_API_KEY not set, film search will fail")
+
+function toStringQuery(value: unknown): string {
+  return typeof value === "string" ? value : ""
 }
 
-// GET /films?q=some
-router.get("/", async (req: Request, res: Response): Promise<void> => {
-  if (!OMDB_KEY) {
-    res.status(500).json({ error: "OMDB_API_KEY missing on server" })
-    return
-  }
+function toNumberQuery(value: unknown, fallback: number): number {
+  if (typeof value !== "string") return fallback
+  const n = Number(value)
+  return Number.isFinite(n) ? n : fallback
+}
 
-  const q = (req.query.q as string | undefined) || ""
-  if (!q) {
-    res.json({ Search: [] })
-    return
-  }
+filmsRoutes.get("/", async (req, res) => {
   try {
-    const url = `${BASE_URL}?apikey=${OMDB_KEY}&s=${encodeURIComponent(q)}`
-    const r = await fetch(url)
-    const data = await r.json()
-    res.json(data)
-  } catch (e) {
-    console.error("Error fetching from OMDb", e)
-    res.status(500).json({ error: "failed to query OMDb" })
-  }
-})
+    const q = toStringQuery(req.query.q).trim()
+    const category = toStringQuery(req.query.category).trim()
+    const limit = toNumberQuery(req.query.limit, 60)
 
-// POST /films/search { query }
-router.post("/search", async (req: Request, res: Response): Promise<void> => {
-  console.log("/films/search body:", req.body)
-  if (!OMDB_KEY) {
-    res.status(500).json({ error: "OMDB_API_KEY missing on server" })
-    return
-  }
-  const q = (req.body.query as string | undefined) || ""
-  if (!q) {
-    res.json({ Search: [] })
-    return
-  }
-  try {
-    const url = `${BASE_URL}?apikey=${OMDB_KEY}&s=${encodeURIComponent(q)}`
-    const r = await fetch(url)
-    const data = await r.json()
-    res.json(data)
-  } catch (e) {
-    console.error("Error fetching from OMDb", e)
-    res.status(500).json({ error: "failed to query OMDb" })
-  }
-})
+    const whereParts: SQL[] = []
 
-// GET /films/:id
-router.get("/:id", async (req: Request, res: Response): Promise<void> => {
-  const id = req.params.id
-  try {
-    const url = `${BASE_URL}?apikey=${OMDB_KEY}&i=${encodeURIComponent(id)}&plot=full`
-    const r = await fetch(url)
-    const data = await r.json()
-    if (data?.Response === "False") {
-      res.status(404).json({ error: data.Error || "Not found" })
-    } else {
-      res.json(data)
+    if (q) {
+      whereParts.push(ilike(films.title, `%${q}%`))
     }
-  } catch (e) {
-    console.error("Error fetching detail from OMDb", e)
-    res.status(500).json({ error: "server" })
-  }
-})
 
-// POST /films/detail { id }
-router.post("/detail", async (req: Request, res: Response): Promise<void> => {
-  const id = req.body.id as string | undefined
-  if (!id) {
-    res.status(400).json({ error: "id missing" })
-    return
-  }
-  try {
-    const url = `${BASE_URL}?apikey=${OMDB_KEY}&i=${encodeURIComponent(id)}&plot=full`
-    const r = await fetch(url)
-    const data = await r.json()
-    if (data?.Response === "False") {
-      res.status(404).json({ error: data.Error || "Not found" })
-    } else {
-      res.json(data)
+    if (category) {
+      const cat = await db
+        .select({ id: categories.id })
+        .from(categories)
+        .where(eq(categories.name, category))
+        .limit(1)
+
+      if (!cat.length) {
+        // catégorie inconnue => 0 résultats
+        return res.json({ films: [] })
+      }
+
+      const links = await db
+        .select({ filmId: filmCategories.filmId })
+        .from(filmCategories)
+        .where(eq(filmCategories.categoryId, cat[0].id))
+
+      const filmIds = links.map((l) => l.filmId)
+
+      if (filmIds.length === 0) {
+        return res.json({ films: [] })
+      }
+
+      whereParts.push(inArray(films.id, filmIds))
     }
-  } catch (e) {
-    console.error("Error fetching detail from OMDb", e)
-    res.status(500).json({ error: "server" })
+
+    let resultFilms;
+    if (whereParts.length > 0) {
+      resultFilms = await db.select().from(films).where(and(...whereParts)).limit(limit);
+    } else {
+      resultFilms = await db.select().from(films).limit(limit);
+    }
+
+    // Now manually attach categories (since SQLite/PG array_agg can be tricky to type cleanly with simple select)
+    // We can do a second query to get all categories for the returning films
+    const filmIds = resultFilms.map(f => f.id);
+    let filmsWithCategories: any[] = resultFilms.map(f => ({ ...f, categories: [] as string[] }));
+
+    if (filmIds.length > 0) {
+      const allLinks = await db
+        .select({
+          filmId: filmCategories.filmId,
+          categoryName: categories.name
+        })
+        .from(filmCategories)
+        .innerJoin(categories, eq(filmCategories.categoryId, categories.id))
+        .where(inArray(filmCategories.filmId, filmIds));
+
+      // grouped
+      const catsMap = new Map<string, string[]>();
+      for (const link of allLinks) {
+        if (!catsMap.has(link.filmId)) catsMap.set(link.filmId, []);
+        catsMap.get(link.filmId)!.push(link.categoryName);
+      }
+
+      filmsWithCategories = resultFilms.map(f => ({
+        ...f,
+        categories: catsMap.get(f.id) || []
+      }));
+    }
+
+    res.json({ films: filmsWithCategories })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: "Erreur récupération films" })
   }
 })
 
-export default router
+filmsRoutes.get("/categories", async (_req, res) => {
+  try {
+    const list = await db.select().from(categories).orderBy(categories.name)
+    res.json({ categories: list })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: "Erreur récupération catégories" })
+  }
+})
+
+filmsRoutes.get("/:id", getFilmById)
