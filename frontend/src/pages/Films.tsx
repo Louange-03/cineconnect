@@ -2,7 +2,6 @@ import React, { useMemo, useState } from "react"
 import { useFilms } from "../hooks/useFilms"
 import { useCategories } from "../hooks/useCategories"
 import { SearchBar } from "../components/films/SearchBar"
-import { OmdbImportPanel } from "../components/films/OmdbImportPanel"
 import { HeroFeature } from "../components/films/HeroFeature"
 import { CategoryPills } from "../components/films/CategoryPills"
 import { FilmCard } from "../components/films/FilmCard"
@@ -27,8 +26,6 @@ export function Films() {
 
   const isCatalogEmpty =
     !isBusy && !error && list.length === 0 && query.trim() === "" && category === ""
-
-  const canImportFromOmdb = query.trim().length >= 3
 
   const featuredFilm = useMemo(() => {
     if (list.length === 0) return undefined
@@ -118,19 +115,8 @@ export function Films() {
 
               <h2 className="mb-3 text-3xl font-black">Votre catalogue est vide</h2>
               <p className="mb-8 text-base md:text-lg leading-relaxed text-white/60">
-                Recherchez un film avec la barre ci-dessus pour commencer à remplir votre base locale
-                (import OMDb).
+                Recherchez un film avec la barre ci-dessus pour le trouver dans la base de données.
               </p>
-
-              {canImportFromOmdb ? (
-                <div className="text-left">
-                  <OmdbImportPanel initialQuery={query} />
-                </div>
-              ) : (
-                <div className="text-white/40">
-                  Tape au moins 3 caractères pour activer l’import OMDb.
-                </div>
-              )}
             </section>
           )}
 
@@ -139,19 +125,9 @@ export function Films() {
             <section className="mx-auto mt-10 max-w-2xl px-6 text-center">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-8">
                 <p className="text-lg text-white/70">
-                  Aucun film local trouvé pour{" "}
+                  Aucun film trouvé pour{" "}
                   <span className="font-bold text-[#3EA6FF]">“{query.trim() || category}”</span>
                 </p>
-
-                {canImportFromOmdb ? (
-                  <div className="mt-6 text-left">
-                    <OmdbImportPanel initialQuery={query} />
-                  </div>
-                ) : (
-                  <div className="mt-6 text-white/40">
-                    Tape au moins 3 caractères pour rechercher sur OMDb…
-                  </div>
-                )}
 
                 <button
                   type="button"

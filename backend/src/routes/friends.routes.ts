@@ -8,7 +8,11 @@ import {
     removeFriend
 } from "../controllers/friends.controller"
 
+import { authMiddleware } from "../middlewares/auth"
+
 const router = Router()
+
+router.use(authMiddleware)
 
 router.get("/", getFriends)
 router.get("/pending", getPendingRequests)

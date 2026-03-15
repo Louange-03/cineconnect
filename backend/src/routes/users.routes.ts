@@ -99,7 +99,7 @@ usersRoutes.get("/me/favorites", authMiddleware, async (req: Request, res: Respo
     const list = await db
       .select({
         id: films.id,
-        tmdbId: films.tmdbId,
+        imdbId: films.imdbId,
         title: films.title,
         year: films.year,
         posterUrl: films.posterUrl

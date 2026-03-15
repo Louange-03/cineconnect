@@ -20,10 +20,10 @@ async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> 
     try {
       if (contentType.includes("application/json")) {
         const json = JSON.parse(text)
-        throw new Error(json?.message || "Erreur serveur")
+        throw new Error(json?.message ?? "Film introuvable")
       }
-    } catch {
-      // ignore parsing error
+    } catch (e) {
+      if (e instanceof Error) throw e
     }
     throw new Error("Film introuvable")
   }
