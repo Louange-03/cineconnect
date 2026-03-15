@@ -8,6 +8,7 @@ import { films, categories, filmCategories } from "../db/schema.js"
 // Trailer of a film row returned by list endpoints
 const filmSelect = {
   id: films.id,
+  imdbId: films.imdbId,
   title: films.title,
   year: films.year,
   posterUrl: films.posterUrl,
@@ -71,16 +72,22 @@ export const listFilms = async (req: Request, res: Response): Promise<void> => {
 }
 
 export const getFilmById = async (req: Request, res: Response): Promise<void> => {
-  let id = req.params.id
-  if (Array.isArray(id)) id = id[0]
+  try {
+    let id = req.params.id
+    if (Array.isArray(id)) id = id[0]
+    
+    if (!id || typeof id !== "string") {
+      res.status(400).json({ message: "Invalid ID" })
+      return
+    }
 
-  const rows = await db.select().from(films).where(eq(films.id, id)).limit(1)
-  const film = rows[0]
+    const rows = await db.select().from(films).where(eq(films.id, id)).limit(1)
+    const film = rows[0]
 
-  if (!film) {
-    res.status(404).json({ message: "Film not found" })
-    return
-  }
+    if (!film) {
+      res.status(404).json({ message: "Film not found" })
+      return
+    }
 
   // retrieve categories
   const cats = await db
@@ -90,6 +97,10 @@ export const getFilmById = async (req: Request, res: Response): Promise<void> =>
     .where(eq(filmCategories.filmId, film.id))
 
   res.json({ film: { ...film, categories: cats.map((c) => c.name) } })
+  } catch (err) {
+    console.error("Erreur getFilmById:", err)
+    res.status(500).json({ message: "Erreur récupération film" })
+  }
 }
 
 export const searchFilms = async (req: Request, res: Response): Promise<void> => {
@@ -114,7 +125,46 @@ export const getCategories = async (req: Request, res: Response): Promise<void> 
 }
 
 /* -----------------------------
-   ✅ IMPORT OMDb -> DB locale
+   OMDb API : recherche externe (pour import)
+-------------------------------- */
+const OMDB_API_BASE = "https://www.omdbapi.com"
+
+function getOmdbKey(): string {
+  return process.env.OMDB_API_KEY || process.env.OMDB_KEY || ""
+}
+
+export const searchOmdb = async (req: Request, res: Response): Promise<void> => {
+  const q = (req.query.q ?? "").toString().trim()
+  const page = Math.max(1, parseInt((req.query.page as string) ?? "1", 10) || 1)
+
+  const OMDB_KEY = getOmdbKey()
+  if (!OMDB_KEY) {
+    res.status(500).json({ error: "OMDB_API_KEY missing on server" })
+    return
+  }
+
+  if (!q) {
+    res.json({ Response: "True", Search: [], totalResults: "0" })
+    return
+  }
+
+  try {
+    const url = `${OMDB_API_BASE}/?apikey=${OMDB_KEY}&s=${encodeURIComponent(q)}&page=${page}`
+    const r = await fetch(url)
+    const data = (await r.json()) as { Response: string; Search?: unknown[]; totalResults?: string; Error?: string }
+    if (data?.Response === "False") {
+      res.json({ Response: "False", Search: [], Error: data?.Error })
+      return
+    }
+    res.json({ Response: "True", Search: data?.Search ?? [], totalResults: data?.totalResults ?? "0" })
+  } catch (e) {
+    console.error("searchOmdb error:", e)
+    res.status(500).json({ error: "OMDb request failed" })
+  }
+}
+
+/* -----------------------------
+   IMPORT OMDb -> DB locale (par imdbID)
 -------------------------------- */
 const importSchema = z.object({
   imdbID: z.string().min(3),
@@ -127,7 +177,7 @@ export const importFilmFromOmdb = async (req: Request, res: Response): Promise<v
     return
   }
 
-  const OMDB_KEY = process.env.OMDB_API_KEY || process.env.OMDB_KEY || ""
+  const OMDB_KEY = getOmdbKey()
   if (!OMDB_KEY) {
     res.status(500).json({ error: "OMDB_API_KEY missing on server" })
     return
@@ -162,11 +212,11 @@ export const importFilmFromOmdb = async (req: Request, res: Response): Promise<v
       return
     }
 
-    // Anti-doublon simple (title+year)
+    // Anti-doublon par imdbId (unique)
     const existing = await db
       .select({ id: films.id })
       .from(films)
-      .where(and(eq(films.title, title), eq(films.year, year)))
+      .where(eq(films.imdbId, imdbID))
       .limit(1)
 
     if (existing.length > 0) {
@@ -175,16 +225,17 @@ export const importFilmFromOmdb = async (req: Request, res: Response): Promise<v
       return
     }
 
-    // Insert film
+    const metadataJson = typeof data === "object" ? JSON.stringify(data) : ""
+
     const inserted = await db
       .insert(films)
       .values({
-        tmdbId: req.body.tmdbId || "",
+        imdbId: imdbID,
         title: title,
         year: year,
         posterUrl: posterUrl,
         synopsis: synopsis,
-        metadata: req.body.metadata || "",
+        metadata: metadataJson,
       })
       .returning()
 

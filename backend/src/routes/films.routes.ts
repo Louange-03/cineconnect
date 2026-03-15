@@ -2,7 +2,8 @@ import { Router } from "express"
 import { db } from "../db"
 import { films, filmCategories, categories } from "../db/schema"
 import { eq, ilike, inArray, and, type SQL } from "drizzle-orm"
-import { getFilmById } from "../controllers/films.controller" // Ajouté
+import { getFilmById, searchOmdb, importFilmFromOmdb } from "../controllers/films.controller"
+import { authMiddleware } from "../middlewares/auth"
 
 export const filmsRoutes = Router()
 
@@ -107,5 +108,9 @@ filmsRoutes.get("/categories", async (_req, res) => {
     res.status(500).json({ message: "Erreur récupération catégories" })
   }
 })
+
+// Recherche OMDb (externe) pour l’import — avant /:id
+filmsRoutes.get("/omdb/search", searchOmdb)
+filmsRoutes.post("/import", authMiddleware, importFilmFromOmdb)
 
 filmsRoutes.get("/:id", getFilmById)

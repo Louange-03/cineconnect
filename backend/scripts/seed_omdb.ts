@@ -1,10 +1,15 @@
+import path from "path"
+import { fileURLToPath } from "url"
+import dotenv from "dotenv"
 import { db } from "../src/db"
 import { films, categories, filmCategories } from "../src/db/schema"
 import { eq } from "drizzle-orm"
-import dotenv from "dotenv"
-dotenv.config()
 
-const OMDB_API_KEY = process.env.OMDB_API_KEY || "e4cdbd66" // fallback demo key
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+dotenv.config()
+dotenv.config({ path: path.resolve(__dirname, "../.env") })
+
+const OMDB_API_KEY = process.env.OMDB_API_KEY || process.env.OMDB_KEY || "1df456d6"
 
 const TITLES_TO_SEED = [
     // --- SERIES ---
@@ -88,7 +93,7 @@ async function seed() {
             const existing = await db
                 .select()
                 .from(films)
-                .where(eq(films.tmdbId, data.imdbID))
+                .where(eq(films.imdbId, data.imdbID))
                 .limit(1)
 
             if (existing.length > 0) {
@@ -98,7 +103,7 @@ async function seed() {
 
             // Insert Film
             const [newFilm] = await db.insert(films).values({
-                tmdbId: data.imdbID,
+                imdbId: data.imdbID,
                 title: data.Title,
                 year: data.Year,
                 posterUrl: data.Poster !== "N/A" ? data.Poster : null,

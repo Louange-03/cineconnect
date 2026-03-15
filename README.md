@@ -112,16 +112,8 @@ pnpm dev
 L'application expose une collection de routes REST solides, par exemple :
 - **Authentification** : `/api/auth/register`, `/api/auth/login`
 - **Contenu Modéré** : `/api/films`, `/api/films/:id`
-- **Recherches et Importation Externe** : `/api/films/tmdb?q=...`, `/api/films/import`
+- **Recherches et Importation Externe** : `GET /api/films/omdb/search?q=...`, `POST /api/films/import`
 - **Contributions (Réseau social)** : `/api/reviews`, `/api/messages`, `/api/users`
 
 Tous les appels sécurisés attendent un `Authorization: Bearer <votre_token_jwt>` obtenu suivant la connexion. Le tout est injecté automatiquement la fonction `apiClient()` construite dans le Front.
 
----
-<<<<<<< HEAD
-
-Projet réalisé dans le cadre académique de développement de la structure "WebApplication complète", **HETIC Web2**.
-=======
-//
-//
->>>>>>> origin/oceanne
