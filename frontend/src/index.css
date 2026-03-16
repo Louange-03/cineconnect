@@ -172,3 +172,41 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@keyframes cine-hero-intro {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0) scale(0.98);
+    filter: blur(4px);
+  }
+  40% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes cine-hero-badge {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -8px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.cine-hero-enter {
+  animation: cine-hero-intro 900ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: left center;
+}
+
+.cine-hero-badge {
+  animation: cine-hero-badge 500ms ease-out 200ms both;
+}
