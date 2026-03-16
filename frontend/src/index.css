@@ -34,6 +34,89 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Global cinematic background with soft glows and floating orbs */
+.cine-bg {
+  position: relative;
+  isolation: isolate;
+}
+
+.cine-bg::before,
+.cine-bg::after {
+  content: "";
+  position: fixed;
+  width: 480px;
+  height: 480px;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.45;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  z-index: -10;
+}
+
+.cine-bg::before {
+  top: -80px;
+  left: -80px;
+  background: radial-gradient(circle at 30% 30%, rgba(62, 166, 255, 0.9), transparent 65%);
+}
+
+.cine-bg::after {
+  bottom: -120px;
+  right: -60px;
+  background: radial-gradient(circle at 70% 70%, rgba(185, 28, 28, 0.85), transparent 70%);
+}
+
+@keyframes cine-orb-float {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(16px, -18px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes cine-orb-float-alt {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-12px, 14px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.cine-orb {
+  position: fixed;
+  border-radius: 9999px;
+  filter: blur(40px);
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: -10;
+}
+
+.cine-orb--blue {
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle at 30% 20%, rgba(56, 189, 248, 0.9), transparent 70%);
+  top: 100px;
+  right: 18%;
+  animation: cine-orb-float 18s ease-in-out infinite;
+}
+
+.cine-orb--gold {
+  width: 190px;
+  height: 190px;
+  background: radial-gradient(circle at 60% 80%, rgba(250, 204, 21, 0.85), transparent 70%);
+  bottom: 120px;
+  left: 15%;
+  animation: cine-orb-float-alt 22s ease-in-out infinite;
+}
+
 :focus-visible {
   outline: 2px solid rgba(29, 108, 224, 0.8);
   outline-offset: 3px;
