@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap");
 @theme {
   --color-prussian: #050b1c;
   --color-navy: #0a132d;
@@ -8,7 +8,6 @@
   --color-frost: #e2e8f0;
 }
 
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap");
 
 :root {
   font-family: "Outfit", system-ui, -apple-system, sans-serif;
@@ -89,4 +88,18 @@ body {
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease;
 }

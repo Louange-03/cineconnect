@@ -1,120 +1,94 @@
-import { Server } from "socket.io"
 import { Server as HttpServer } from "http"
-import jwt from "jsonwebtoken"
-import { pool } from "./db/client.js"
+import { Server, Socket } from "socket.io"
 
-const onlineUsers = new Map<string, Set<string>>()
+interface Message {
+  id: string
+  conversationId: string
+  senderId: string
+  text: string
+  createdAt: string
+}
 
-export const initSocket = (httpServer: HttpServer, frontendOrigin: string) => {
-  const io = new Server(httpServer, {
-    cors: {
-      origin: frontendOrigin,
-      credentials: true,
-    },
+interface UserStatusPayload {
+  userId: string
+}
+
+interface ClientToServerEvents {
+  join_conversation: (conversationId: string) => void
+  send_message: (msg: Message) => void
+  edit_message: (data: { messageId: string; text: string }) => void
+  delete_message: (messageId: string) => void
+  typing: (data: { conversationId: string; userId: string }) => void
+  stop_typing: (data: { conversationId: string; userId: string }) => void
+}
+
+interface ServerToClientEvents {
+  receive_message: (msg: Message) => void
+  message_edited: (msg: Message) => void
+  message_deleted: (messageId: string) => void
+  user_online: (data: UserStatusPayload) => void
+  user_offline: (data: UserStatusPayload) => void
+  user_typing: (data: UserStatusPayload) => void
+  user_stop_typing: (data: UserStatusPayload) => void
+}
+
+export const initSocket = (httpServer: HttpServer, origin: string) => {
+  const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
+    cors: { origin, methods: ["GET", "POST"] },
   })
 
-  io.use((socket, next) => {
-    const token = socket.handshake.auth?.token
+  const messages: Record<string, Message[]> = {}
 
-    if (!token) {
-      return next(new Error("Unauthorized"))
-    }
+  io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
+    console.log("Nouvelle connexion WebSocket:", socket.id)
 
-    try {
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET as string
-      ) as { id: string }
-
-      socket.data.user = decoded
-      next()
-    } catch {
-      next(new Error("Unauthorized"))
-    }
-  })
-
-  io.on("connection", async (socket) => {
-    const userId = socket.data.user?.id as string
-
-    if (!onlineUsers.has(userId)) {
-      onlineUsers.set(userId, new Set())
-    }
-
-    onlineUsers.get(userId)!.add(socket.id)
-
-    io.emit("user-online", { userId })
-
-    try {
-      const conversations = await pool.query(
-        `
-        SELECT conversation_id 
-        FROM conversation_members 
-        WHERE user_id = $1
-        `,
-        [userId]
-      )
-
-      conversations.rows.forEach((row: { conversation_id: string }) => {
-        socket.join(`conversation-${row.conversation_id}`)
-      })
-    } catch (e) {
-      console.error(e)
-    }
-
-    socket.on("send-message", async ({ conversationId, text }) => {
-      try {
-        const memberCheck = await pool.query(
-          `
-          SELECT 1 FROM conversation_members
-          WHERE conversation_id = $1 AND user_id = $2
-          `,
-          [conversationId, userId]
-        )
-
-        if (!memberCheck.rowCount) return
-
-        const result = await pool.query(
-          `
-          INSERT INTO messages (conversation_id, sender_id, text)
-          VALUES ($1, $2, $3)
-          RETURNING *
-          `,
-          [conversationId, userId, text]
-        )
-
-        const message = result.rows[0]
-
-        io.to(`conversation-${conversationId}`).emit(
-          "new-message",
-          message
-        )
-      } catch (e) {
-        console.error(e)
+    socket.on("join_conversation", (conversationId) => {
+      socket.join(conversationId)
+      console.log(`Socket ${socket.id} rejoint la conversation ${conversationId}`)
+      if (messages[conversationId]) {
+        messages[conversationId].forEach((msg) => socket.emit("receive_message", msg))
       }
     })
 
-    socket.on("disconnect", async () => {
-      const sockets = onlineUsers.get(userId)
-      if (!sockets) return
+    socket.on("send_message", (msg) => {
+      msg.createdAt = new Date().toISOString()
+      messages[msg.conversationId] = messages[msg.conversationId] || []
+      messages[msg.conversationId].push(msg)
+      io.to(msg.conversationId).emit("receive_message", msg)
+    })
 
-      sockets.delete(socket.id)
-
-      if (sockets.size === 0) {
-        onlineUsers.delete(userId)
-
-        try {
-          await pool.query(
-            `UPDATE users SET last_seen = NOW() WHERE id = $1`,
-            [userId]
-          )
-        } catch (e) {
-          console.error(e)
+    socket.on("edit_message", ({ messageId, text }) => {
+      for (const convId in messages) {
+        const idx = messages[convId].findIndex((m) => m.id === messageId)
+        if (idx !== -1) {
+          messages[convId][idx].text = text
+          io.to(convId).emit("message_edited", messages[convId][idx])
+          break
         }
-
-        io.emit("user-offline", { userId })
       }
     })
-  })
 
-  return io
+    socket.on("delete_message", (messageId) => {
+      for (const convId in messages) {
+        const idx = messages[convId].findIndex((m) => m.id === messageId)
+        if (idx !== -1) {
+          messages[convId].splice(idx, 1)
+          io.to(convId).emit("message_deleted", messageId)
+          break
+        }
+      }
+    })
+
+    socket.on("typing", ({ conversationId, userId }) => {
+      socket.to(conversationId).emit("user_typing", { userId })
+    })
+
+    socket.on("stop_typing", ({ conversationId, userId }) => {
+      socket.to(conversationId).emit("user_stop_typing", { userId })
+    })
+
+    socket.on("disconnect", () => {
+      console.log("Socket déconnectée:", socket.id)
+    })
+  })
 }

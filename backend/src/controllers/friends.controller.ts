@@ -1,10 +1,9 @@
-import { eq, sql } from "drizzle-orm"
+import { eq, sql, and, ilike, ne } from "drizzle-orm"
 import type { Request, Response } from "express"
 
 import { db } from "../db/client.js"
 import { users, friendships } from "../db/schema.js"
 
-/* ...existing code... */
 export const getFriends = async (req: Request, res: Response): Promise<void> => {
   const meId = req.user!.id
 
@@ -38,7 +37,9 @@ export const getPendingRequests = async (req: Request, res: Response): Promise<v
       createdAt: friendships.createdAt,
     })
     .from(friendships)
-    .where(sql`${friendships.addresseeId} = ${meId} AND ${friendships.status} = 'pending'`)
+    .where(
+      sql`${friendships.addresseeId} = ${meId} AND ${friendships.status} = 'pending'`
+    )
 
   res.json({ requests: rows })
 }
@@ -58,18 +59,23 @@ export const sendFriendRequest = async (req: Request, res: Response): Promise<vo
   }
 
   try {
-    const other = await db.select({ id: users.id }).from(users).where(eq(users.id, userId)).limit(1)
+    const other = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1)
+
     if (!other[0]) {
       res.status(404).json({ error: "user not found" })
       return
     }
 
-    // Check if already exist
     const existing = await db
       .select()
       .from(friendships)
       .where(
-        sql`(${friendships.requesterId} = ${meId} AND ${friendships.addresseeId} = ${userId}) OR (${friendships.requesterId} = ${userId} AND ${friendships.addresseeId} = ${meId})`
+        sql`(${friendships.requesterId} = ${meId} AND ${friendships.addresseeId} = ${userId}) 
+        OR (${friendships.requesterId} = ${userId} AND ${friendships.addresseeId} = ${meId})`
       )
       .limit(1)
 
@@ -80,7 +86,11 @@ export const sendFriendRequest = async (req: Request, res: Response): Promise<vo
 
     const inserted = await db
       .insert(friendships)
-      .values({ requesterId: meId, addresseeId: userId, status: "pending" })
+      .values({
+        requesterId: meId,
+        addresseeId: userId,
+        status: "pending",
+      })
       .returning()
 
     res.status(201).json({ status: "pending", friendship: inserted[0] })
@@ -105,7 +115,11 @@ export const respondFriendRequest = async (req: Request, res: Response): Promise
   }
 
   try {
-    const friendship = await db.select().from(friendships).where(eq(friendships.id, friendshipId)).limit(1)
+    const friendship = await db
+      .select()
+      .from(friendships)
+      .where(eq(friendships.id, friendshipId))
+      .limit(1)
 
     if (!friendship[0]) {
       res.status(404).json({ error: "friendship not found" })
@@ -120,7 +134,10 @@ export const respondFriendRequest = async (req: Request, res: Response): Promise
     if (action === "accept") {
       const updated = await db
         .update(friendships)
-        .set({ status: "accepted", updatedAt: sql`now()` })
+        .set({
+          status: "accepted",
+          updatedAt: sql`now()`,
+        })
         .where(eq(friendships.id, friendshipId))
         .returning()
 
@@ -135,7 +152,7 @@ export const respondFriendRequest = async (req: Request, res: Response): Promise
         .where(eq(friendships.id, friendshipId))
         .returning()
 
-      res.json({ status: "pending", friendship: updated[0] })
+      res.json({ status: "rejected", friendship: updated[0] })
     }
   } catch {
     res.status(500).json({ error: "server" })
@@ -153,7 +170,10 @@ export const removeFriend = async (req: Request, res: Response): Promise<void> =
   try {
     const updated = await db
       .update(friendships)
-      .set({ status: "rejected", updatedAt: sql`now()` })
+      .set({
+        status: "rejected",
+        updatedAt: sql`now()`,
+      })
       .where(eq(friendships.id, friendshipId))
       .returning()
 
@@ -167,21 +187,20 @@ export const removeFriend = async (req: Request, res: Response): Promise<void> =
     res.status(500).json({ error: "server" })
   }
 }
-export const searchUsers = async (req, res) => {
-  const query = req.query.q
-  const currentUserId = req.user.id
 
-  const users = await db
+export const searchUsers = async (req: Request, res: Response): Promise<void> => {
+  const query = req.query.q as string
+  const currentUserId = req.user!.id
+
+  const foundUsers = await db
     .select()
-    .from(usersTable)
+    .from(users)
     .where(
       and(
-        ilike(usersTable.username, `%${query}%`),
-        ne(usersTable.id, currentUserId)
+        ilike(users.username, `%${query}%`),
+        ne(users.id, currentUserId)
       )
     )
 
-  res.json(users)
+  res.json(foundUsers)
 }
-
-

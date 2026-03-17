@@ -26,16 +26,11 @@ export interface Message {
 
 export interface Conversation {
   id: string
-  name: string | null
-  createdAt: string
-  updatedAt: string
-  userId?: string // used in some context
-  lastMessage?: string
-  unread?: number
-  status?: string
-  // raw SQL properties
-  last_message?: string
-  unread_count?: number
+  name: string
+  user_id: string
+  last_message: string
+  unread_count: number
+  is_friend: boolean
 }
 
 export interface ChatMessage extends Message { }
