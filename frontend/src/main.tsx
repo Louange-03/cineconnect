@@ -24,8 +24,16 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       <TanStackDevtools
         config={{ position: "bottom-right", hideUntilHover: false }}
         plugins={[
-          { name: "TanStack Query", render: <ReactQueryDevtoolsPanel /> },
-          { name: "TanStack Router", render: <TanStackRouterDevtoolsPanel /> },
+          {
+            name: "TanStack Query",
+            render: <ReactQueryDevtoolsPanel client={queryClient} />,
+          },
+          {
+            name: "TanStack Router",
+            render: (
+              <TanStackRouterDevtoolsPanel router={router} />
+            ),
+          },
         ]}
       />
     </QueryClientProvider>

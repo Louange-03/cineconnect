@@ -3,6 +3,7 @@ import { Send } from "lucide-react"
 import { socket } from "../socket"
 import axios from "axios"
 import type { Conversation, Message } from "../types"
+import { getToken, getUser } from "../lib/auth"
 
 interface UserStatusPayload {
   userId: string
@@ -15,8 +16,8 @@ export function Discussion() {
   const [newMessage, setNewMessage] = useState("")
   const [typingUsers, setTypingUsers] = useState<string[]>([])
 
-  const token = localStorage.getItem("token")
-  const currentUserId = localStorage.getItem("userId")
+  const token = getToken()
+  const currentUserId = getUser()?.id
 
   useEffect(() => {
     const fetchConversations = async () => {
