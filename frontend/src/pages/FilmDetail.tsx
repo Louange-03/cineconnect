@@ -1,12 +1,20 @@
 import React, { useMemo } from "react"
 import { useNavigate, useParams } from "@tanstack/react-router"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import type { Film } from "../types"
 import { ReviewForm } from "../components/reviews/ReviewForm"
 import { ReviewCard } from "../components/reviews/ReviewCard"
 import { useReviews } from "../hooks/useReviews"
+import { getToken, getUser } from "../lib/auth"
 
-/** small JSON fetch wrapper that throws useful errors */
+// --- Types ---
+
+type EditState =
+  | { status: "idle" }
+  | { status: "editing"; reviewId: string; rating: number; comment: string }
+
+// --- Helpers ---
+
 async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const res = await fetch(input, {
     ...init,
@@ -23,7 +31,7 @@ async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> 
         throw new Error(json?.message || "Erreur serveur")
       }
     } catch {
-      // ignore parsing error
+      // ignore
     }
     throw new Error("Film introuvable")
   }
@@ -37,7 +45,7 @@ async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> 
 
 const FALLBACK_POSTER = "https://via.placeholder.com/900x1350/0b1020/ffffff?text=No+Image"
 
-function safePosterUrl(posterUrl?: string | null) {
+function safePosterUrl(posterUrl?: string | null): string {
   const p = (posterUrl ?? "").trim()
   if (!p) return FALLBACK_POSTER
   if (p.toLowerCase() === "n/a") return FALLBACK_POSTER
@@ -57,9 +65,14 @@ function MiniToast({ message }: { message: string }) {
 export function FilmDetail() {
   const { id } = useParams({ from: "/film/$id" })
   const navigate = useNavigate()
+  const qc = useQueryClient()
 
   const [toast, setToast] = React.useState<string | null>(null)
-  function showToast(msg: string) {
+  const [editState, setEditState] = React.useState<EditState>({ status: "idle" })
+
+  const currentUser = getUser()
+
+  function showToast(msg: string): void {
     setToast(msg)
     window.setTimeout(() => setToast(null), 1600)
   }
@@ -82,6 +95,27 @@ export function FilmDetail() {
       ? null
       : String(film?.year)
 
+  const handleDelete = async (reviewId: string): Promise<void> => {
+    const token = getToken()
+    if (!token) return
+
+    try {
+      const res = await fetch(`http://localhost:3001/api/reviews/${reviewId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error("Erreur suppression")
+      await qc.invalidateQueries({ queryKey: ["reviews", id] })
+      showToast("Avis supprimé ✅")
+    } catch {
+      showToast("Erreur lors de la suppression")
+    }
+  }
+
+  const handleEditStart = (reviewId: string, rating: number, comment: string): void => {
+    setEditState({ status: "editing", reviewId, rating, comment })
+  }
+
   if (isLoading) {
     return (
       <main className="flex min-h-[85vh] items-center justify-center bg-[#050B1C] pt-12">
@@ -98,9 +132,7 @@ export function FilmDetail() {
     return (
       <main className="mx-auto min-h-[85vh] w-full bg-[#050B1C] px-4 pt-24 text-center">
         <div className="inline-block rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-red-200">
-          <span className="mb-4 block text-4xl" aria-hidden="true">
-            ⚠️
-          </span>
+          <span className="mb-4 block text-4xl" aria-hidden="true">⚠️</span>
           {error.message}
         </div>
       </main>
@@ -111,16 +143,14 @@ export function FilmDetail() {
     return (
       <main className="mx-auto min-h-[85vh] w-full bg-[#050B1C] px-4 pt-24 text-center">
         <div className="inline-block rounded-2xl border border-white/10 bg-white/5 p-8 text-white/70">
-          <span className="mb-4 block text-4xl" aria-hidden="true">
-            🎬
-          </span>
+          <span className="mb-4 block text-4xl" aria-hidden="true">🎬</span>
           Ce film n&apos;existe pas ou a été retiré.
         </div>
       </main>
     )
   }
 
-  const onShare = async () => {
+  const onShare = async (): Promise<void> => {
     const url = window.location.href
     try {
       if (navigator.share) {
@@ -135,8 +165,7 @@ export function FilmDetail() {
     }
   }
 
-  const onWatchlist = () => {
-    // À brancher plus tard sur ton endpoint (watchlist/favorites)
+  const onWatchlist = (): void => {
     showToast("Ajout à ma liste : à connecter ✅")
   }
 
@@ -149,25 +178,14 @@ export function FilmDetail() {
         <div
           aria-hidden="true"
           className="absolute inset-0 h-[62vh] w-full"
-          style={{
-            backgroundImage: `url(${poster})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
+          style={{ backgroundImage: `url(${poster})`, backgroundSize: "cover", backgroundPosition: "center" }}
         />
         <div aria-hidden="true" className="absolute inset-0 h-[62vh] w-full bg-black/40" />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 h-[62vh] w-full bg-gradient-to-b from-[#050B1C]/10 via-[#050B1C]/55 to-[#050B1C]"
-        />
+        <div aria-hidden="true" className="absolute inset-0 h-[62vh] w-full bg-gradient-to-b from-[#050B1C]/10 via-[#050B1C]/55 to-[#050B1C]" />
         <div
           aria-hidden="true"
           className="pointer-events-none absolute left-0 top-0 h-[62vh] w-full opacity-25 blur-[120px]"
-          style={{
-            backgroundImage: `url(${poster})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
+          style={{ backgroundImage: `url(${poster})`, backgroundSize: "cover", backgroundPosition: "center" }}
         />
 
         {/* CONTENT WRAPPER */}
@@ -175,12 +193,7 @@ export function FilmDetail() {
           {/* Back */}
           <div className="mb-6">
             <button
-              onClick={() =>
-                navigate({
-                  to: "/films",
-                  search: { q: "", category: "", type: "all", sort: "" },
-                })
-              }
+              onClick={() => navigate({ to: "/films", search: { q: "", category: "", type: "all", sort: "" } })}
               className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
               aria-label="Retour au catalogue"
             >
@@ -194,14 +207,12 @@ export function FilmDetail() {
           {/* MAIN CARD */}
           <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#0A132D]/65 shadow-2xl backdrop-blur-xl">
             <div className="grid gap-0 md:grid-cols-[380px_1fr]">
-              {/* Poster */}
               <div className="p-4 md:p-6">
                 <div className="aspect-[2/3] overflow-hidden rounded-2xl bg-black/20 shadow-[0_10px_30px_rgba(0,0,0,0.75)]">
                   <img src={poster} alt={film.title} className="h-full w-full object-cover" loading="lazy" />
                 </div>
               </div>
 
-              {/* Info */}
               <div className="flex flex-col justify-center p-6 md:p-10 md:pl-2">
                 <div className="flex flex-wrap items-center gap-3 text-sm text-white/70">
                   {yearLabel && (
@@ -209,14 +220,10 @@ export function FilmDetail() {
                       {yearLabel}
                     </span>
                   )}
-
                   {film.categories?.length ? (
                     <div className="flex flex-wrap gap-2">
                       {film.categories.slice(0, 4).map((c) => (
-                        <span
-                          key={c}
-                          className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[12px] font-medium uppercase tracking-wider text-[#FFC107]/90"
-                        >
+                        <span key={c} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[12px] font-medium uppercase tracking-wider text-[#FFC107]/90">
                           {c}
                         </span>
                       ))}
@@ -235,21 +242,11 @@ export function FilmDetail() {
                   </p>
                 </div>
 
-                {/* Actions */}
                 <div className="mt-8 flex flex-wrap gap-4">
-                  <button
-                    type="button"
-                    onClick={onWatchlist}
-                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] px-8 py-4 font-bold text-white transition transform hover:-translate-y-1 hover:brightness-110 shadow-[0_0_20px_rgba(29,108,224,0.35)]"
-                  >
+                  <button type="button" onClick={onWatchlist} className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] px-8 py-4 font-bold text-white transition transform hover:-translate-y-1 hover:brightness-110 shadow-[0_0_20px_rgba(29,108,224,0.35)]">
                     Ajouter à ma liste
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={onShare}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-8 py-4 font-bold text-white/90 hover:bg-white/10"
-                  >
+                  <button type="button" onClick={onShare} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-8 py-4 font-bold text-white/90 hover:bg-white/10">
                     Partager
                   </button>
                 </div>
@@ -262,13 +259,8 @@ export function FilmDetail() {
             <section>
               <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
                 <h2 className="text-2xl md:text-3xl font-black text-white">Avis</h2>
-
                 {loadingReviews ? (
-                  <div
-                    className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-[#FFC107]"
-                    aria-label="Chargement des avis"
-                    role="status"
-                  />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-[#FFC107]" role="status" />
                 ) : (
                   <span className="rounded-full border border-[#FFC107]/20 bg-[#FFC107]/10 px-3 py-1 text-sm font-bold text-[#FFC107]">
                     {reviews?.length || 0} avis
@@ -278,7 +270,33 @@ export function FilmDetail() {
 
               <div className="space-y-6">
                 {reviews && reviews.length > 0 ? (
-                  reviews.map((r) => <ReviewCard key={r.id} review={r} />)
+                  reviews.map((r) => {
+                    const isMine = currentUser?.id === r.userId
+
+                    // Mode édition pour cet avis
+                    if (isMine && editState.status === "editing" && editState.reviewId === r.id) {
+                      return (
+                        <ReviewForm
+                          key={r.id}
+                          filmId={id}
+                          editReviewId={r.id}
+                          editInitialRating={editState.rating}
+                          editInitialComment={editState.comment}
+                          onEditDone={() => setEditState({ status: "idle" })}
+                        />
+                      )
+                    }
+
+                    return (
+                      <ReviewCard
+                        key={r.id}
+                        review={r}
+                        isMine={isMine}
+                        onEdit={() => handleEditStart(r.id, r.rating, r.comment ?? "")}
+                        onDelete={() => handleDelete(r.id)}
+                      />
+                    )
+                  })
                 ) : (
                   <div className="rounded-3xl border border-white/10 border-dashed bg-white/5 p-12 text-center">
                     <span className="mb-4 block text-5xl opacity-50">⭐</span>
