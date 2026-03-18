@@ -15,8 +15,15 @@ import openapi from "./swagger"
 
 const app = express()
 
-const FRONTEND_ORIGIN = process.env.FRONTEND_URL || "*"
-app.use(cors({ origin: FRONTEND_ORIGIN, credentials: true }))
+// En dev : autoriser 5173 et 5174 (Vite peut basculer sur 5174 si 5173 est pris)
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173"
+const allowedOrigins = [
+  FRONTEND_URL,
+  "http://localhost:5173",
+  "http://localhost:5174",
+].filter(Boolean)
+const corsOrigin = allowedOrigins.length > 0 ? allowedOrigins : true
+app.use(cors({ origin: corsOrigin, credentials: true }))
 app.use(express.json())
 
 app.get("/health", (_req, res) => res.json({ ok: true }))
@@ -41,7 +48,7 @@ app.use("/api/conversations", conversationsRoutes)
 const port = Number(process.env.PORT ?? 3001)
 const httpServer = createServer(app)
 
-initSocket(httpServer, FRONTEND_ORIGIN as string)
+initSocket(httpServer, corsOrigin)
 
 httpServer.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`)
