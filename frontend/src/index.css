@@ -210,3 +210,46 @@ body {
 .cine-hero-badge {
   animation: cine-hero-badge 500ms ease-out 200ms both;
 }
+
+/* Reveal on scroll */
+.cine-reveal {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+}
+
+@keyframes cine-reveal-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+.cine-reveal--in {
+  animation: cine-reveal-in 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--reveal-delay, 0ms);
+  will-change: transform, opacity;
+}
+
+/* Stagger helper for film cards */
+@keyframes cine-card-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.cine-card-enter {
+  opacity: 0;
+  animation: cine-card-in 520ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--stagger, 0ms);
+}

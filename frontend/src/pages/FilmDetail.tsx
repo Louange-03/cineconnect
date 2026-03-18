@@ -5,6 +5,7 @@ import type { Film } from "../types"
 import { ReviewForm } from "../components/reviews/ReviewForm"
 import { ReviewCard } from "../components/reviews/ReviewCard"
 import { useReviews } from "../hooks/useReviews"
+import { Reveal } from "../components/ui/Reveal"
 
 /** small JSON fetch wrapper that throws useful errors */
 async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
@@ -192,8 +193,9 @@ export function FilmDetail() {
           </div>
 
           {/* MAIN CARD */}
-          <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#0A132D]/65 shadow-2xl backdrop-blur-xl">
-            <div className="grid gap-0 md:grid-cols-[380px_1fr]">
+          <Reveal>
+            <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#0A132D]/65 shadow-2xl backdrop-blur-xl">
+              <div className="grid gap-0 md:grid-cols-[380px_1fr]">
               {/* Poster */}
               <div className="p-4 md:p-6">
                 <div className="aspect-[2/3] overflow-hidden rounded-2xl bg-black/20 shadow-[0_10px_30px_rgba(0,0,0,0.75)]">
@@ -255,11 +257,12 @@ export function FilmDetail() {
                 </div>
               </div>
             </div>
-          </section>
+            </section>
+          </Reveal>
 
           {/* REVIEWS */}
           <div className="mt-14 grid gap-10 lg:grid-cols-[1fr_400px] pb-24">
-            <section>
+            <Reveal as="section">
               <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
                 <h2 className="text-2xl md:text-3xl font-black text-white">Avis</h2>
 
@@ -288,13 +291,13 @@ export function FilmDetail() {
                   </div>
                 )}
               </div>
-            </section>
+            </Reveal>
 
-            <aside className="sticky top-24 h-fit rounded-3xl border border-white/10 bg-[#0A132D]/70 p-8 shadow-xl backdrop-blur-xl">
+            <Reveal as="aside" className="sticky top-24 h-fit rounded-3xl border border-white/10 bg-[#0A132D]/70 p-8 shadow-xl backdrop-blur-xl">
               <h3 className="mb-2 text-2xl font-black text-white">Donnez votre avis</h3>
               <p className="mb-8 text-white/60">Partagez votre critique avec la communauté CinéConnect.</p>
               <ReviewForm filmId={id} />
-            </aside>
+            </Reveal>
           </div>
         </div>
       </div>
