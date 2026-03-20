@@ -13,10 +13,12 @@ export function ReviewForm({ filmId }: Props) {
   const [comment, setComment] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   async function submit(e: FormEvent) {
     e.preventDefault()
     setError(null)
+    setSuccess(null)
 
     if (!filmId) return
     if (rating === 0) {
@@ -43,9 +45,12 @@ export function ReviewForm({ filmId }: Props) {
         body: JSON.stringify({ filmId, rating, comment }),
       })
 
+      const contentType = res.headers.get("content-type") || ""
+      const text = await res.text()
+      const json = contentType.includes("application/json") && text ? JSON.parse(text) : null
+
       if (!res.ok) {
-        const text = await res.text()
-        throw new Error(text || "Erreur lors de la publication")
+        throw new Error(json?.message || text || "Erreur lors de la publication")
       }
 
       // reset
@@ -54,6 +59,7 @@ export function ReviewForm({ filmId }: Props) {
 
       // refresh reviews list
       await qc.invalidateQueries({ queryKey: ["reviews", filmId] })
+      setSuccess(json?.action === "updated" ? "Avis mis à jour ✅" : "Avis publié ✅")
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erreur"
       setError(msg)
@@ -85,6 +91,11 @@ export function ReviewForm({ filmId }: Props) {
         {error && (
           <div className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
             {error}
+          </div>
+        )}
+        {success && (
+          <div className="mt-3 rounded-xl border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-200">
+            {success}
           </div>
         )}
 
