@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "seed:omdb:massive": "tsx scripts/seed_omdb_massive.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
