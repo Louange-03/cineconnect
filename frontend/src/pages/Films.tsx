@@ -10,14 +10,57 @@ import type { Film } from "../types"
 export function Films() {
   const [query, setQuery] = useState("")
   const [category, setCategory] = useState("")
+  const hasSearchQuery = query.trim() !== ""
+  const effectiveCategory = hasSearchQuery ? "" : category
 
   const { data: categories = [], isLoading: loadingCategories } = useCategories()
-  const { data: films, isLoading, error } = useFilms(query, category, "")
+  const { data: films, isLoading, error } = useFilms(query, effectiveCategory, "")
 
-  const list = useMemo<Film[]>(
-    () => (Array.isArray(films) ? (films as Film[]) : []),
-    [films]
-  )
+  const filteredCategories = useMemo(() => {
+    const byName = new Map(
+      categories.map((c) => [c.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""), c] as const)
+    )
+
+    const preferredGroups = [
+      ["action", "actio"],
+      ["drama", "drame", "drames"],
+      ["movie", "movies", "film", "films"],
+      ["animation", "annimation"],
+      ["comedie", "comedy"],
+      ["serie", "series"],
+      ["horreur", "horror", "horeur"],
+      ["family", "famamily", "familial"],
+    ]
+
+    const picked: typeof categories = []
+    const added = new Set<string>()
+
+    for (const group of preferredGroups) {
+      const found = group
+        .map((key) => byName.get(key))
+        .find((cat): cat is (typeof categories)[number] => Boolean(cat))
+      if (found && !added.has(found.id)) {
+        picked.push(found)
+        added.add(found.id)
+      }
+    }
+
+    return picked
+  }, [categories])
+
+  const list = useMemo<Film[]>(() => {
+    const base = Array.isArray(films) ? (films as Film[]) : []
+    if (!category || hasSearchQuery) return base
+
+    const normalize = (v: string) =>
+      v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    const selected = normalize(category)
+
+    // Filtrage strict côté UI pour garantir que seule la catégorie choisie s'affiche.
+    return base.filter((film) =>
+      (film.categories ?? []).some((c) => normalize(c) === selected)
+    )
+  }, [films, category, hasSearchQuery])
 
   const isBusy = isLoading || loadingCategories
 
@@ -43,7 +86,7 @@ export function Films() {
       : "Explore tous les films & séries disponibles"
 
   return (
-    <main className="min-h-screen bg-[#050B1C] text-white pb-24">
+    <main className="films-page min-h-screen bg-[#050B1C] text-white pb-24">
       {/* HERO */}
       {showHero && featuredFilm && <HeroFeature film={featuredFilm} />}
 
@@ -61,7 +104,7 @@ export function Films() {
 
         {/* Sticky group: Search + Category pills */}
         <div className="sticky top-4 z-30 space-y-3">
-          <div className="rounded-2xl border border-white/10 bg-[#0A132D]/80 p-2 shadow-2xl backdrop-blur-xl md:p-4">
+          <div className="films-search-shell rounded-2xl border border-white/10 bg-[#0A132D]/80 p-2 shadow-2xl backdrop-blur-xl md:p-4">
             <SearchBar
               value={query}
               onChange={setQuery}
@@ -70,9 +113,9 @@ export function Films() {
           </div>
 
           {!isCatalogEmpty && (
-            <div className="rounded-2xl border border-white/10 bg-[#0A132D]/70 p-2 backdrop-blur-xl">
+            <div className="films-category-shell rounded-2xl border border-white/10 bg-[#0A132D]/70 p-2 backdrop-blur-xl">
               <CategoryPills
-                categories={categories}
+                categories={filteredCategories}
                 selectedCategory={category}
                 onCategoryChange={setCategory}
               />
@@ -123,7 +166,7 @@ export function Films() {
           {/* NO RESULTS */}
           {hasNoResults && (
             <section className="mx-auto mt-10 max-w-2xl px-6 text-center">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-8">
+              <div className="films-empty-shell rounded-2xl border border-white/10 bg-white/5 p-8">
                 <p className="text-lg text-white/70">
                   Aucun film trouvé pour{" "}
                   <span className="font-bold text-[#3EA6FF]">“{query.trim() || category}”</span>

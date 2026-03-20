@@ -16,6 +16,10 @@
   color-scheme: dark;
 }
 
+html.theme-light {
+  color-scheme: light;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -32,6 +36,129 @@ body {
   color: var(--color-frost);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html.theme-light body {
+  background-color: #eef3ff;
+  color: #0f172a;
+}
+
+/* Light mode overrides for existing cinematic dark utility classes */
+html.theme-light .bg-\[\#050B1C\] {
+  background-color: #eef3ff !important;
+}
+html.theme-light .bg-\[\#050B1C\]\/80 {
+  background-color: rgba(238, 243, 255, 0.82) !important;
+}
+html.theme-light .bg-\[\#0A132D\]\/60,
+html.theme-light .bg-\[\#0A132D\]\/65,
+html.theme-light .bg-\[\#0A132D\]\/70,
+html.theme-light .bg-\[\#0A132D\]\/80 {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+}
+html.theme-light .text-white,
+html.theme-light .text-white\/90,
+html.theme-light .text-white\/85,
+html.theme-light .text-white\/80,
+html.theme-light .text-white\/70,
+html.theme-light .text-white\/60 {
+  color: #0f172a !important;
+}
+html.theme-light .text-gray-400,
+html.theme-light .text-gray-500 {
+  color: #475569 !important;
+}
+html.theme-light .border-white\/10,
+html.theme-light .border-white\/15,
+html.theme-light .border-white\/20 {
+  border-color: rgba(15, 23, 42, 0.14) !important;
+}
+html.theme-light .bg-white\/5 {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+html.theme-light .bg-white\/10 {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+}
+html.theme-light .from-\[\#050B1C\] {
+  --tw-gradient-from: #eef3ff var(--tw-gradient-from-position) !important;
+}
+html.theme-light .bg-\[\#020617\] {
+  background-color: #f8fafc !important;
+}
+html.theme-light .bg-black\/40,
+html.theme-light .bg-black\/50,
+html.theme-light .bg-black\/60 {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+}
+html.theme-light .from-\[\#050B1C\]\/90 {
+  --tw-gradient-from: rgba(238, 243, 255, 0.95) var(--tw-gradient-from-position) !important;
+}
+html.theme-light .via-\[\#050B1C\]\/25,
+html.theme-light .via-\[\#050B1C\]\/55 {
+  --tw-gradient-via: rgba(238, 243, 255, 0.72) var(--tw-gradient-via-position) !important;
+}
+html.theme-light .to-transparent {
+  --tw-gradient-to: rgb(238 243 255 / 0) var(--tw-gradient-to-position) !important;
+}
+html.theme-light .drop-shadow-md {
+  filter: none !important;
+}
+html.theme-light .cine-bg::before,
+html.theme-light .cine-bg::after {
+  opacity: 0.22;
+}
+html.theme-light .cine-orb {
+  opacity: 0.18;
+}
+
+/* Page-specific light mode polish */
+html.theme-light .home-page,
+html.theme-light .films-page,
+html.theme-light .profile-page {
+  background: linear-gradient(180deg, #f6f9ff 0%, #edf3ff 45%, #e8effd 100%) !important;
+}
+
+html.theme-light .home-category-shell,
+html.theme-light .films-search-shell,
+html.theme-light .films-category-shell,
+html.theme-light .films-empty-shell,
+html.theme-light .profile-header-card,
+html.theme-light .profile-favorites-shell {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08) !important;
+}
+
+html.theme-light .home-content h2,
+html.theme-light .films-page h1,
+html.theme-light .films-page h2,
+html.theme-light .films-page h3,
+html.theme-light .profile-page h1,
+html.theme-light .profile-page h2,
+html.theme-light .profile-page h3 {
+  color: #0b1220 !important;
+}
+
+html.theme-light .home-content a,
+html.theme-light .films-page a,
+html.theme-light .profile-page a {
+  color: #1d4ed8;
+}
+
+html.theme-light .home-content p,
+html.theme-light .films-page p,
+html.theme-light .profile-page p,
+html.theme-light .films-page span,
+html.theme-light .profile-page span {
+  color: #334155;
+}
+
+html.theme-light .profile-banner {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(255, 255, 255, 0.9), rgba(59, 130, 246, 0.18)) !important;
+}
+
+html.theme-light .profile-page .text-\[\#3EA6FF\] {
+  color: #1d4ed8 !important;
 }
 
 /* Global cinematic background with soft glows and floating orbs */

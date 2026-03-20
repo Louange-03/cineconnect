@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { Link, useRouterState } from "@tanstack/react-router"
 import { isAuthenticated, logout } from "../../lib/auth"
+import { getTheme, toggleTheme, type ThemeMode } from "../../lib/theme"
 import type { ReactNode } from "react"
 
 type NavLinkItem = { to: any; label: string; search?: any; requireAuth?: boolean }
@@ -41,6 +42,7 @@ function NavItem({ to, label, search }: NavLinkItem) {
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [isAuth, setIsAuth] = useState(isAuthenticated())
+  const [theme, setTheme] = useState<ThemeMode>(getTheme())
 
   useEffect(() => {
     const syncAuth = () => setIsAuth(isAuthenticated())
@@ -52,6 +54,14 @@ export function Navbar() {
       window.removeEventListener("auth-changed", syncAuth)
       window.removeEventListener("storage", syncAuth)
       window.removeEventListener("focus", syncAuth)
+    }
+  }, [])
+
+  useEffect(() => {
+    const syncTheme = () => setTheme(getTheme())
+    window.addEventListener("theme-changed", syncTheme as EventListener)
+    return () => {
+      window.removeEventListener("theme-changed", syncTheme as EventListener)
     }
   }, [])
 
@@ -131,6 +141,24 @@ export function Navbar() {
             </svg>
           </Link>
 
+          <button
+            type="button"
+            onClick={() => setTheme(toggleTheme())}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-300/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+            title={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
+            aria-label={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
+          >
+            {theme === "dark" ? (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                <path d="M12 2.25a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75ZM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0Zm-.53-6.03a.75.75 0 10-1.06 1.06l1.06 1.06a.75.75 0 101.06-1.06L6.97 5.97Zm10 10a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06ZM3 11.25a.75.75 0 000 1.5h1.5a.75.75 0 000-1.5H3Zm16.5 0a.75.75 0 000 1.5H21a.75.75 0 000-1.5h-1.5ZM5.91 18.09a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06Zm12.12-12.12a.75.75 0 011.06 0 .75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06ZM12 19.5a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0112 19.5Z" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.82 8.25 8.25 0 0010.593 10.593.75.75 0 01.982.98A9.75 9.75 0 1110.51 2.356a.75.75 0 01-.982-.638Z" clipRule="evenodd" />
+              </svg>
+            )}
+          </button>
+
           {!isAuth ? (
             <Link
               to="/login"
@@ -139,21 +167,12 @@ export function Navbar() {
               Connexion
             </Link>
           ) : (
-            <>
-              <Link
-                to="/login"
-                onClick={handleLogout}
-                className="hidden rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white/85 transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 md:inline-flex"
-              >
-                Changer de compte
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="rounded-full bg-white/10 px-6 py-2.5 text-sm font-bold text-white shadow-lg backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/20 hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-              >
-                Déconnexion
-              </button>
-            </>
+            <button
+              onClick={handleLogout}
+              className="rounded-full bg-white/10 px-6 py-2.5 text-sm font-bold text-white shadow-lg backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/20 hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+            >
+              Déconnexion
+            </button>
           )}
 
           {/* Mobile menu button */}
@@ -193,16 +212,16 @@ export function Navbar() {
                   </Link>
                 ))}
                 {isAuth ? (
-                  <Link
-                    to="/login"
+                  <button
+                    type="button"
                     onClick={() => {
                       handleLogout()
                       setMobileOpen(false)
                     }}
-                    className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10"
+                    className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10 text-left"
                   >
-                    Changer de compte
-                  </Link>
+                    Déconnexion
+                  </button>
                 ) : null}
               </div>
             </div>

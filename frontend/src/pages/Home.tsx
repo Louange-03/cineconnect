@@ -39,10 +39,10 @@ export function Home() {
   const topFilms = useMemo(() => all.filter((f) => !isSeries(f)).slice(0, 12), [all])
 
   return (
-    <main className="min-h-screen bg-[#050B1C] text-white pb-20">
+    <main className="home-page min-h-screen bg-[#050B1C] text-white pb-20">
       {/* Barre de catégories (style screenshot) */}
       <section className="mx-auto max-w-5xl px-6 pt-10 pb-4">
-        <div className="flex flex-wrap gap-3 rounded-full bg-[#050B1C]/80 px-3 py-2 md:px-4 md:py-3">
+        <div className="home-category-shell flex flex-wrap gap-3 rounded-full bg-[#050B1C]/80 px-3 py-2 md:px-4 md:py-3">
           {CATEGORIES.map((cat) => {
             const active = selectedCategory === cat.value
             return (
@@ -65,7 +65,7 @@ export function Home() {
       </section>
 
       {/* CONTENU – carrousels */}
-      <section className="mx-auto mt-4 max-w-6xl space-y-10 px-6 pb-12">
+      <section className="home-content mx-auto mt-4 max-w-6xl space-y-10 px-6 pb-12">
         <SectionHeader
           title="Tendances"
           to="/films"
