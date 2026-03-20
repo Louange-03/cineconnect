@@ -20,9 +20,13 @@ function authMiddleware(req: Request, res: Response, next: NextFunction) {
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET as string
-    ) as { id: string; email: string; username: string }
+    ) as { id?: string; userId?: string; email?: string; username?: string }
+    const id = decoded.id ?? decoded.userId
+    if (!id) {
+      return res.status(401).json({ error: "Unauthorized" })
+    }
 
-    req.user = decoded
+    req.user = { ...decoded, id }
     next()
   } catch {
     return res.status(401).json({ error: "Unauthorized" })

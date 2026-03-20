@@ -11,7 +11,13 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
   }
 
   try {
-    req.user = verifyToken(token)
+    const decoded = verifyToken(token) as { id?: string; userId?: string; email?: string; username?: string }
+    const id = decoded.id ?? decoded.userId
+    if (!id) {
+      res.status(401).json({ message: "Token invalide" })
+      return
+    }
+    req.user = { ...decoded, id }
     next()
   } catch {
     res.status(401).json({ message: "Token invalide" })

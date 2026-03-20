@@ -27,9 +27,11 @@ export const initSocket = (
       const decoded = jwt.verify(
         token,
         process.env.JWT_SECRET as string
-      ) as { id: string }
+      ) as { id?: string; userId?: string }
+      const id = decoded.id ?? decoded.userId
+      if (!id) return next(new Error("Unauthorized"))
 
-      socket.data.user = decoded
+      socket.data.user = { ...decoded, id }
       next()
     } catch {
       next(new Error("Unauthorized"))
