@@ -60,12 +60,13 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
       <div className="space-y-2">
         <label className="text-sm text-frost/60 uppercase tracking-wider">Mot de passe</label>
-        <input
-          className="w-full rounded-2xl border border-imperial bg-prussian/50 px-6 py-5 text-frost placeholder-frost/40 outline-none transition-all focus:border-ocean focus:bg-prussian focus:shadow-[0_0_30px_rgba(14,107,168,0.2)]"
+        <Input
+          className="rounded-2xl border-imperial bg-prussian/50 py-5 text-frost placeholder-frost/40 focus:border-ocean focus:bg-prussian focus:shadow-[0_0_30px_rgba(14,107,168,0.2)]"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
-          type="password"
+          type={showPwd ? "text" : "password"}
+          rightSlot={<EyeButton pressed={showPwd} onClick={() => setShowPwd((v) => !v)} />}
         />
       </div>
 
