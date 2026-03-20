@@ -16,6 +16,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "predev": "node scripts/free-port.mjs 3001",
     "dev": "concurrently -n BACK,FRONT -c auto \"pnpm --dir backend dev\" \"pnpm --dir frontend dev\"",
     "dev:backend": "pnpm --dir backend dev",
     "dev:frontend": "pnpm --dir frontend dev"

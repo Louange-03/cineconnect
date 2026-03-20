@@ -73,7 +73,7 @@ export function Home() {
         />
         <HorizontalRow>
           {trending.map((film) => (
-            <div key={film.id} className="w-[140px] sm:w-[160px] md:w-[180px]">
+            <div key={film.id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
               <FilmCard film={film} />
             </div>
           ))}
@@ -86,7 +86,7 @@ export function Home() {
         />
         <HorizontalRow>
           {topSeries.map((film) => (
-            <div key={film.id} className="w-[140px] sm:w-[160px] md:w-[180px]">
+            <div key={film.id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
               <FilmCard film={film} />
             </div>
           ))}
@@ -99,7 +99,7 @@ export function Home() {
         />
         <HorizontalRow>
           {topFilms.map((film) => (
-            <div key={film.id} className="w-[140px] sm:w-[160px] md:w-[180px]">
+            <div key={film.id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
               <FilmCard film={film} />
             </div>
           ))}

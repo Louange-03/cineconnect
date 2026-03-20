@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { Link, useRouterState } from "@tanstack/react-router"
 import { isAuthenticated, logout } from "../../lib/auth"
 import type { ReactNode } from "react"
@@ -40,7 +40,20 @@ function NavItem({ to, label, search }: NavLinkItem) {
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const isAuth = isAuthenticated()
+  const [isAuth, setIsAuth] = useState(isAuthenticated())
+
+  useEffect(() => {
+    const syncAuth = () => setIsAuth(isAuthenticated())
+    syncAuth()
+    window.addEventListener("auth-changed", syncAuth)
+    window.addEventListener("storage", syncAuth)
+    window.addEventListener("focus", syncAuth)
+    return () => {
+      window.removeEventListener("auth-changed", syncAuth)
+      window.removeEventListener("storage", syncAuth)
+      window.removeEventListener("focus", syncAuth)
+    }
+  }, [])
 
   const nav = useMemo<NavLinkItem[]>(
     () => [
