@@ -5,7 +5,6 @@ import { SearchBar } from "../components/films/SearchBar"
 import { HeroFeature } from "../components/films/HeroFeature"
 import { CategoryPills } from "../components/films/CategoryPills"
 import { FilmCard } from "../components/films/FilmCard"
-import { Reveal } from "../components/ui/Reveal"
 import type { Film } from "../types"
 
 export function Films() {
@@ -156,19 +155,17 @@ export function Films() {
                 </span>
               </div>
 
-              <Reveal>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:gap-6">
-                  {list.map((film, idx) => (
-                    <div
-                      key={film.id}
-                      className="cine-card-enter"
-                      style={{ ["--stagger" as any]: `${Math.min(idx * 22, 260)}ms` }}
-                    >
-                      <FilmCard film={film} />
-                    </div>
-                  ))}
-                </div>
-              </Reveal>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:gap-6">
+                {list.map((film, idx) => (
+                  <div
+                    key={film.id}
+                    className="cine-card-enter"
+                    style={{ ["--stagger" as any]: `${Math.min(idx * 22, 260)}ms` }}
+                  >
+                    <FilmCard film={film} />
+                  </div>
+                ))}
+              </div>
             </section>
           )}
         </>
