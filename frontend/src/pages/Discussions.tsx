@@ -4,12 +4,14 @@ import { socket } from "../socket"
 import axios from "axios"
 import type { Conversation, Message } from "../types"
 import { getToken, getUser } from "../lib/auth"
+import { useSearch } from "@tanstack/react-router"
 
 interface UserStatusPayload {
   userId: string
 }
 
 export function Discussion() {
+  const search = useSearch({ from: "/discussion" }) as { userId?: string }
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selected, setSelected] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -18,6 +20,15 @@ export function Discussion() {
 
   const token = getToken()
   const currentUserId = getUser()?.id
+
+  useEffect(() => {
+    if (!token) return
+    socket.auth = { token }
+    socket.connect()
+    return () => {
+      socket.disconnect()
+    }
+  }, [token])
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -30,6 +41,22 @@ export function Discussion() {
 
     fetchConversations()
   }, [token])
+
+  useEffect(() => {
+    if (!token || !search.userId) return
+    const startConversation = async () => {
+      try {
+        await axios.post(
+          "http://localhost:3001/api/messages/start",
+          { userId: search.userId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      } catch (e) {
+        console.error("Impossible de démarrer la conversation", e)
+      }
+    }
+    startConversation()
+  }, [token, search.userId])
 
   useEffect(() => {
     if (!selected) return

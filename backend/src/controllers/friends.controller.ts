@@ -8,22 +8,29 @@ import { users, friendships } from "../db/schema.js"
 export const getFriends = async (req: Request, res: Response): Promise<void> => {
   const meId = req.user!.id
 
-  const select = {
-    id: friendships.id,
-    requesterId: friendships.requesterId,
-    addresseeId: friendships.addresseeId,
-    status: friendships.status,
-    createdAt: friendships.createdAt,
-  }
-
   const rows = await db
-    .select(select)
+    .select({
+      friendshipId: friendships.id,
+      requesterId: friendships.requesterId,
+      addresseeId: friendships.addresseeId,
+      status: friendships.status,
+      createdAt: friendships.createdAt,
+    })
     .from(friendships)
     .where(
       sql`(${friendships.requesterId} = ${meId} OR ${friendships.addresseeId} = ${meId}) AND ${friendships.status} = 'accepted'`
     )
 
-  res.json({ friendships: rows })
+  const friendIds = rows.map((r) => (r.requesterId === meId ? r.addresseeId : r.requesterId))
+  const friendUsers =
+    friendIds.length > 0
+      ? await db
+          .select({ id: users.id, username: users.username, email: users.email })
+          .from(users)
+          .where(sql`${users.id} = ANY(${friendIds})`)
+      : []
+
+  res.json({ friends: friendUsers })
 }
 
 export const getPendingRequests = async (req: Request, res: Response): Promise<void> => {
@@ -40,7 +47,57 @@ export const getPendingRequests = async (req: Request, res: Response): Promise<v
     .from(friendships)
     .where(sql`${friendships.addresseeId} = ${meId} AND ${friendships.status} = 'pending'`)
 
-  res.json({ requests: rows })
+  const requesterIds = rows.map((r) => r.requesterId)
+  const requesterUsers =
+    requesterIds.length > 0
+      ? await db
+          .select({ id: users.id, username: users.username, email: users.email })
+          .from(users)
+          .where(sql`${users.id} = ANY(${requesterIds})`)
+      : []
+  const userMap = new Map(requesterUsers.map((u) => [u.id, u]))
+
+  res.json({
+    requests: rows.map((r) => ({
+      friendshipId: r.id,
+      fromUserId: r.requesterId,
+      fromUsername: userMap.get(r.requesterId)?.username ?? "Utilisateur",
+      email: userMap.get(r.requesterId)?.email ?? "",
+      sentAt: r.createdAt,
+    })),
+  })
+}
+
+export const getSentRequests = async (req: Request, res: Response): Promise<void> => {
+  const meId = req.user!.id
+
+  const rows = await db
+    .select({
+      friendshipId: friendships.id,
+      toUserId: friendships.addresseeId,
+      createdAt: friendships.createdAt,
+    })
+    .from(friendships)
+    .where(sql`${friendships.requesterId} = ${meId} AND ${friendships.status} = 'pending'`)
+
+  const toIds = rows.map((r) => r.toUserId)
+  const usersRows =
+    toIds.length > 0
+      ? await db
+          .select({ id: users.id, username: users.username })
+          .from(users)
+          .where(sql`${users.id} = ANY(${toIds})`)
+      : []
+  const userMap = new Map(usersRows.map((u) => [u.id, u.username]))
+
+  res.json({
+    sent: rows.map((r) => ({
+      friendshipId: r.friendshipId,
+      toUserId: r.toUserId,
+      toUsername: userMap.get(r.toUserId) ?? "Utilisateur",
+      sentAt: r.createdAt,
+    })),
+  })
 }
 
 export const sendFriendRequest = async (req: Request, res: Response): Promise<void> => {
@@ -142,7 +199,54 @@ export const respondFriendRequest = async (req: Request, res: Response): Promise
   }
 }
 
+export const acceptFriendRequestByUser = async (req: Request, res: Response): Promise<void> => {
+  const meId = req.user!.id
+  const userId = req.body.userId as string | undefined
+  if (!userId) {
+    res.status(400).json({ error: "userId missing" })
+    return
+  }
+
+  const updated = await db
+    .update(friendships)
+    .set({ status: "accepted", updatedAt: sql`now()` })
+    .where(
+      sql`${friendships.requesterId} = ${userId} AND ${friendships.addresseeId} = ${meId} AND ${friendships.status} = 'pending'`
+    )
+    .returning()
+
+  if (!updated.length) {
+    res.status(404).json({ error: "request not found" })
+    return
+  }
+  res.json({ status: "accepted", friendship: updated[0] })
+}
+
+export const rejectFriendRequestByUser = async (req: Request, res: Response): Promise<void> => {
+  const meId = req.user!.id
+  const userId = req.body.userId as string | undefined
+  if (!userId) {
+    res.status(400).json({ error: "userId missing" })
+    return
+  }
+
+  const updated = await db
+    .update(friendships)
+    .set({ status: "rejected", updatedAt: sql`now()` })
+    .where(
+      sql`${friendships.requesterId} = ${userId} AND ${friendships.addresseeId} = ${meId} AND ${friendships.status} = 'pending'`
+    )
+    .returning()
+
+  if (!updated.length) {
+    res.status(404).json({ error: "request not found" })
+    return
+  }
+  res.json({ status: "rejected", friendship: updated[0] })
+}
+
 export const removeFriend = async (req: Request, res: Response): Promise<void> => {
+  const meId = req.user!.id
   const friendshipId = req.params.id as string | undefined
 
   if (!friendshipId) {
@@ -154,7 +258,12 @@ export const removeFriend = async (req: Request, res: Response): Promise<void> =
     const updated = await db
       .update(friendships)
       .set({ status: "rejected", updatedAt: sql`now()` })
-      .where(eq(friendships.id, friendshipId))
+      .where(
+        sql`(${friendships.id} = ${friendshipId}
+              OR ((${friendships.requesterId} = ${meId} AND ${friendships.addresseeId} = ${friendshipId})
+               OR (${friendships.requesterId} = ${friendshipId} AND ${friendships.addresseeId} = ${meId})))
+             AND ${friendships.status} IN ('accepted','pending')`
+      )
       .returning()
 
     if (updated.length === 0) {

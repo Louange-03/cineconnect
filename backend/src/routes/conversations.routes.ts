@@ -29,6 +29,40 @@ function authMiddleware(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+router.get("/", authMiddleware, async (req: Request, res: Response) => {
+  const userId = req.user!.id
+
+  try {
+    const result = await pool.query(
+      `
+      SELECT
+        c.id,
+        c.name,
+        c.created_at,
+        c.updated_at,
+        COALESCE(last_msg.text, '') AS last_message
+      FROM conversations c
+      JOIN conversation_members cm ON cm.conversation_id = c.id
+      LEFT JOIN LATERAL (
+        SELECT m.text, m.created_at
+        FROM messages m
+        WHERE m.conversation_id = c.id
+        ORDER BY m.created_at DESC
+        LIMIT 1
+      ) last_msg ON true
+      WHERE cm.user_id = $1
+      ORDER BY COALESCE(last_msg.created_at, c.updated_at) DESC
+      `,
+      [userId]
+    )
+
+    res.json(result.rows)
+  } catch (error) {
+    console.error("Get conversations error:", error)
+    res.status(500).json({ error: "Server error" })
+  }
+})
+
 /* =========================
    GET MESSAGES HISTORY
 ========================= */

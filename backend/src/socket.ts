@@ -7,7 +7,7 @@ const onlineUsers = new Map<string, Set<string>>()
 
 export const initSocket = (
   httpServer: HttpServer,
-  frontendOrigin: string | string[] | boolean
+  frontendOrigin: string | string[] | RegExp | (string | RegExp)[] | boolean
 ) => {
   const io = new Server(httpServer, {
     cors: {
