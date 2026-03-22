@@ -74,7 +74,7 @@ function FooterExtLink({
 
 export function Footer() {
   return (
-    <footer className="relative mt-20 overflow-hidden border-t border-white/10 bg-[#050B1C]">
+    <footer className="site-footer relative mt-20 overflow-hidden border-t border-white/10 bg-[#050B1C]">
       {/* Subtle glow line */}
       <div
         aria-hidden="true"

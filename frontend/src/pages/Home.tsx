@@ -1,144 +1,263 @@
-import React, { useMemo } from "react"
+import React from "react"
 import { Link } from "@tanstack/react-router"
-import { useFilms } from "../hooks/useFilms"
-import { FilmCard } from "../components/films/FilmCard"
-import type { Film } from "../types"
+import { BackdropLayer, SafeImage } from "../components/home/SafeImage"
+import {
+  CINEMA_BG_PRIMARY,
+  HERO_POSTERS,
+  MONSTERS_BACKDROP,
+  MONSTERS_FOREGROUND,
+  ROW_TOP_FILMS,
+  ROW_TOP_SERIES,
+} from "../components/home/homeAssets"
 
-const CATEGORIES = [
-  { label: "Tout", value: "" },
-  { label: "Action", value: "Action" },
-  { label: "Comédie", value: "Comédie" },
-  { label: "Horreur", value: "Horreur" },
-  { label: "Drame", value: "Drame" },
-]
+const FEATURE_PILLS = ["Tout", "Animé", "Comédie", "Action", "Horreur"] as const
 
-function isSeries(f: Film) {
-  const c = (f.categories ?? []).map((x) => x.toLowerCase())
-  return c.some((cat) => cat.includes("série") || cat.includes("series") || cat.includes("tv"))
-}
+const FILMS_SEARCH = { q: "", category: "", type: "movie" as const, sort: "" as const }
 
-export function Home() {
-  const { data: allRaw = [] } = useFilms("", "", "")
-  const all = allRaw as Film[]
-
-  const [selectedCategory, setSelectedCategory] = React.useState("")
-
-  const filtered = useMemo(() => {
-    if (!selectedCategory) return all
-    return all.filter((f) => (f.categories ?? []).includes(selectedCategory))
-  }, [all, selectedCategory])
-
-  const featured = useMemo(() => {
-    if (all.length === 0) return null
-    return all.find((f) => f.title?.toLowerCase().includes("monster")) ?? all[0]
-  }, [all])
-
-  const trending = useMemo(() => filtered.slice(0, 12), [filtered])
-
-  const topSeries = useMemo(() => all.filter(isSeries).slice(0, 12), [all])
-  const topFilms = useMemo(() => all.filter((f) => !isSeries(f)).slice(0, 12), [all])
-
-  return (
-    <main className="home-page min-h-screen bg-[#050B1C] text-white pb-20">
-      {/* Barre de catégories (style screenshot) */}
-      <section className="mx-auto max-w-5xl px-6 pt-10 pb-4">
-        <div className="home-category-shell flex flex-wrap gap-3 rounded-full bg-[#050B1C]/80 px-3 py-2 md:px-4 md:py-3">
-          {CATEGORIES.map((cat) => {
-            const active = selectedCategory === cat.value
-            return (
-              <button
-                key={cat.label}
-                type="button"
-                onClick={() => setSelectedCategory(cat.value)}
-                className={[
-                  "rounded-full px-4 md:px-5 py-1.5 text-xs md:text-sm font-medium transition-all duration-200",
-                  active
-                    ? "bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] text-white shadow-[0_0_18px_rgba(62,166,255,0.5)] border border-[#3EA6FF]/60"
-                    : "bg-[#020617] text-white/70 border border-white/10 hover:border-white/25 hover:text-white",
-                ].join(" ")}
-              >
-                {cat.label}
-              </button>
-            )
-          })}
-        </div>
-      </section>
-
-      {/* CONTENU – carrousels */}
-      <section className="home-content mx-auto mt-4 max-w-6xl space-y-10 px-6 pb-12">
-        <SectionHeader
-          title="Tendances"
-          to="/films"
-          search={{ q: "", category: selectedCategory, type: "all", sort: "" as any }}
-        />
-        <HorizontalRow>
-          {trending.map((film) => (
-            <div key={film.id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
-              <FilmCard film={film} />
-            </div>
-          ))}
-        </HorizontalRow>
-
-        <SectionHeader
-          title="Séries à la une"
-          to="/films"
-          search={{ q: "", category: "Série", type: "series", sort: "" }}
-        />
-        <HorizontalRow>
-          {topSeries.map((film) => (
-            <div key={film.id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
-              <FilmCard film={film} />
-            </div>
-          ))}
-        </HorizontalRow>
-
-        <SectionHeader
-          title="Films à voir"
-          to="/films"
-          search={{ q: "", category: "", type: "movie", sort: "" }}
-        />
-        <HorizontalRow>
-          {topFilms.map((film) => (
-            <div key={film.id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
-              <FilmCard film={film} />
-            </div>
-          ))}
-        </HorizontalRow>
-      </section>
-    </main>
-  )
-}
-
-function SectionHeader({
-  title,
-  to,
-  search,
+function PosterStrip({
+  items,
 }: {
-  title: string
-  to: "/films"
-  search: any
+  items: { src: string; alt: string; seed: string }[]
 }) {
   return (
-    <div className="flex items-end justify-between gap-4">
-      <h2 className="text-2xl md:text-3xl font-black tracking-tight">{title}</h2>
-      <Link
-        to={to}
-        search={search}
-        className="text-[#3EA6FF] font-bold hover:text-white transition-colors text-xs md:text-sm uppercase tracking-wider inline-flex items-center gap-1"
-      >
-        Voir plus
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-        </svg>
-      </Link>
+    <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-2 pt-1 md:gap-4">
+      {items.map((item, i) => (
+        <Link
+          key={`${item.seed}-${i}`}
+          to="/films"
+          search={FILMS_SEARCH}
+          className="home-poster-card group relative w-[132px] shrink-0 sm:w-[150px] md:w-[168px]"
+        >
+          <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/10 bg-[#0c1222] shadow-lg ring-0 transition duration-300 group-hover:-translate-y-1 group-hover:border-[#007BFF]/40 group-hover:shadow-[0_12px_40px_rgba(0,123,255,0.2)]">
+            <SafeImage
+              src={item.src}
+              alt={item.alt}
+              fallbackSeed={item.seed}
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+            />
+          </div>
+        </Link>
+      ))}
     </div>
   )
 }
 
-function HorizontalRow({ children }: { children: React.ReactNode }) {
+export function Home() {
+  const [pill, setPill] = React.useState<(typeof FEATURE_PILLS)[number]>("Tout")
+
   return (
-    <div className="hide-scrollbar flex gap-4 overflow-x-auto pb-2 pt-1">
-      {children}
+    <div data-page="home" className="home-page home-page-mockup bg-[#050505] text-white">
+      {/* ——— HERO ——— */}
+      <section className="relative min-h-[calc(100vh-5rem)] overflow-hidden">
+        <div className="absolute inset-0">
+          <BackdropLayer
+            src={CINEMA_BG_PRIMARY}
+            fallbackSeed="cineconnect-hero-bg"
+            overlayClassName="home-hero-overlay"
+            kenBurns
+          />
+          <div className="home-hero-radial-glow absolute inset-0" aria-hidden />
+        </div>
+
+        <div className="home-hero-content relative z-10 mx-auto flex max-w-5xl flex-col items-center px-4 pb-16 pt-8 text-center md:px-8 md:pb-20 md:pt-12">
+          <p className="home-hero-badge mb-6 inline-flex rounded-full border border-amber-300/50 bg-black/45 px-4 py-2 text-xs font-semibold text-amber-100 shadow-sm backdrop-blur-md md:text-sm">
+            La plateforme communautaire n°1 de ciné
+          </p>
+
+          <h1 className="max-w-4xl text-[clamp(1.75rem,5vw,3.5rem)] font-black leading-[1.1] tracking-tight text-white">
+            Découvrez notez,{" "}
+            <span className="bg-gradient-to-r from-cyan-300 to-[#00b4ff] bg-clip-text text-transparent">
+              échangez.
+            </span>
+          </h1>
+
+          <p className="mx-auto mt-6 max-w-2xl text-sm leading-relaxed text-white/80 md:text-base">
+            Un catalogue infini, le chat en temps réel et le partage autour de ton art
+            avec une communauté qui vit le cinéma comme toi.
+          </p>
+
+          <div className="home-carousel-3d mt-12 w-full max-w-4xl px-1">
+            <div className="home-carousel-track">
+              {HERO_POSTERS.map((p, i) => {
+                const offset = i - 2
+                const rotateY = offset * 15
+                const scale = i === 2 ? 1.08 : 0.86
+                const z = 5 - Math.abs(offset)
+                return (
+                  <div
+                    key={p.seed}
+                    className="home-carousel-card"
+                    style={{
+                      transform: `perspective(1100px) rotateY(${rotateY}deg) scale(${scale})`,
+                      zIndex: z,
+                    }}
+                  >
+                    <Link to="/films" search={FILMS_SEARCH} className="block">
+                      <div className="w-[92px] overflow-hidden rounded-xl border border-white/25 shadow-[0_24px_60px_rgba(0,0,0,0.65)] sm:w-[110px] md:w-[128px]">
+                        <SafeImage
+                          src={p.src}
+                          alt={p.alt}
+                          fallbackSeed={p.seed}
+                          className="aspect-[2/3] w-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    </Link>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              to="/films"
+              search={FILMS_SEARCH}
+              className="home-cta-primary inline-flex items-center gap-2 rounded-full bg-[#007BFF] px-8 py-3.5 text-sm font-bold text-white shadow-[0_8px_32px_rgba(0,123,255,0.45)] transition hover:bg-[#0066dd]"
+            >
+              Explorer le catalogue
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2.5}
+                stroke="currentColor"
+                className="h-5 w-5"
+                aria-hidden
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+                />
+              </svg>
+            </Link>
+            <Link
+              to="/films"
+              search={FILMS_SEARCH}
+              className="inline-flex items-center rounded-full border-2 border-white bg-transparent px-8 py-3.5 text-sm font-bold text-white transition hover:bg-white/10"
+            >
+              Explorer le catalogue
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ——— Monsters ——— */}
+      <section className="relative min-h-[min(92vh,720px)] overflow-hidden border-y border-white/10">
+        <div className="absolute inset-0">
+          <BackdropLayer
+            src={MONSTERS_BACKDROP}
+            fallbackSeed="cineconnect-monsters-bg"
+            className="object-[center_25%]"
+            overlayClassName="home-monsters-overlay"
+            kenBurns={false}
+          />
+          <div className="home-monsters-shade absolute inset-0" aria-hidden />
+        </div>
+
+        <div className="home-section-rise relative z-10 mx-auto grid min-h-[min(92vh,720px)] max-w-7xl items-end gap-8 px-4 py-12 md:grid-cols-2 md:items-center md:gap-10 md:px-10 md:py-16 lg:py-20">
+          <div className="max-w-xl pb-4 text-left md:pb-0">
+            <span className="inline-flex rounded-full border border-white/25 bg-black/40 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-white/95 backdrop-blur-sm">
+              À découvrir maintenant
+            </span>
+            <h2 className="mt-5 text-4xl font-black tracking-tight md:text-5xl lg:text-6xl">
+              Monsters
+            </h2>
+            <p className="mt-5 text-sm leading-relaxed text-white/85 md:text-base">
+              Films, séries, tendances : explore ce qui fait vibrer la communauté et
+              partage tes coups de cœur en temps réel.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                to="/films"
+                search={FILMS_SEARCH}
+                className="inline-flex items-center gap-2 rounded-full bg-[#007BFF] px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-[#0066dd]"
+              >
+                Explorer le catalogue
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                  stroke="currentColor"
+                  className="h-4 w-4"
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+                  />
+                </svg>
+              </Link>
+              <Link
+                to="/films"
+                search={FILMS_SEARCH}
+                className="inline-flex rounded-full border-2 border-white px-6 py-3 text-sm font-bold text-white transition hover:bg-white/10"
+              >
+                Explorer le catalogue
+              </Link>
+            </div>
+
+            <div className="mt-8 flex flex-wrap gap-2">
+              {FEATURE_PILLS.map((label) => {
+                const active = pill === label
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => setPill(label)}
+                    className={[
+                      "rounded-full px-4 py-2 text-xs font-semibold transition md:text-sm",
+                      active
+                        ? "bg-[#007BFF] text-white shadow-[0_0_24px_rgba(0,123,255,0.45)]"
+                        : "border border-white/40 bg-black/30 text-white/90 backdrop-blur-sm hover:border-white/70",
+                    ].join(" ")}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="relative flex min-h-[280px] items-center justify-center md:min-h-[420px] md:justify-end md:items-center">
+            <div className="home-monsters-float relative w-full max-w-[min(100%,300px)] sm:max-w-[340px] md:max-w-[min(100%,380px)]">
+              <div className="overflow-hidden rounded-2xl border border-white/15 bg-[#0c1222] shadow-[0_28px_80px_rgba(0,0,0,0.55)] ring-1 ring-white/10 md:rounded-3xl">
+                <div className="aspect-[2/3] w-full">
+                  <SafeImage
+                    src={MONSTERS_FOREGROUND}
+                    alt="Inception"
+                    fallbackSeed="cineconnect-monsters-fg"
+                    className="h-full w-full object-cover object-top"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ——— Rangées ——— */}
+      <section className="home-rows-section border-t border-white/10 px-4 py-12 md:px-10 md:py-16">
+        <div className="mx-auto max-w-7xl space-y-12">
+          <div className="home-section-rise">
+            <h3 className="text-lg font-bold tracking-tight text-white md:text-xl">
+              Top series
+            </h3>
+            <PosterStrip items={ROW_TOP_SERIES} />
+          </div>
+          <div className="home-section-rise">
+            <h3 className="text-lg font-bold tracking-tight text-white md:text-xl">
+              Top Films
+            </h3>
+            <PosterStrip items={ROW_TOP_FILMS} />
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

@@ -4,7 +4,14 @@ import { isAuthenticated, logout } from "../../lib/auth"
 import { getTheme, toggleTheme, type ThemeMode } from "../../lib/theme"
 import type { ReactNode } from "react"
 
-type NavLinkItem = { to: any; label: string; search?: any; requireAuth?: boolean }
+type NavLinkItem = {
+  to: any
+  label: string
+  search?: any
+  requireAuth?: boolean
+  /** Affiché seulement dans le menu mobile (maquette desktop : 4 liens centraux) */
+  mobileOnly?: boolean
+}
 
 function usePathname() {
   return useRouterState({ select: (s) => s.location.pathname })
@@ -12,7 +19,8 @@ function usePathname() {
 
 function NavItem({ to, label, search }: NavLinkItem) {
   const pathname = usePathname()
-  const active = pathname === to || (to !== "/" && pathname.startsWith(to))
+  const active =
+    pathname === to || (to !== "/" && pathname.startsWith(to))
 
   return (
     <Link
@@ -20,19 +28,17 @@ function NavItem({ to, label, search }: NavLinkItem) {
       search={search}
       aria-current={active ? "page" : undefined}
       className={[
-        "relative rounded-full px-5 py-2 text-sm font-medium transition-all duration-300",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]",
-        active
-          ? "bg-white/10 text-white shadow-[0_0_10px_rgba(255,255,255,0.10)]"
-          : "text-gray-400 hover:bg-white/5 hover:text-white",
+        "group relative px-4 py-2 text-sm font-medium transition-colors duration-200",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C] rounded-lg",
+        active ? "text-white" : "text-gray-400 hover:text-white",
       ].join(" ")}
     >
       {label}
       <span
         aria-hidden="true"
         className={[
-          "pointer-events-none absolute left-1/2 top-[calc(100%+2px)] h-[2px] w-0 -translate-x-1/2 rounded-full bg-[#3EA6FF] transition-all duration-300",
-          active ? "w-6 opacity-100" : "opacity-0 group-hover:w-6",
+          "pointer-events-none absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-[#007BFF] transition-opacity duration-200",
+          active ? "opacity-100" : "opacity-0",
         ].join(" ")}
       />
     </Link>
@@ -69,14 +75,15 @@ export function Navbar() {
     () => [
       { to: "/", label: "Accueil" },
       { to: "/films", label: "Films", search: { q: "", category: "", type: "movie", sort: "" } },
-      { to: "/amis", label: "Amis", requireAuth: true },
       { to: "/discussion", label: "Discussion", requireAuth: true },
       { to: "/profil", label: "Profil", requireAuth: true },
+      { to: "/amis", label: "Amis", requireAuth: true, mobileOnly: true },
     ],
     [],
   )
 
   const visibleNav = nav.filter((n) => !n.requireAuth || isAuth)
+  const desktopNav = visibleNav.filter((n) => !n.mobileOnly)
 
   const handleLogout = () => {
     logout()
@@ -84,18 +91,18 @@ export function Navbar() {
   }
 
   return (
-    <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-[#050B1C]/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 md:px-12">
-        {/* Brand */}
-        <Link to="/" className="group flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[#1D6CE0] to-[#3EA6FF] shadow-[0_0_15px_rgba(29,108,224,0.35)] transition-transform duration-300 group-hover:scale-105">
+    <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-[#050505]/90 backdrop-blur-xl">
+      <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between px-4 md:px-10">
+        {/* Brand — maquette : icône caméra + mot-clé */}
+        <Link to="/" className="group relative z-20 flex items-center gap-2.5 md:gap-3">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#007BFF] shadow-[0_0_20px_rgba(0,123,255,0.35)] transition-transform duration-300 group-hover:scale-105 md:h-10 md:w-10">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth={2}
               stroke="white"
-              className="h-6 w-6"
+              className="h-5 w-5 md:h-6 md:w-6"
               aria-hidden="true"
             >
               <path
@@ -106,21 +113,25 @@ export function Navbar() {
             </svg>
           </div>
 
-          <div className="text-2xl font-black tracking-tight">
-            <span className="text-white">Ciné</span>
-            <span className="text-[#1D6CE0]">Connect</span>
-          </div>
+          <span className="text-xl font-black tracking-tight text-white md:text-2xl">
+            CinéConnect
+          </span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-1 md:flex">
-          {visibleNav.map((item) => (
-            <NavItem key={item.to} {...item} />
-          ))}
+        {/* Desktop nav — centré (maquette) */}
+        <nav
+          className="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 md:block"
+          aria-label="Navigation principale"
+        >
+          <div className="pointer-events-auto flex items-center gap-1 lg:gap-2">
+            {desktopNav.map((item) => (
+              <NavItem key={`${item.to}-${item.label}`} {...item} />
+            ))}
+          </div>
         </nav>
 
         {/* Actions */}
-        <div className="flex items-center gap-3">
+        <div className="relative z-20 flex items-center gap-2 md:gap-3">
           <Link
             to="/films"
             search={{ q: "", category: "", type: "movie", sort: "" }}
@@ -144,7 +155,7 @@ export function Navbar() {
           <button
             type="button"
             onClick={() => setTheme(toggleTheme())}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-300/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+            className="hidden h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-300/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 md:inline-flex"
             title={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
             aria-label={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
           >
@@ -162,7 +173,7 @@ export function Navbar() {
           {!isAuth ? (
             <Link
               to="/login"
-              className="rounded-full bg-gradient-to-r from-red-600 to-rose-500 px-6 py-2.5 text-sm font-bold text-white shadow-[0_0_15px_rgba(220,38,38,0.35)] transition-all duration-300 hover:-translate-y-0.5 hover:from-red-500 hover:to-rose-400 hover:shadow-[0_0_22px_rgba(220,38,38,0.55)] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]"
+              className="rounded-full bg-[#007BFF] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_20px_rgba(0,123,255,0.4)] transition hover:bg-[#0066dd] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] md:px-6"
             >
               Connexion
             </Link>
@@ -203,14 +214,24 @@ export function Navbar() {
               <div className="flex flex-col gap-2">
                 {visibleNav.map((item) => (
                   <Link
-                    key={item.to}
+                    key={`${item.to}-${item.label}`}
                     to={item.to}
+                    search={item.search}
                     onClick={() => setMobileOpen(false)}
                     className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10"
                   >
                     {item.label}
                   </Link>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTheme(toggleTheme())
+                  }}
+                  className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/90 transition hover:bg-white/10 md:hidden"
+                >
+                  {theme === "dark" ? "Mode clair" : "Mode sombre"}
+                </button>
                 {isAuth ? (
                   <button
                     type="button"
