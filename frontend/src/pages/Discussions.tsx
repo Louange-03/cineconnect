@@ -20,10 +20,9 @@ export function Discussion() {
 
   useEffect(() => {
     const fetchConversations = async () => {
-      const res = await axios.get<Conversation[]>(
-        "http://localhost:3001/api/conversations",
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      const res = await axios.get<Conversation[]>("/api/conversations", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       setConversations(res.data)
     }
 
@@ -35,7 +34,7 @@ export function Discussion() {
 
     const fetchMessages = async () => {
       const res = await axios.get<Message[]>(
-        `http://localhost:3001/api/conversations/${selected.id}/messages`,
+        `/api/conversations/${selected.id}/messages`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setMessages(res.data)

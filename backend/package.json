@@ -11,6 +11,7 @@
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:migrate:reset": "drizzle-kit migrate reset",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

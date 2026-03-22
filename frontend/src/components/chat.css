@@ -1,0 +1,157 @@
+:root {
+  --color-prussian: #050b1c;
+  --color-navy: #0a132d;
+  --color-imperial: #0a2472;
+  --color-ocean: #1d6ce0;
+  --color-frost: #e2e8f0;
+}
+
+/* Reset scrollbar styles */
+.hide-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ocean) transparent;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.hide-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.hide-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--color-ocean);
+  border-radius: 3px;
+}
+
+/* General layout */
+.flex {
+  display: flex;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.h-screen {
+  height: 100vh;
+}
+
+/* Sidebar */
+.bg-prussian {
+  background-color: var(--color-prussian);
+}
+
+.bg-navy {
+  background-color: var(--color-navy);
+}
+
+.border-imperial {
+  border-color: var(--color-imperial);
+}
+
+.text-white {
+  color: #ffffff;
+}
+
+.text-white/40 {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.text-white/50 {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.text-white/80 {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.bg-gradient-to-r {
+  background: linear-gradient(to right, var(--color-ocean), #3ea6ff);
+}
+
+/* Conversation item */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.hover\:bg-white\/10:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+
+.rounded-2xl {
+  border-radius: 1rem;
+}
+
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+.shadow-\[0_0_20px_rgba\(29,108,224,0.3\)\] {
+  box-shadow: 0 0 20px rgba(29,108,224,0.3);
+}
+
+/* Chat bubbles */
+.bg-[#0A132D] {
+  background-color: var(--color-navy);
+}
+
+.border-white\/10 {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bg-[#1D6CE0]\/20 {
+  background-color: rgba(29,108,224,0.2);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Typing indicator */
+.text-sm {
+  font-size: 0.875rem;
+}
+
+/* Input */
+input:focus {
+  outline: none;
+}
+
+/* Emoji picker positioning */
+.emoji-picker-container {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  z-index: 10;
+}
+
+/* Message actions (edit, delete, copy, emoji) */
+.absolute {
+  position: absolute;
+}
+
+.top-1 { top: 0.25rem; }
+.right-1 { right: 0.25rem; }
+
+.opacity-0 { opacity: 0; }
+.hover\:opacity-100:hover { opacity: 1; }
+.transition-opacity { transition: opacity 0.2s ease-in-out; }
+
+/* Online status badge */
+.online-badge {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--color-ocean);
+}

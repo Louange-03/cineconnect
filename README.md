@@ -118,10 +118,5 @@ L'application expose une collection de routes REST solides, par exemple :
 Tous les appels sécurisés attendent un `Authorization: Bearer <votre_token_jwt>` obtenu suivant la connexion. Le tout est injecté automatiquement la fonction `apiClient()` construite dans le Front.
 
 ---
-<<<<<<< HEAD
 
 Projet réalisé dans le cadre académique de développement de la structure "WebApplication complète", **HETIC Web2**.
-=======
-//
-//
->>>>>>> origin/oceanne
