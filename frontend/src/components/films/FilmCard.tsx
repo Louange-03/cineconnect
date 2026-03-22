@@ -2,6 +2,7 @@ import React from "react"
 import type { Film } from "../../types"
 import { Link } from "@tanstack/react-router"
 import axios from "axios"
+import { getToken } from "../../lib/auth"
 
 interface FilmCardProps {
   film: Film
@@ -45,7 +46,7 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
     e.stopPropagation()
     if (busy) return
 
-    const token = localStorage.getItem("token")
+    const token = getToken()
     if (!token) {
       showToast("Connecte-toi pour ajouter aux favoris.")
       return
@@ -60,13 +61,37 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
 
     try {
       const api = getApiBaseUrl()
+      let targetFilmId = film.id
+
+      // OMDb fallback rows use imdbID as id; import first so favorites can persist in DB.
+      if (/^tt\d+$/i.test(targetFilmId)) {
+        const imported = await fetch(`${api}/api/films/import`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ imdbID: targetFilmId }),
+        })
+        if (!imported.ok) {
+          throw new Error("Impossible d'importer le film avant ajout aux favoris")
+        }
+        const importedData = await imported.json()
+        targetFilmId = importedData?.film?.id ?? targetFilmId
+      }
+
       const method = next ? "post" : "delete"
 
       await axios({
         method,
-        url: `${api}/api/users/me/favorites/${film.id}`,
+        url: `${api}/api/users/me/favorites/${targetFilmId}`,
         headers: { Authorization: `Bearer ${token}` },
       })
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("favorites-changed"))
+      }
 
       showToast(next ? "Ajouté aux favoris ✅" : "Retiré des favoris ✅")
     } catch (err) {

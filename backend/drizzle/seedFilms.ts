@@ -6,7 +6,7 @@ import { db } from "../src/db/client"
 import { films, categories, filmCategories } from "../src/db/schema"
 import { eq } from "drizzle-orm"
 
-const TMDB_API_KEY = "083d97120d76b70b8ad1dd40aa42740f" // Clé TMDB fournie
+const TMDB_API_KEY = "" // Clé TMDB fournie
 const BASE_URL = "https://api.themoviedb.org/3"
 
 async function fetchPopularMovies(page = 1) {
@@ -76,7 +76,7 @@ async function importMovies() {
       try {
         const details = await fetchMovieDetails(m.id)
         const filmRes = await db.insert(films).values({
-          tmdbId: String(m.id),
+          imdbId: String(m.id),
           title: m.title,
           year: m.release_date?.slice(0, 4),
           posterUrl: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : null,

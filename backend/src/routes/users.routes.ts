@@ -7,6 +7,24 @@ import bcrypt from "bcryptjs"
 
 export const usersRoutes = Router()
 
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+}
+
+async function resolveFilmId(input: string): Promise<string | null> {
+  const raw = String(input || "").trim()
+  if (!raw) return null
+  if (isUuid(raw)) return raw
+
+  const byImdb = await db
+    .select({ id: films.id })
+    .from(films)
+    .where(eq(films.imdbId, raw))
+    .limit(1)
+
+  return byImdb[0]?.id ?? null
+}
+
 // GET /users
 usersRoutes.get("/", authMiddleware, async (req: Request, res: Response) => {
   try {
@@ -99,7 +117,7 @@ usersRoutes.get("/me/favorites", authMiddleware, async (req: Request, res: Respo
     const list = await db
       .select({
         id: films.id,
-        tmdbId: films.tmdbId,
+        imdbId: films.imdbId,
         title: films.title,
         year: films.year,
         posterUrl: films.posterUrl
@@ -120,11 +138,16 @@ usersRoutes.get("/me/favorites", authMiddleware, async (req: Request, res: Respo
 usersRoutes.post("/me/favorites/:filmId", authMiddleware, async (req: Request, res: Response) => {
   try {
     const meId = req.user!.id
-    const { filmId } = req.params
+    const rawFilmId = req.params.filmId
+    const filmIdParam = Array.isArray(rawFilmId) ? rawFilmId[0] : rawFilmId
+    const resolvedFilmId = await resolveFilmId(filmIdParam)
+    if (!resolvedFilmId) {
+      return res.status(404).json({ message: "Film introuvable" })
+    }
 
     await db.insert(favorites).values({
       userId: meId,
-      filmId
+      filmId: resolvedFilmId
     } as any).onConflictDoNothing()
 
     res.json({ success: true })
@@ -139,9 +162,13 @@ usersRoutes.delete("/me/favorites/:filmId", authMiddleware, async (req: Request,
   try {
     const meId = req.user!.id
     const filmId = req.params.filmId as string
+    const resolvedFilmId = await resolveFilmId(filmId)
+    if (!resolvedFilmId) {
+      return res.status(404).json({ message: "Film introuvable" })
+    }
 
     await db.delete(favorites)
-      .where(and(eq(favorites.userId as any, meId), eq(favorites.filmId as any, filmId)))
+      .where(and(eq(favorites.userId as any, meId), eq(favorites.filmId as any, resolvedFilmId)))
 
     res.json({ success: true })
   } catch (err) {

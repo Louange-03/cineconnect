@@ -60,7 +60,8 @@ reviewsRoutes.post("/", authMiddleware, async (req, res) => {
 reviewsRoutes.put("/:id", authMiddleware, async (req, res) => {
   try {
     const userId = req.user!.id
-    const { id } = req.params
+    const raw = req.params.id
+    const id = Array.isArray(raw) ? raw[0] : raw
     const { rating, comment } = req.body ?? {}
 
     if (typeof rating !== "number") {
@@ -88,7 +89,8 @@ reviewsRoutes.put("/:id", authMiddleware, async (req, res) => {
 reviewsRoutes.delete("/:id", authMiddleware, async (req, res) => {
   try {
     const userId = req.user!.id
-    const { id } = req.params
+    const raw = req.params.id
+    const id = Array.isArray(raw) ? raw[0] : raw
 
     const deleted = await db
       .delete(reviews)

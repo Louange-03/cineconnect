@@ -13,9 +13,14 @@ function requireEnv(name: string): string {
     return v
 }
 
-function signToken(payload: { userId: string }) {
+function signToken(payload: { userId: string; email: string; username: string }) {
     const secret = requireEnv("JWT_SECRET")
-    return jwt.sign(payload, secret, { expiresIn: "7d" })
+    // Keep both id and userId for backward compatibility across middlewares/routes.
+    return jwt.sign(
+        { id: payload.userId, userId: payload.userId, email: payload.email, username: payload.username },
+        secret,
+        { expiresIn: "7d" }
+    )
 }
 
 function getBearerToken(req: Request): string | null {
@@ -46,7 +51,7 @@ authRoutes.post("/register", async (req, res) => {
             .returning({ id: users.id, email: users.email, username: users.username })
 
         const user = created[0]
-        const token = signToken({ userId: user.id })
+        const token = signToken({ userId: user.id, email: user.email, username: user.username })
 
         res.json({ token, user })
     } catch (err: unknown) {
@@ -80,7 +85,7 @@ authRoutes.post("/login", async (req, res) => {
         const ok = await bcrypt.compare(String(password), user.passwordHash)
         if (!ok) return res.status(401).json({ message: "Identifiants invalides" })
 
-        const token = signToken({ userId: user.id })
+        const token = signToken({ userId: user.id, email: user.email, username: user.username })
 
         res.json({
             token,
@@ -98,12 +103,16 @@ authRoutes.get("/me", async (req, res) => {
         if (!token) return res.status(401).json({ message: "Non authentifié" })
 
         const secret = requireEnv("JWT_SECRET")
-        const decoded = jwt.verify(token, secret) as { userId: string }
+        const decoded = jwt.verify(token, secret) as { id?: string; userId?: string }
+        const resolvedUserId = decoded.id ?? decoded.userId
+        if (!resolvedUserId) {
+            return res.status(401).json({ message: "Token invalide" })
+        }
 
         const rows = await db
             .select({ id: users.id, email: users.email, username: users.username })
             .from(users)
-            .where(eq(users.id, decoded.userId))
+            .where(eq(users.id, resolvedUserId))
             .limit(1)
 
         const me = rows[0]

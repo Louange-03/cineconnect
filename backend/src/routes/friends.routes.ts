@@ -252,7 +252,8 @@ router.get("/search", authMiddleware, async (req: Request, res: Response): Promi
 // DELETE /friends/:userId
 router.delete("/:userId", authMiddleware, async (req: Request, res: Response): Promise<void> => {
   const meId = req.user?.id
-  const userId = req.params.userId
+  const raw = req.params.userId
+  const userId = Array.isArray(raw) ? raw[0] : raw
 
   if (!meId) {
     res.status(401).json({ message: "Unauthorized" })

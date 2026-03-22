@@ -54,7 +54,7 @@ export const friendships = pgTable(
 
 export const films = pgTable("films", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tmdbId: varchar("tmdb_id", { length: 50 }).notNull().unique(),
+  imdbId: varchar("imdb_id", { length: 50 }).notNull().unique(),
   title: varchar("title", { length: 255 }).notNull(),
   year: varchar("year", { length: 10 }),
   posterUrl: varchar("poster_url", { length: 500 }),

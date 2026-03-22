@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { Link, useRouterState } from "@tanstack/react-router"
 import { isAuthenticated, logout } from "../../lib/auth"
+import { getTheme, toggleTheme, type ThemeMode } from "../../lib/theme"
 import type { ReactNode } from "react"
 
 type NavLinkItem = { to: any; label: string; search?: any; requireAuth?: boolean }
@@ -40,7 +41,29 @@ function NavItem({ to, label, search }: NavLinkItem) {
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const isAuth = isAuthenticated()
+  const [isAuth, setIsAuth] = useState(isAuthenticated())
+  const [theme, setTheme] = useState<ThemeMode>(getTheme())
+
+  useEffect(() => {
+    const syncAuth = () => setIsAuth(isAuthenticated())
+    syncAuth()
+    window.addEventListener("auth-changed", syncAuth)
+    window.addEventListener("storage", syncAuth)
+    window.addEventListener("focus", syncAuth)
+    return () => {
+      window.removeEventListener("auth-changed", syncAuth)
+      window.removeEventListener("storage", syncAuth)
+      window.removeEventListener("focus", syncAuth)
+    }
+  }, [])
+
+  useEffect(() => {
+    const syncTheme = () => setTheme(getTheme())
+    window.addEventListener("theme-changed", syncTheme as EventListener)
+    return () => {
+      window.removeEventListener("theme-changed", syncTheme as EventListener)
+    }
+  }, [])
 
   const nav = useMemo<NavLinkItem[]>(
     () => [
@@ -118,6 +141,24 @@ export function Navbar() {
             </svg>
           </Link>
 
+          <button
+            type="button"
+            onClick={() => setTheme(toggleTheme())}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-300/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+            title={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
+            aria-label={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
+          >
+            {theme === "dark" ? (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                <path d="M12 2.25a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75ZM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0Zm-.53-6.03a.75.75 0 10-1.06 1.06l1.06 1.06a.75.75 0 101.06-1.06L6.97 5.97Zm10 10a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06ZM3 11.25a.75.75 0 000 1.5h1.5a.75.75 0 000-1.5H3Zm16.5 0a.75.75 0 000 1.5H21a.75.75 0 000-1.5h-1.5ZM5.91 18.09a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06Zm12.12-12.12a.75.75 0 011.06 0 .75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06ZM12 19.5a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0112 19.5Z" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.82 8.25 8.25 0 0010.593 10.593.75.75 0 01.982.98A9.75 9.75 0 1110.51 2.356a.75.75 0 01-.982-.638Z" clipRule="evenodd" />
+              </svg>
+            )}
+          </button>
+
           {!isAuth ? (
             <Link
               to="/login"
@@ -170,6 +211,18 @@ export function Navbar() {
                     {item.label}
                   </Link>
                 ))}
+                {isAuth ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleLogout()
+                      setMobileOpen(false)
+                    }}
+                    className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10 text-left"
+                  >
+                    Déconnexion
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>

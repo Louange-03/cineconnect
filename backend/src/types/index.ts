@@ -14,8 +14,8 @@ export interface SafeUser {
 
 export interface JwtPayload {
   id: string
-  email: string
-  username: string
+  email?: string
+  username?: string
 }
 
 export interface Friendship {
@@ -39,5 +39,3 @@ export interface FriendRequestData {
   fromUsername: string
   createdAt: Date
 }
-
-

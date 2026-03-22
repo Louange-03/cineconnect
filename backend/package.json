@@ -9,10 +9,12 @@
     "start": "tsx src/server.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:migrate:reset": "drizzle-kit migrate reset",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "seed:omdb:massive": "tsx scripts/seed_omdb_massive.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -25,6 +27,7 @@
     "node-fetch": "^3.3.2",
     "pg": "^8.17.2",
     "socket.io": "^4.8.3",
+    "swagger-ui-express": "^5.0.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -39,9 +42,12 @@
     "drizzle-kit": "^0.31.8",
     "eslint": "^9.0.0",
     "nodemon": "^3.1.11",
+    "openapi-types": "^12.1.3",
+    "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.0.0"
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^4.1.0"
   }
 }

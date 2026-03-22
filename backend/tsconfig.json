@@ -6,8 +6,8 @@
     "moduleResolution": "Bundler",
     "strict": true,
     "skipLibCheck": true,
-    "composite": true,
-    "noEmit": false,
+    "composite": false,
+    "noEmit": true,
     "types": ["node"],
 
     "allowJs": false,

@@ -4,7 +4,7 @@
 
 - **Liste des films** (base locale) : recherche, filtre par catégorie/année, pagination
 - **Détail d’un film** (base locale) : affiche synopsis, affiche, catégories associées
-- **Recherche externe** (OMDb/TMDb) : proxy côté backend pour éviter d’exposer la clé API
+- **Recherche externe** (OMDb) : proxy côté backend pour éviter d’exposer la clé API
 - **Catégories** : endpoint dédié pour la liste, association film/catégorie
 - **Seed** : script pour remplir la base avec 50+ films et catégories
 
@@ -24,14 +24,13 @@
 - `GET /films/search?q=...` – alias de la liste pour recherche rapide
 - `GET /films/categories` – récupérer la liste des catégories
 - `GET /films/:id` – détails d’un film (inclut catégories)
-- `GET /films/tmdb?q=...` – recherche dans l’API externe (OMDb/TMDb)
-- `POST /films/tmdb/search` – idem en POST (utilisé par ancien client)
-- `GET /films/tmdb/:id` – détail externe
-- `POST /films/tmdb/detail` – idem en POST
+- `GET /films/omdb/search?q=...` – recherche dans l’API OMDb (pour import)
+- `POST /films/import` – importer un film par `imdbID` (corps JSON : `{ "imdbID": "tt0133093" }`)
 
 ### Seed
 
-- Script `backend/drizzle/seedFilms.ts` pour remplir la base avec des exemples
+- **OMDb (recommandé)** : `npx tsx backend/scripts/seed_omdb_massive.ts` — import massif depuis l’API OMDb (nécessite `OMDB_API_KEY` dans `backend/.env`).
+- Liste ciblée : `npx tsx backend/scripts/seed_omdb.ts` — quelques dizaines de titres prédéfinis.
 
 ---
 

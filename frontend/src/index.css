@@ -1,6 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap");
-
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap");
 
 @theme {
   --color-prussian: #050b1c;
@@ -10,12 +9,15 @@
   --color-frost: #e2e8f0;
 }
 
-
 :root {
   font-family: "Outfit", system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: dark;
+}
+
+html.theme-light {
+  color-scheme: light;
 }
 
 html {
@@ -27,7 +29,6 @@ body,
 #root {
   min-height: 100vh;
   height: 100%;
-  margin: 100px;
 }
 
 body {
@@ -35,6 +36,212 @@ body {
   color: var(--color-frost);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html.theme-light body {
+  background-color: #eef3ff;
+  color: #0f172a;
+}
+
+/* Light mode overrides for existing cinematic dark utility classes */
+html.theme-light .bg-\[\#050B1C\] {
+  background-color: #eef3ff !important;
+}
+html.theme-light .bg-\[\#050B1C\]\/80 {
+  background-color: rgba(238, 243, 255, 0.82) !important;
+}
+html.theme-light .bg-\[\#0A132D\]\/60,
+html.theme-light .bg-\[\#0A132D\]\/65,
+html.theme-light .bg-\[\#0A132D\]\/70,
+html.theme-light .bg-\[\#0A132D\]\/80 {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+}
+html.theme-light .text-white,
+html.theme-light .text-white\/90,
+html.theme-light .text-white\/85,
+html.theme-light .text-white\/80,
+html.theme-light .text-white\/70,
+html.theme-light .text-white\/60 {
+  color: #0f172a !important;
+}
+html.theme-light .text-gray-400,
+html.theme-light .text-gray-500 {
+  color: #475569 !important;
+}
+html.theme-light .border-white\/10,
+html.theme-light .border-white\/15,
+html.theme-light .border-white\/20 {
+  border-color: rgba(15, 23, 42, 0.14) !important;
+}
+html.theme-light .bg-white\/5 {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+html.theme-light .bg-white\/10 {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+}
+html.theme-light .from-\[\#050B1C\] {
+  --tw-gradient-from: #eef3ff var(--tw-gradient-from-position) !important;
+}
+html.theme-light .bg-\[\#020617\] {
+  background-color: #f8fafc !important;
+}
+html.theme-light .bg-black\/40,
+html.theme-light .bg-black\/50,
+html.theme-light .bg-black\/60 {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+}
+html.theme-light .from-\[\#050B1C\]\/90 {
+  --tw-gradient-from: rgba(238, 243, 255, 0.95) var(--tw-gradient-from-position) !important;
+}
+html.theme-light .via-\[\#050B1C\]\/25,
+html.theme-light .via-\[\#050B1C\]\/55 {
+  --tw-gradient-via: rgba(238, 243, 255, 0.72) var(--tw-gradient-via-position) !important;
+}
+html.theme-light .to-transparent {
+  --tw-gradient-to: rgb(238 243 255 / 0) var(--tw-gradient-to-position) !important;
+}
+html.theme-light .drop-shadow-md {
+  filter: none !important;
+}
+html.theme-light .cine-bg::before,
+html.theme-light .cine-bg::after {
+  opacity: 0.22;
+}
+html.theme-light .cine-orb {
+  opacity: 0.18;
+}
+
+/* Page-specific light mode polish */
+html.theme-light .home-page,
+html.theme-light .films-page,
+html.theme-light .profile-page {
+  background: linear-gradient(180deg, #f6f9ff 0%, #edf3ff 45%, #e8effd 100%) !important;
+}
+
+html.theme-light .home-category-shell,
+html.theme-light .films-search-shell,
+html.theme-light .films-category-shell,
+html.theme-light .films-empty-shell,
+html.theme-light .profile-header-card,
+html.theme-light .profile-favorites-shell {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08) !important;
+}
+
+html.theme-light .home-content h2,
+html.theme-light .films-page h1,
+html.theme-light .films-page h2,
+html.theme-light .films-page h3,
+html.theme-light .profile-page h1,
+html.theme-light .profile-page h2,
+html.theme-light .profile-page h3 {
+  color: #0b1220 !important;
+}
+
+html.theme-light .home-content a,
+html.theme-light .films-page a,
+html.theme-light .profile-page a {
+  color: #1d4ed8;
+}
+
+html.theme-light .home-content p,
+html.theme-light .films-page p,
+html.theme-light .profile-page p,
+html.theme-light .films-page span,
+html.theme-light .profile-page span {
+  color: #334155;
+}
+
+html.theme-light .profile-banner {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(255, 255, 255, 0.9), rgba(59, 130, 246, 0.18)) !important;
+}
+
+html.theme-light .profile-page .text-\[\#3EA6FF\] {
+  color: #1d4ed8 !important;
+}
+
+/* Global cinematic background with soft glows and floating orbs */
+.cine-bg {
+  position: relative;
+  isolation: isolate;
+}
+
+.cine-bg::before,
+.cine-bg::after {
+  content: "";
+  position: fixed;
+  width: 480px;
+  height: 480px;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.45;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  z-index: -10;
+}
+
+.cine-bg::before {
+  top: -80px;
+  left: -80px;
+  background: radial-gradient(circle at 30% 30%, rgba(62, 166, 255, 0.9), transparent 65%);
+}
+
+.cine-bg::after {
+  bottom: -120px;
+  right: -60px;
+  background: radial-gradient(circle at 70% 70%, rgba(185, 28, 28, 0.85), transparent 70%);
+}
+
+@keyframes cine-orb-float {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(16px, -18px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes cine-orb-float-alt {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-12px, 14px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.cine-orb {
+  position: fixed;
+  border-radius: 9999px;
+  filter: blur(40px);
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: -10;
+}
+
+.cine-orb--blue {
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle at 30% 20%, rgba(56, 189, 248, 0.9), transparent 70%);
+  top: 100px;
+  right: 18%;
+  animation: cine-orb-float 18s ease-in-out infinite;
+}
+
+.cine-orb--gold {
+  width: 190px;
+  height: 190px;
+  background: radial-gradient(circle at 60% 80%, rgba(250, 204, 21, 0.85), transparent 70%);
+  bottom: 120px;
+  left: 15%;
+  animation: cine-orb-float-alt 22s ease-in-out infinite;
 }
 
 :focus-visible {
@@ -53,8 +260,6 @@ body {
   padding-right: 1.5rem;
   /* px-6 */
 }
-
-
 
 @media (min-width: 768px) {
   .container-page {
@@ -93,4 +298,85 @@ body {
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@keyframes cine-hero-intro {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0) scale(0.98);
+    filter: blur(4px);
+  }
+  40% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes cine-hero-badge {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -8px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.cine-hero-enter {
+  animation: cine-hero-intro 900ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: left center;
+}
+
+.cine-hero-badge {
+  animation: cine-hero-badge 500ms ease-out 200ms both;
+}
+
+/* Reveal on scroll */
+.cine-reveal {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+}
+
+@keyframes cine-reveal-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+.cine-reveal--in {
+  animation: cine-reveal-in 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--reveal-delay, 0ms);
+  will-change: transform, opacity;
+}
+
+/* Stagger helper for film cards */
+@keyframes cine-card-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.cine-card-enter {
+  opacity: 0;
+  animation: cine-card-in 520ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--stagger, 0ms);
 }

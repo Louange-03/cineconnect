@@ -2,9 +2,12 @@ import { Router } from "express"
 import { db } from "../db"
 import { films, filmCategories, categories } from "../db/schema"
 import { eq, ilike, inArray, and, type SQL } from "drizzle-orm"
-import { getFilmById, importFilmFromOmdb } from "../controllers/films.controller"
+import { getFilmById, searchOmdb, importFilmFromOmdb } from "../controllers/films.controller"
+import { authMiddleware } from "../middlewares/auth"
 
 export const filmsRoutes = Router()
+
+
 
 function toStringQuery(value: unknown): string {
   return typeof value === "string" ? value : ""
@@ -36,6 +39,7 @@ filmsRoutes.get("/", async (req, res) => {
         .limit(1)
 
       if (!cat.length) {
+        // catégorie inconnue => 0 résultats
         return res.json({ films: [] })
       }
 
@@ -60,6 +64,8 @@ filmsRoutes.get("/", async (req, res) => {
       resultFilms = await db.select().from(films).limit(limit);
     }
 
+    // Now manually attach categories (since SQLite/PG array_agg can be tricky to type cleanly with simple select)
+    // We can do a second query to get all categories for the returning films
     const filmIds = resultFilms.map(f => f.id);
     let filmsWithCategories: any[] = resultFilms.map(f => ({ ...f, categories: [] as string[] }));
 
@@ -73,6 +79,7 @@ filmsRoutes.get("/", async (req, res) => {
         .innerJoin(categories, eq(filmCategories.categoryId, categories.id))
         .where(inArray(filmCategories.filmId, filmIds));
 
+      // grouped
       const catsMap = new Map<string, string[]>();
       for (const link of allLinks) {
         if (!catsMap.has(link.filmId)) catsMap.set(link.filmId, []);
@@ -102,25 +109,8 @@ filmsRoutes.get("/categories", async (_req, res) => {
   }
 })
 
-filmsRoutes.get("/tmdb", async (req, res) => {
-  try {
-    const q = (req.query.q ?? "").toString().trim()
-    if (!q) return res.json({ Search: [] })
-
-    const OMDB_KEY = process.env.OMDB_API_KEY || ""
-    if (!OMDB_KEY) return res.status(500).json({ error: "OMDB_API_KEY manquant" })
-
-    const url = `https://www.omdbapi.com/?apikey=${OMDB_KEY}&s=${encodeURIComponent(q)}`
-    const r = await fetch(url)
-    const data = await r.json()
-    res.json(data)
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: "Erreur recherche OMDb" })
-  }
-})
-
-
-filmsRoutes.post("/import", importFilmFromOmdb)
+// Recherche OMDb (externe) pour l’import — avant /:id
+filmsRoutes.get("/omdb/search", searchOmdb)
+filmsRoutes.post("/import", authMiddleware, importFilmFromOmdb)
 
 filmsRoutes.get("/:id", getFilmById)

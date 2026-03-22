@@ -36,6 +36,7 @@ async function fetchFilms(query: string, category: string, year: string): Promis
 
   const data = JSON.parse(text)
   const films = Array.isArray(data.films) ? data.films : []
+
   if (films.length > 0) {
     localStorage.setItem(cacheKey, JSON.stringify(films))
   }
@@ -43,7 +44,7 @@ async function fetchFilms(query: string, category: string, year: string): Promis
 }
 
 // Purge automatique du cache si la structure a changé
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 if (localStorage.getItem('films_cache_version') !== CACHE_VERSION) {
   Object.keys(localStorage).forEach(k => {
     if (k.startsWith('films_cache_')) localStorage.removeItem(k);

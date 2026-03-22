@@ -39,115 +39,71 @@ export function Home() {
   const topFilms = useMemo(() => all.filter((f) => !isSeries(f)).slice(0, 12), [all])
 
   return (
-    <main className="min-h-screen bg-[#050B1C] text-white pb-20">
-      {/* HERO */}
-      <section className="relative overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-40"
-          style={{ backgroundImage: "url('/hero_background.png')" }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#050B1C]/20 via-[#050B1C]/65 to-[#050B1C]" />
-
-        <div className="relative mx-auto max-w-7xl px-6 pt-28 pb-16">
-          <div className="max-w-3xl">
-            <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#3EA6FF] backdrop-blur">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#3EA6FF] opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#3EA6FF]" />
-              </span>
-              À découvrir maintenant
-            </span>
-
-            <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-none drop-shadow-[0_0_30px_rgba(29,108,224,0.25)]">
-              {featured ? featured.title : "CinéConnect"}
-            </h1>
-
-            <p className="mt-5 text-base md:text-lg text-white/70 leading-relaxed">
-              Films, séries, tendances et avis — retrouve tout au même endroit et partage avec ta communauté.
-            </p>
-
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              {featured && (
-                <Link
-                  to="/film/$id"
-                  params={{ id: featured.id }}
-                  className="inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] px-8 py-3 font-bold text-white shadow-[0_0_18px_rgba(29,108,224,0.35)] transition-transform hover:scale-[1.03]"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                    <path
-                      fillRule="evenodd"
-                      d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Voir la fiche
-                </Link>
-              )}
-
-              <Link
-                to="/films"
-                search={{ q: "", category: selectedCategory, type: "all", sort: "" as any }}
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-8 py-3 font-semibold text-white/90 backdrop-blur hover:bg-white/10 transition-colors"
+    <main className="home-page min-h-screen bg-[#050B1C] text-white pb-20">
+      {/* Barre de catégories (style screenshot) */}
+      <section className="mx-auto max-w-5xl px-6 pt-10 pb-4">
+        <div className="home-category-shell flex flex-wrap gap-3 rounded-full bg-[#050B1C]/80 px-3 py-2 md:px-4 md:py-3">
+          {CATEGORIES.map((cat) => {
+            const active = selectedCategory === cat.value
+            return (
+              <button
+                key={cat.label}
+                type="button"
+                onClick={() => setSelectedCategory(cat.value)}
+                className={[
+                  "rounded-full px-4 md:px-5 py-1.5 text-xs md:text-sm font-medium transition-all duration-200",
+                  active
+                    ? "bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] text-white shadow-[0_0_18px_rgba(62,166,255,0.5)] border border-[#3EA6FF]/60"
+                    : "bg-[#020617] text-white/70 border border-white/10 hover:border-white/25 hover:text-white",
+                ].join(" ")}
               >
-                Explorer le catalogue
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                </svg>
-              </Link>
-            </div>
-
-            {/* Catégories (pills) */}
-            <div className="mt-10 flex flex-wrap gap-3">
-              {CATEGORIES.map((cat) => {
-                const active = selectedCategory === cat.value
-                return (
-                  <button
-                    key={cat.label}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat.value)}
-                    className={[
-                      "rounded-full px-5 py-2 text-sm font-semibold transition-all",
-                      "border border-white/10 backdrop-blur",
-                      active
-                        ? "bg-[#3EA6FF]/15 text-[#3EA6FF] shadow-[0_0_12px_rgba(62,166,255,0.25)]"
-                        : "bg-white/5 text-white/70 hover:text-white hover:bg-white/10",
-                    ].join(" ")}
-                  >
-                    {cat.label}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+                {cat.label}
+              </button>
+            )
+          })}
         </div>
       </section>
 
-      {/* CONTENT */}
-      <section className="mx-auto max-w-7xl px-6 space-y-14 mt-8">
+      {/* CONTENU – carrousels */}
+      <section className="home-content mx-auto mt-4 max-w-6xl space-y-10 px-6 pb-12">
         <SectionHeader
           title="Tendances"
           to="/films"
           search={{ q: "", category: selectedCategory, type: "all", sort: "" as any }}
         />
-        <Grid>
+        <HorizontalRow>
           {trending.map((film) => (
-            <FilmCard key={film.id} film={film} />
+            <div key={film.id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
+              <FilmCard film={film} />
+            </div>
           ))}
-        </Grid>
+        </HorizontalRow>
 
-        <SectionHeader title="Séries à la une" to="/films" search={{ q: "", category: "Série", type: "series", sort: "" }} />
-        <Grid>
+        <SectionHeader
+          title="Séries à la une"
+          to="/films"
+          search={{ q: "", category: "Série", type: "series", sort: "" }}
+        />
+        <HorizontalRow>
           {topSeries.map((film) => (
-            <FilmCard key={film.id} film={film} />
+            <div key={film.id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
+              <FilmCard film={film} />
+            </div>
           ))}
-        </Grid>
+        </HorizontalRow>
 
-        <SectionHeader title="Films à voir" to="/films" search={{ q: "", category: "", type: "movie", sort: "" }} />
-        <Grid>
+        <SectionHeader
+          title="Films à voir"
+          to="/films"
+          search={{ q: "", category: "", type: "movie", sort: "" }}
+        />
+        <HorizontalRow>
           {topFilms.map((film) => (
-            <FilmCard key={film.id} film={film} />
+            <div key={film.id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
+              <FilmCard film={film} />
+            </div>
           ))}
-        </Grid>
+        </HorizontalRow>
       </section>
     </main>
   )
@@ -179,9 +135,9 @@ function SectionHeader({
   )
 }
 
-function Grid({ children }: { children: React.ReactNode }) {
+function HorizontalRow({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+    <div className="hide-scrollbar flex gap-4 overflow-x-auto pb-2 pt-1">
       {children}
     </div>
   )
