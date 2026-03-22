@@ -3,12 +3,12 @@ import { Link } from "@tanstack/react-router"
 import { BackdropLayer, SafeImage } from "../components/home/SafeImage"
 import {
   CINEMA_BG_PRIMARY,
-  HERO_POSTERS,
   MONSTERS_BACKDROP,
   MONSTERS_FOREGROUND,
   ROW_TOP_FILMS,
   ROW_TOP_SERIES,
 } from "../components/home/homeAssets"
+import { HeroAnimatedCarousel } from "../components/home/HeroAnimatedCarousel"
 
 const FEATURE_PILLS = ["Tout", "Animé", "Comédie", "Action", "Horreur"] as const
 
@@ -76,38 +76,7 @@ export function Home() {
             avec une communauté qui vit le cinéma comme toi.
           </p>
 
-          <div className="home-carousel-3d mt-12 w-full max-w-4xl px-1">
-            <div className="home-carousel-track">
-              {HERO_POSTERS.map((p, i) => {
-                const offset = i - 2
-                const rotateY = offset * 15
-                const scale = i === 2 ? 1.08 : 0.86
-                const z = 5 - Math.abs(offset)
-                return (
-                  <div
-                    key={p.seed}
-                    className="home-carousel-card"
-                    style={{
-                      transform: `perspective(1100px) rotateY(${rotateY}deg) scale(${scale})`,
-                      zIndex: z,
-                    }}
-                  >
-                    <Link to="/films" search={FILMS_SEARCH} className="block">
-                      <div className="w-[92px] overflow-hidden rounded-xl border border-white/25 shadow-[0_24px_60px_rgba(0,0,0,0.65)] sm:w-[110px] md:w-[128px]">
-                        <SafeImage
-                          src={p.src}
-                          alt={p.alt}
-                          fallbackSeed={p.seed}
-                          className="aspect-[2/3] w-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                    </Link>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+          <HeroAnimatedCarousel />
 
           <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
             <Link
