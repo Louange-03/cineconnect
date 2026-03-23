@@ -50,6 +50,33 @@ function formatMessageTime(value?: string) {
   })
 }
 
+function formatMessageDayLabel(value?: string) {
+  if (!value) return ""
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return ""
+
+  const now = new Date()
+  const sameDay =
+    d.getDate() === now.getDate() &&
+    d.getMonth() === now.getMonth() &&
+    d.getFullYear() === now.getFullYear()
+  if (sameDay) return "Aujourd'hui"
+
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+  const isYesterday =
+    d.getDate() === yesterday.getDate() &&
+    d.getMonth() === yesterday.getMonth() &&
+    d.getFullYear() === yesterday.getFullYear()
+  if (isYesterday) return "Hier"
+
+  return d.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  })
+}
+
 function Avatar({
   name,
   src,
@@ -343,72 +370,86 @@ export function Discussion() {
 
             {/* Messages body */}
             <div className="flex-1 p-6 overflow-y-auto space-y-4 z-10 hide-scrollbar scroll-smooth">
-              {messages.map((msg) => {
+              {messages.map((msg, idx) => {
                 const isMine = msg.sender_id === currentUserId;
                 const sharedFilm = parseSharedFilmMessage(msg.text || "")
-                const sentAt = formatMessageTime(msg.created_at || msg.createdAt)
+                const rawDate = msg.created_at || msg.createdAt
+                const sentAt = formatMessageTime(rawDate)
+                const dayLabel = formatMessageDayLabel(rawDate)
+                const prevRawDate =
+                  idx > 0 ? messages[idx - 1].created_at || messages[idx - 1].createdAt : undefined
+                const prevDayLabel = idx > 0 ? formatMessageDayLabel(prevRawDate) : ""
+                const showDaySeparator = idx === 0 || dayLabel !== prevDayLabel
                 return (
-                  <div
-                    key={msg.id}
-                    className={`flex ${isMine ? "justify-end" : "justify-start"} motion-safe:animate-fade-in`}
-                  >
+                  <div key={msg.id}>
+                    {showDaySeparator ? (
+                      <div className="my-2 flex items-center justify-center">
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-white/70">
+                          {dayLabel}
+                        </span>
+                      </div>
+                    ) : null}
                     <div
-                      className={`max-w-[70%] p-4 rounded-3xl ${isMine
-                        ? "bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] text-white rounded-br-sm shadow-[0_5px_20px_rgba(29,108,224,0.3)]"
-                        : "bg-[#0A132D] border border-white/10 text-white/90 rounded-bl-sm shadow-xl"
-                        }`}
+                      className={`flex ${isMine ? "justify-end" : "justify-start"} motion-safe:animate-fade-in`}
                     >
-                      {sharedFilm ? (
-                        <a
-                          href={sharedFilm.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className={[
-                            "block rounded-2xl border px-4 py-3 transition",
-                            isMine
-                              ? "border-white/30 bg-white/10 hover:bg-white/15"
-                              : "border-white/15 bg-white/5 hover:bg-white/10",
-                          ].join(" ")}
-                        >
-                          <p className="text-[11px] font-semibold uppercase tracking-wider text-white/70">
-                            Film partage
-                          </p>
-                          {sharedFilm.posterUrl ? (
-                            <img
-                              src={sharedFilm.posterUrl}
-                              alt={sharedFilm.title}
-                              className="mt-2 h-36 w-24 rounded-lg object-cover shadow-lg"
-                              loading="lazy"
-                              referrerPolicy="no-referrer"
-                            />
-                          ) : null}
-                          <p className="mt-1 text-sm font-bold text-white">{sharedFilm.title}</p>
-                          <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/20 px-2.5 py-1 text-[11px] font-medium text-white/85">
-                            <span>{sharedFilm.year || "—"}</span>
-                            <span>•</span>
-                            <span>Ouvrir</span>
-                          </div>
-                        </a>
-                      ) : (
-                        <p className="leading-relaxed">{msg.text}</p>
-                      )}
+                      <div
+                        className={`max-w-[70%] p-4 rounded-3xl ${isMine
+                          ? "bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] text-white rounded-br-sm shadow-[0_5px_20px_rgba(29,108,224,0.3)]"
+                          : "bg-[#0A132D] border border-white/10 text-white/90 rounded-bl-sm shadow-xl"
+                          }`}
+                      >
+                        {sharedFilm ? (
+                          <a
+                            href={sharedFilm.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={[
+                              "block rounded-2xl border px-4 py-3 transition",
+                              isMine
+                                ? "border-white/30 bg-white/10 hover:bg-white/15"
+                                : "border-white/15 bg-white/5 hover:bg-white/10",
+                            ].join(" ")}
+                          >
+                            <p className="text-[11px] font-semibold uppercase tracking-wider text-white/70">
+                              Film partage
+                            </p>
+                            {sharedFilm.posterUrl ? (
+                              <img
+                                src={sharedFilm.posterUrl}
+                                alt={sharedFilm.title}
+                                className="mt-2 h-36 w-24 rounded-lg object-cover shadow-lg"
+                                loading="lazy"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : null}
+                            <p className="mt-1 text-sm font-bold text-white">{sharedFilm.title}</p>
+                            <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/20 px-2.5 py-1 text-[11px] font-medium text-white/85">
+                              <span>{sharedFilm.year || "—"}</span>
+                              <span>•</span>
+                              <span>Ouvrir</span>
+                            </div>
+                          </a>
+                        ) : (
+                          <p className="leading-relaxed">{msg.text}</p>
+                        )}
 
-                      <div className="mt-2 flex items-center justify-end gap-2 text-[10px] font-medium text-white/70">
-                        {sentAt ? <span>{sentAt}</span> : null}
-                        {isMine ? (
-                          <span className="inline-flex items-center gap-1">
-                            {msg.seen ? (
-                              <>
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-white/90">
-                                  <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                                </svg>
-                                <span>Vu</span>
-                              </>
-                            ) : (
-                              <span>Envoye</span>
-                            )}
-                          </span>
-                        ) : null}
+                        <div className="mt-2 flex items-center justify-end gap-2 text-[10px] font-medium text-white/70">
+                          {sentAt ? <span>{sentAt}</span> : null}
+                          {isMine ? (
+                            <span className="inline-flex items-center gap-1">
+                              {msg.seen ? (
+                                <>
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-white/90">
+                                    <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                                  </svg>
+                                  <span>Vu</span>
+                                </>
+                              ) : (
+                                <span>Envoye</span>
+                              )}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
                   </div>
