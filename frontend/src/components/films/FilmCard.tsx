@@ -3,6 +3,7 @@ import type { Film } from "../../types"
 import { Link } from "@tanstack/react-router"
 import axios from "axios"
 import { getToken } from "../../lib/auth"
+import { connectSocket, socket } from "../../socket"
 
 interface FilmCardProps {
   film: Film
@@ -10,6 +11,12 @@ interface FilmCardProps {
   initialIsFavorite?: boolean
   /** Optionnel : callback pour synchroniser un état global */
   onFavoriteChange?: (filmId: string, isFavorite: boolean) => void
+}
+
+type Friend = {
+  id: string
+  username: string
+  email?: string
 }
 
 const FALLBACK_POSTER = "https://via.placeholder.com/600x900/0b1020/ffffff?text=No+Image"
@@ -31,6 +38,11 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
   const [isFavorite, setIsFavorite] = React.useState(initialIsFavorite)
   const [busy, setBusy] = React.useState(false)
   const [toast, setToast] = React.useState<string | null>(null)
+  const [shareOpen, setShareOpen] = React.useState(false)
+  const [friends, setFriends] = React.useState<Friend[]>([])
+  const [loadingFriends, setLoadingFriends] = React.useState(false)
+  const [sharingTo, setSharingTo] = React.useState<string | null>(null)
+  const [friendSearch, setFriendSearch] = React.useState("")
 
   React.useEffect(() => {
     setIsFavorite(initialIsFavorite)
@@ -40,6 +52,10 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
     setToast(msg)
     window.setTimeout(() => setToast(null), 1600)
   }
+
+  const filteredFriends = friends.filter((f) =>
+    f.username.toLowerCase().includes(friendSearch.trim().toLowerCase())
+  )
 
   const handleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -105,16 +121,82 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
     }
   }
 
-  const handleShare = async (e: React.MouseEvent) => {
+  const openShareModal = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
 
-    const url = `${window.location.origin}/film/${film.id}`
+    const token = getToken()
+    if (!token) {
+      showToast("Connecte-toi pour partager un film.")
+      return
+    }
+
+    setShareOpen(true)
+    setFriendSearch("")
+    setLoadingFriends(true)
+
     try {
-      await navigator.clipboard.writeText(url)
-      showToast("Lien copié ✅")
-    } catch {
-      showToast("Impossible de copier le lien.")
+      const api = getApiBaseUrl()
+      const res = await fetch(`${api}/api/friends`, {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (!res.ok) throw new Error("Erreur chargement amis")
+      const data = (await res.json()) as { friends?: Friend[] }
+      setFriends(Array.isArray(data.friends) ? data.friends : [])
+    } catch (err) {
+      console.error(err)
+      showToast("Impossible de charger tes amis.")
+      setShareOpen(false)
+    } finally {
+      setLoadingFriends(false)
+    }
+  }
+
+  const shareToFriend = async (friend: Friend) => {
+    const token = getToken()
+    if (!token) {
+      showToast("Connecte-toi pour partager un film.")
+      return
+    }
+    const api = getApiBaseUrl()
+    const filmUrl = `${window.location.origin}/film/${film.id}`
+    const text = `Je te recommande: ${film.title} (${film.year || "—"})\n${filmUrl}`
+
+    setSharingTo(friend.id)
+    try {
+      const started = await fetch(`${api}/api/messages/start`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId: friend.id }),
+      })
+      if (!started.ok) {
+        throw new Error("Impossible d'ouvrir la conversation")
+      }
+      const payload = (await started.json()) as { conversationId?: string }
+      if (!payload.conversationId) {
+        throw new Error("Conversation introuvable")
+      }
+
+      connectSocket()
+      socket.emit("send-message", {
+        conversationId: payload.conversationId,
+        text,
+      })
+
+      setShareOpen(false)
+      showToast(`Partagé avec ${friend.username} ✅`)
+    } catch (err) {
+      console.error(err)
+      showToast("Echec du partage.")
+    } finally {
+      setSharingTo(null)
     }
   }
 
@@ -210,7 +292,7 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
 
               <button
                 type="button"
-                onClick={handleShare}
+                onClick={openShareModal}
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white/80 backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-black/70 hover:text-white"
                 aria-label="Partager le film"
                 title="Partager le film"
@@ -250,6 +332,62 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
         <div className="pointer-events-none absolute left-1/2 top-3 z-30 -translate-x-1/2">
           <div className="rounded-full border border-white/10 bg-black/60 px-4 py-2 text-xs font-semibold text-white/90 backdrop-blur-md shadow-lg">
             {toast}
+          </div>
+        </div>
+      )}
+
+      {shareOpen && (
+        <div
+          className="absolute inset-0 z-40 grid place-items-center bg-black/70 p-3 backdrop-blur-sm"
+          onClick={() => setShareOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#0A132D] p-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h4 className="text-sm font-bold text-white">Partager avec un ami</h4>
+              <button
+                type="button"
+                onClick={() => setShareOpen(false)}
+                className="rounded-md px-2 py-1 text-xs text-white/70 hover:bg-white/10 hover:text-white"
+              >
+                Fermer
+              </button>
+            </div>
+            <input
+              type="text"
+              value={friendSearch}
+              onChange={(e) => setFriendSearch(e.target.value)}
+              placeholder="Rechercher un ami..."
+              className="mb-3 w-full rounded-lg border border-white/10 bg-[#050B1C]/70 px-3 py-2 text-sm text-white placeholder-white/40 outline-none focus:border-[#3EA6FF]/60"
+            />
+
+            <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+              {loadingFriends ? (
+                <p className="py-3 text-center text-xs text-white/60">Chargement...</p>
+              ) : filteredFriends.length === 0 ? (
+                <p className="py-3 text-center text-xs text-white/60">Aucun ami trouve.</p>
+              ) : (
+                filteredFriends.map((friend) => (
+                  <button
+                    key={friend.id}
+                    type="button"
+                    onClick={() => shareToFriend(friend)}
+                    disabled={sharingTo === friend.id}
+                    className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left transition hover:bg-white/10 disabled:opacity-60"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-white">{friend.username}</p>
+                      <p className="text-xs text-white/50">{friend.email ?? ""}</p>
+                    </div>
+                    <span className="text-xs font-semibold text-[#3EA6FF]">
+                      {sharingTo === friend.id ? "Envoi..." : "Partager"}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}

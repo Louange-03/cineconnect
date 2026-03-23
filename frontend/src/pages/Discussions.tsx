@@ -9,6 +9,30 @@ interface UserStatusPayload {
   userId: string
 }
 
+type ShareFilmItem = {
+  id: string
+  title: string
+  year?: string | null
+}
+
+function parseSharedFilmMessage(text: string): { title: string; year: string; url: string } | null {
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean)
+  if (lines.length < 2) return null
+  const first = lines[0]
+  const url = lines[lines.length - 1]
+  if (!first.startsWith("Je te partage ce film:")) return null
+  if (!/^https?:\/\//i.test(url)) return null
+
+  const payload = first.replace("Je te partage ce film:", "").trim()
+  const match = payload.match(/^(.*)\s\((.*)\)$/)
+  if (!match) return null
+  return {
+    title: match[1].trim(),
+    year: match[2].trim(),
+    url,
+  }
+}
+
 function Avatar({
   name,
   src,
@@ -57,6 +81,10 @@ export function Discussion() {
   const [newMessage, setNewMessage] = useState("")
   const [search, setSearch] = useState("")
   const [typingUsers, setTypingUsers] = useState<string[]>([])
+  const [shareOpen, setShareOpen] = useState(false)
+  const [films, setFilms] = useState<ShareFilmItem[]>([])
+  const [filmSearch, setFilmSearch] = useState("")
+  const [loadingFilms, setLoadingFilms] = useState(false)
 
   const token = getToken()
   const currentUserId = getUser()?.id ?? null
@@ -154,9 +182,47 @@ export function Discussion() {
     socket.emit("stop-typing", { conversationId: selected.id })
   }
 
+  const openShareFilms = async () => {
+    if (!selected) return
+    setShareOpen(true)
+    setFilmSearch("")
+    if (films.length > 0) return
+
+    const token = getToken()
+    if (!token) return
+
+    setLoadingFilms(true)
+    try {
+      const res = await fetch("/api/films?limit=120", {
+        headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error("Erreur chargement films")
+      const data = (await res.json()) as { films?: ShareFilmItem[] }
+      setFilms(Array.isArray(data.films) ? data.films : [])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingFilms(false)
+    }
+  }
+
+  const shareFilmInCurrentChat = (film: ShareFilmItem) => {
+    if (!selected) return
+    const filmUrl = `${window.location.origin}/film/${film.id}`
+    const text = `Je te partage ce film: ${film.title} (${film.year || "—"})\n${filmUrl}`
+    socket.emit("send-message", {
+      conversationId: selected.id,
+      text,
+    })
+    setShareOpen(false)
+  }
+
   const normalizedSearch = search.trim().toLowerCase()
   const filteredConversations = conversations.filter((conv) =>
     (conv.name || "Inconnu").toLowerCase().includes(normalizedSearch)
+  )
+  const filteredFilms = films.filter((f) =>
+    f.title.toLowerCase().includes(filmSearch.trim().toLowerCase())
   )
 
   return (
@@ -255,6 +321,7 @@ export function Discussion() {
             <div className="flex-1 p-6 overflow-y-auto space-y-4 z-10 hide-scrollbar scroll-smooth">
               {messages.map((msg) => {
                 const isMine = msg.sender_id === currentUserId;
+                const sharedFilm = parseSharedFilmMessage(msg.text || "")
                 return (
                   <div
                     key={msg.id}
@@ -266,7 +333,31 @@ export function Discussion() {
                         : "bg-[#0A132D] border border-white/10 text-white/90 rounded-bl-sm shadow-xl"
                         }`}
                     >
-                      <p className="leading-relaxed">{msg.text}</p>
+                      {sharedFilm ? (
+                        <a
+                          href={sharedFilm.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={[
+                            "block rounded-2xl border px-4 py-3 transition",
+                            isMine
+                              ? "border-white/30 bg-white/10 hover:bg-white/15"
+                              : "border-white/15 bg-white/5 hover:bg-white/10",
+                          ].join(" ")}
+                        >
+                          <p className="text-[11px] font-semibold uppercase tracking-wider text-white/70">
+                            Film partage
+                          </p>
+                          <p className="mt-1 text-sm font-bold text-white">{sharedFilm.title}</p>
+                          <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/20 px-2.5 py-1 text-[11px] font-medium text-white/85">
+                            <span>{sharedFilm.year || "—"}</span>
+                            <span>•</span>
+                            <span>Ouvrir</span>
+                          </div>
+                        </a>
+                      ) : (
+                        <p className="leading-relaxed">{msg.text}</p>
+                      )}
 
                       {isMine && msg.seen && (
                         <div className="text-[10px] mt-2 text-white/70 text-right font-medium flex justify-end gap-1">
@@ -297,6 +388,14 @@ export function Discussion() {
             {/* Input area */}
             <div className="p-4 bg-transparent z-10 mb-2">
               <div className="mx-auto max-w-4xl bg-[#0A132D]/90 backdrop-blur-2xl border border-white/10 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex items-center p-2 pr-3 gap-3">
+                <button
+                  type="button"
+                  onClick={openShareFilms}
+                  className="ml-1 flex h-10 items-center justify-center rounded-full border border-white/10 bg-white/5 px-3 text-xs font-semibold text-white/85 transition hover:bg-white/10"
+                  title="Partager un film"
+                >
+                  Partager
+                </button>
                 <div className="relative flex-1">
                   <input
                     value={newMessage}
@@ -326,6 +425,48 @@ export function Discussion() {
                 </button>
               </div>
             </div>
+
+            {shareOpen && (
+              <div className="px-4 pb-3">
+                <div className="mx-auto max-w-4xl rounded-2xl border border-white/10 bg-[#0A132D]/95 p-3 shadow-2xl">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-sm font-semibold text-white">Partager un film dans cette discussion</p>
+                    <button
+                      type="button"
+                      onClick={() => setShareOpen(false)}
+                      className="rounded px-2 py-1 text-xs text-white/70 hover:bg-white/10 hover:text-white"
+                    >
+                      Fermer
+                    </button>
+                  </div>
+                  <input
+                    value={filmSearch}
+                    onChange={(e) => setFilmSearch(e.target.value)}
+                    placeholder="Rechercher un film..."
+                    className="mb-2 w-full rounded-lg border border-white/10 bg-[#050B1C]/70 px-3 py-2 text-sm text-white placeholder-white/40 outline-none focus:border-[#3EA6FF]/60"
+                  />
+                  <div className="max-h-52 space-y-1 overflow-y-auto">
+                    {loadingFilms ? (
+                      <p className="py-3 text-center text-xs text-white/60">Chargement des films...</p>
+                    ) : filteredFilms.length === 0 ? (
+                      <p className="py-3 text-center text-xs text-white/60">Aucun film trouvé.</p>
+                    ) : (
+                      filteredFilms.map((film) => (
+                        <button
+                          key={film.id}
+                          type="button"
+                          onClick={() => shareFilmInCurrentChat(film)}
+                          className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left transition hover:bg-white/10"
+                        >
+                          <span className="text-sm font-medium text-white">{film.title}</span>
+                          <span className="text-xs text-white/60">{film.year || "—"}</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-white/40 space-y-4">
