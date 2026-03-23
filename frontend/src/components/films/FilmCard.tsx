@@ -163,7 +163,11 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
     }
     const api = getApiBaseUrl()
     const filmUrl = `${window.location.origin}/film/${film.id}`
-    const text = `Je te recommande: ${film.title} (${film.year || "—"})\n${filmUrl}`
+    const posterUrl = safePosterUrl(film.posterUrl)
+    const text =
+      `Je te partage ce film: ${film.title} (${film.year || "—"})\n` +
+      `POSTER:${posterUrl}\n` +
+      `${filmUrl}`
 
     setSharingTo(friend.id)
     try {
