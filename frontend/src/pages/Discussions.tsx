@@ -13,9 +13,13 @@ type ShareFilmItem = {
   id: string
   title: string
   year?: string | null
+  posterUrl?: string | null
+  poster_url?: string | null
 }
 
-function parseSharedFilmMessage(text: string): { title: string; year: string; url: string } | null {
+const QUICK_EMOJIS = ["😀", "😂", "😍", "🔥", "👏", "😢", "🤝", "🎬", "🍿"] as const
+
+function parseSharedFilmMessage(text: string): { title: string; year: string; url: string; posterUrl?: string } | null {
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean)
   if (lines.length < 2) return null
   const first = lines[0]
@@ -26,10 +30,13 @@ function parseSharedFilmMessage(text: string): { title: string; year: string; ur
   const payload = first.replace("Je te partage ce film:", "").trim()
   const match = payload.match(/^(.*)\s\((.*)\)$/)
   if (!match) return null
+  const posterLine = lines.find((l) => l.startsWith("POSTER:"))
+  const posterUrl = posterLine?.replace("POSTER:", "").trim()
   return {
     title: match[1].trim(),
     year: match[2].trim(),
     url,
+    posterUrl: posterUrl && /^https?:\/\//i.test(posterUrl) ? posterUrl : undefined,
   }
 }
 
@@ -85,6 +92,7 @@ export function Discussion() {
   const [films, setFilms] = useState<ShareFilmItem[]>([])
   const [filmSearch, setFilmSearch] = useState("")
   const [loadingFilms, setLoadingFilms] = useState(false)
+  const [emojiOpen, setEmojiOpen] = useState(false)
 
   const token = getToken()
   const currentUserId = getUser()?.id ?? null
@@ -209,12 +217,18 @@ export function Discussion() {
   const shareFilmInCurrentChat = (film: ShareFilmItem) => {
     if (!selected) return
     const filmUrl = `${window.location.origin}/film/${film.id}`
-    const text = `Je te partage ce film: ${film.title} (${film.year || "—"})\n${filmUrl}`
+    const poster = film.posterUrl || film.poster_url
+    const text = `Je te partage ce film: ${film.title} (${film.year || "—"})\n${poster ? `POSTER:${poster}\n` : ""}${filmUrl}`
     socket.emit("send-message", {
       conversationId: selected.id,
       text,
     })
     setShareOpen(false)
+  }
+
+  const addEmoji = (emoji: string) => {
+    setNewMessage((prev) => `${prev}${emoji}`)
+    setEmojiOpen(false)
   }
 
   const normalizedSearch = search.trim().toLowerCase()
@@ -348,6 +362,15 @@ export function Discussion() {
                           <p className="text-[11px] font-semibold uppercase tracking-wider text-white/70">
                             Film partage
                           </p>
+                          {sharedFilm.posterUrl ? (
+                            <img
+                              src={sharedFilm.posterUrl}
+                              alt={sharedFilm.title}
+                              className="mt-2 h-36 w-24 rounded-lg object-cover shadow-lg"
+                              loading="lazy"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : null}
                           <p className="mt-1 text-sm font-bold text-white">{sharedFilm.title}</p>
                           <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/20 px-2.5 py-1 text-[11px] font-medium text-white/85">
                             <span>{sharedFilm.year || "—"}</span>
@@ -396,6 +419,30 @@ export function Discussion() {
                 >
                   Partager
                 </button>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setEmojiOpen((v) => !v)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg transition hover:bg-white/10"
+                    title="Emojis"
+                  >
+                    😊
+                  </button>
+                  {emojiOpen && (
+                    <div className="absolute bottom-12 left-0 z-30 flex max-w-[220px] flex-wrap gap-1 rounded-xl border border-white/10 bg-[#0A132D] p-2 shadow-2xl">
+                      {QUICK_EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => addEmoji(emoji)}
+                          className="rounded-md px-2 py-1 text-lg transition hover:bg-white/10"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <div className="relative flex-1">
                   <input
                     value={newMessage}
