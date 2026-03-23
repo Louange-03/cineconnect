@@ -71,7 +71,7 @@ export function Profil() {
 
     try {
       const token = localStorage.getItem("token")
-      await axios.put("http://localhost:3001/api/users/me/password", { password: newPass }, {
+      await axios.put("http://localhost:3007/api/users/me/password", { password: newPass }, {
         headers: { Authorization: `Bearer ${token}` }
       })
       showToast("Mot de passe modifié avec succès !", "success")
@@ -84,7 +84,7 @@ export function Profil() {
     if (!window.confirm("C'est définitif. Êtes-vous ABSOLUMENT sûr de vouloir supprimer votre compte ?")) return
     try {
       const token = localStorage.getItem("token")
-      await axios.delete("http://localhost:3001/api/users/me", {
+      await axios.delete("http://localhost:3007/api/users/me", {
         headers: { Authorization: `Bearer ${token}` }
       })
       localStorage.removeItem("token")
@@ -112,7 +112,7 @@ export function Profil() {
       try {
         const token = localStorage.getItem("token")
         if (!token) return
-        const res = await axios.get("http://localhost:3001/api/users/me/favorites", {
+        const res = await axios.get("http://localhost:3007/api/users/me/favorites", {
           headers: { Authorization: `Bearer ${token}` }
         })
         setFavoriteFilms(res.data.favorites)

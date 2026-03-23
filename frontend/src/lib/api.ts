@@ -1,8 +1,8 @@
 // legacy helper, prefer apiClient.ts
-const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) || "http://localhost:3001"
+const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) || "http://localhost:3007"
 
 if (!BASE_URL) {
-  console.warn("VITE_API_URL manquant dans .env (fallback 3001)")
+  console.warn("VITE_API_URL manquant dans .env (fallback 3007)")
 }
 
 interface FetchOptions extends RequestInit {

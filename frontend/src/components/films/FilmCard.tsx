@@ -21,9 +21,9 @@ function safePosterUrl(posterUrl?: string | null) {
 }
 
 function getApiBaseUrl() {
-  // Vite: define VITE_API_URL dans .env (ex: http://localhost:3001)
-  // Fallback: même host avec port 3001
-  return (import.meta as any).env?.VITE_API_URL || "http://localhost:3001"
+  // Vite: define VITE_API_URL dans .env (ex: http://localhost:3007)
+  // Fallback: même host avec port 3007
+  return (import.meta as any).env?.VITE_API_URL || "http://localhost:3007"
 }
 
 export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: FilmCardProps) {

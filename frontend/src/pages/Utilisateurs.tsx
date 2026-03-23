@@ -27,7 +27,7 @@ type RelationStatus = "ami" | "demande_reçue" | "demande_envoyée" | "none"
 
 // --- Fetch ---
 
-const API = "http://localhost:3001/api"
+const API = "http://localhost:3007/api"
 
 function authHeader(): HeadersInit {
   return {

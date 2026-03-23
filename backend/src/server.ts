@@ -13,7 +13,7 @@ import { initSocket } from "./socket"
 
 const app = express()
 
-const FRONTEND_ORIGIN = process.env.FRONTEND_URL || "*"
+const FRONTEND_ORIGIN = process.env.FRONTEND_URL || "http://localhost:5173"
 app.use(cors({ origin: FRONTEND_ORIGIN, credentials: true }))
 app.use(express.json())
 
@@ -33,7 +33,7 @@ app.use("/api/friends", friendsRoutes)
 app.use("/api/messages", messagesRoutes)
 app.use("/api/conversations", conversationsRoutes)
 
-const port = Number(process.env.PORT ?? 3001)
+const port = Number(process.env.PORT ?? 3007)
 const httpServer = createServer(app)
 
 initSocket(httpServer, FRONTEND_ORIGIN as string)
