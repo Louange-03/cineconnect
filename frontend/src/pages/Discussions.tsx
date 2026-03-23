@@ -55,6 +55,7 @@ export function Discussion() {
   const [selected, setSelected] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState("")
+  const [search, setSearch] = useState("")
   const [typingUsers, setTypingUsers] = useState<string[]>([])
 
   const token = getToken()
@@ -153,6 +154,11 @@ export function Discussion() {
     socket.emit("stop-typing", { conversationId: selected.id })
   }
 
+  const normalizedSearch = search.trim().toLowerCase()
+  const filteredConversations = conversations.filter((conv) =>
+    (conv.name || "Inconnu").toLowerCase().includes(normalizedSearch)
+  )
+
   return (
     <div className="flex h-[calc(100vh-5rem)] mt-20 bg-[#050B1C] text-white overflow-hidden">
       {/* Sidebar */}
@@ -160,10 +166,39 @@ export function Discussion() {
         <div className="p-6 border-b border-white/10 bg-white/5">
           <h2 className="text-2xl font-black tracking-tight text-white">Messages</h2>
           <p className="text-sm text-gray-400 mt-1">Vos conversations récentes</p>
+          <div className="mt-4 relative">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher un ami..."
+              className="w-full rounded-xl border border-white/10 bg-[#050B1C]/70 py-2.5 pl-10 pr-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#3EA6FF]/60 focus:ring-2 focus:ring-[#3EA6FF]/25"
+            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+              />
+            </svg>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto hide-scrollbar p-3 space-y-2">
-          {conversations.map((conv) => {
+          {filteredConversations.length === 0 ? (
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/60">
+              Aucun ami ne correspond a ta recherche.
+            </div>
+          ) : (
+            filteredConversations.map((conv) => {
             const isSelected = selected?.id === conv.id;
             return (
               <div
@@ -191,7 +226,8 @@ export function Discussion() {
                 )}
               </div>
             );
-          })}
+            })
+          )}
         </div>
       </div>
 
