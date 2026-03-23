@@ -159,6 +159,49 @@ export const initSocket = (httpServer: HttpServer, frontendOrigin: string) => {
       }
     })
 
+    socket.on(
+      "message-reaction",
+      async ({
+        conversationId,
+        messageId,
+        emoji,
+      }: {
+        conversationId: string
+        messageId: string
+        emoji: string
+      }) => {
+        if (!conversationId || !messageId || !emoji) return
+        try {
+          const memberCheck = await pool.query(
+            `
+            SELECT 1 FROM conversation_members
+            WHERE conversation_id = $1 AND user_id = $2
+            `,
+            [conversationId, userId]
+          )
+          if (!memberCheck.rowCount) return
+
+          const msgCheck = await pool.query(
+            `
+            SELECT 1 FROM messages
+            WHERE id = $1 AND conversation_id = $2
+            `,
+            [messageId, conversationId]
+          )
+          if (!msgCheck.rowCount) return
+
+          io.to(`conversation-${conversationId}`).emit("message-reaction", {
+            conversationId,
+            messageId,
+            emoji,
+            userId,
+          })
+        } catch (e) {
+          console.error(e)
+        }
+      }
+    )
+
     socket.on("disconnect", async () => {
       const sockets = onlineUsers.get(userId)
       if (!sockets) return

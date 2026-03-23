@@ -17,7 +17,22 @@ type ShareFilmItem = {
   poster_url?: string | null
 }
 
-const QUICK_EMOJIS = ["😀", "😂", "😍", "🔥", "👏", "😢", "🤝", "🎬", "🍿"] as const
+const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"] as const
+
+type ReactionPayload = {
+  conversationId: string
+  messageId: string
+  emoji: string
+  userId: string
+}
+
+type MessageReactions = Record<
+  string,
+  {
+    emoji: string
+    users: string[]
+  }[]
+>
 
 function parseSharedFilmMessage(text: string): { title: string; year: string; url: string; posterUrl?: string } | null {
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean)
@@ -129,7 +144,8 @@ export function Discussion() {
   const [films, setFilms] = useState<ShareFilmItem[]>([])
   const [filmSearch, setFilmSearch] = useState("")
   const [loadingFilms, setLoadingFilms] = useState(false)
-  const [emojiOpen, setEmojiOpen] = useState(false)
+  const [reactionOpenFor, setReactionOpenFor] = useState<string | null>(null)
+  const [reactionsByMessage, setReactionsByMessage] = useState<MessageReactions>({})
 
   const token = getToken()
   const currentUserId = getUser()?.id ?? null
@@ -167,6 +183,8 @@ export function Discussion() {
     fetchMessages()
 
     socket.emit("mark-as-seen", { conversationId: selected.id })
+    setReactionOpenFor(null)
+    setReactionsByMessage({})
   }, [selected, token])
 
   useEffect(() => {
@@ -196,6 +214,38 @@ export function Discussion() {
       )
     })
 
+    socket.on("message-reaction", (payload: ReactionPayload) => {
+      setReactionsByMessage((prev) => {
+        const current = [...(prev[payload.messageId] ?? [])]
+
+        // One reaction per user per message: remove user from all buckets first.
+        for (const bucket of current) {
+          bucket.users = bucket.users.filter((id) => id !== payload.userId)
+        }
+
+        // Remove empty buckets
+        const cleaned = current.filter((b) => b.users.length > 0)
+
+        // Toggle off if same reaction already selected by user
+        const hasSame =
+          (prev[payload.messageId] ?? []).some(
+            (b) => b.emoji === payload.emoji && b.users.includes(payload.userId)
+          )
+        if (hasSame) {
+          return { ...prev, [payload.messageId]: cleaned }
+        }
+
+        const sameEmoji = cleaned.find((b) => b.emoji === payload.emoji)
+        if (sameEmoji) {
+          sameEmoji.users.push(payload.userId)
+        } else {
+          cleaned.push({ emoji: payload.emoji, users: [payload.userId] })
+        }
+
+        return { ...prev, [payload.messageId]: cleaned }
+      })
+    })
+
     return () => {
       socket.off("new-message")
       socket.off("user-online")
@@ -203,6 +253,7 @@ export function Discussion() {
       socket.off("user-typing")
       socket.off("user-stop-typing")
       socket.off("messages-seen")
+      socket.off("message-reaction")
     }
   }, [currentUserId])
 
@@ -263,9 +314,14 @@ export function Discussion() {
     setShareOpen(false)
   }
 
-  const addEmoji = (emoji: string) => {
-    setNewMessage((prev) => `${prev}${emoji}`)
-    setEmojiOpen(false)
+  const reactToMessage = (messageId: string, emoji: string) => {
+    if (!selected) return
+    socket.emit("message-reaction", {
+      conversationId: selected.id,
+      messageId,
+      emoji,
+    })
+    setReactionOpenFor(null)
   }
 
   const normalizedSearch = search.trim().toLowerCase()
@@ -376,6 +432,7 @@ export function Discussion() {
                 const rawDate = msg.created_at || msg.createdAt
                 const sentAt = formatMessageTime(rawDate)
                 const dayLabel = formatMessageDayLabel(rawDate)
+                const msgReactions = reactionsByMessage[msg.id] ?? []
                 const prevRawDate =
                   idx > 0 ? messages[idx - 1].created_at || messages[idx - 1].createdAt : undefined
                 const prevDayLabel = idx > 0 ? formatMessageDayLabel(prevRawDate) : ""
@@ -450,6 +507,52 @@ export function Discussion() {
                             </span>
                           ) : null}
                         </div>
+
+                        <div className="mt-2 flex items-center gap-2">
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setReactionOpenFor((cur) => (cur === msg.id ? null : msg.id))
+                              }
+                              className="rounded-full border border-white/15 bg-white/5 px-2 py-1 text-[11px] text-white/80 transition hover:bg-white/10"
+                              title="Reagir"
+                            >
+                              🙂 React
+                            </button>
+                            {reactionOpenFor === msg.id ? (
+                              <div className="absolute bottom-8 left-0 z-20 flex gap-1 rounded-xl border border-white/10 bg-[#0A132D] p-1.5 shadow-2xl">
+                                {REACTION_EMOJIS.map((emoji) => (
+                                  <button
+                                    key={emoji}
+                                    type="button"
+                                    onClick={() => reactToMessage(msg.id, emoji)}
+                                    className="rounded-md px-1.5 py-1 text-base transition hover:bg-white/10"
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+
+                          {msgReactions.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {msgReactions.map((r) => (
+                                <button
+                                  key={`${msg.id}-${r.emoji}`}
+                                  type="button"
+                                  onClick={() => reactToMessage(msg.id, r.emoji)}
+                                  className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-[11px] text-white/85 transition hover:bg-white/10"
+                                  title="Changer ma reaction"
+                                >
+                                  <span>{r.emoji}</span>
+                                  <span>{r.users.length}</span>
+                                </button>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -481,30 +584,6 @@ export function Discussion() {
                 >
                   Partager
                 </button>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setEmojiOpen((v) => !v)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg transition hover:bg-white/10"
-                    title="Emojis"
-                  >
-                    😊
-                  </button>
-                  {emojiOpen && (
-                    <div className="absolute bottom-12 left-0 z-30 flex max-w-[220px] flex-wrap gap-1 rounded-xl border border-white/10 bg-[#0A132D] p-2 shadow-2xl">
-                      {QUICK_EMOJIS.map((emoji) => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          onClick={() => addEmoji(emoji)}
-                          className="rounded-md px-2 py-1 text-lg transition hover:bg-white/10"
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
                 <div className="relative flex-1">
                   <input
                     value={newMessage}
