@@ -33,7 +33,7 @@ app.use("/api/friends", friendsRoutes)
 app.use("/api/messages", messagesRoutes)
 app.use("/api/conversations", conversationsRoutes)
 
-const port = Number(process.env.PORT ?? 3001)
+const port = Number(process.env.PORT ?? 3007)
 const httpServer = createServer(app)
 
 initSocket(httpServer, FRONTEND_ORIGIN as string)

@@ -3,11 +3,9 @@ import { Link } from "@tanstack/react-router"
 import { useAuth } from "../hooks/useAuth"
 import { useLocation } from "@tanstack/react-router"
 import axios from "axios"
-import { getToken, logout } from "../lib/auth"
-import { getTheme, setTheme } from "../lib/theme"
 
 type FavoriteFilm = {
-  id: string
+  id: number
   title: string
   year: string
   posterUrl: string | null
@@ -27,10 +25,6 @@ function FilmCard({ film }: FilmCardProps) {
           alt={film.title}
           className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.08]"
           loading="lazy"
-          onError={(e) => {
-            ;(e.currentTarget as HTMLImageElement).src =
-              "https://via.placeholder.com/300x450/0b1020/ffffff?text=No+Image"
-          }}
         />
 
         {/* Overlays */}
@@ -57,25 +51,9 @@ export function Profil() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [favoriteFilms, setFavoriteFilms] = useState<FavoriteFilm[]>([])
   const [avatar, setAvatar] = useState<string | null>(localStorage.getItem("user_avatar"))
-  const [darkMode, setDarkMode] = useState(getTheme() === "dark")
+  const [darkMode, setDarkMode] = useState(true)
   const [emailNotifs, setEmailNotifs] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null)
-  const fetchFavorites = React.useCallback(async () => {
-    try {
-      const token = getToken()
-      if (!token) {
-        setFavoriteFilms([])
-        return
-      }
-      const res = await axios.get("http://localhost:3001/api/users/me/favorites", {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setFavoriteFilms(res.data.favorites ?? [])
-    } catch {
-      console.error("Erreur lors de la recup des favoris")
-    }
-  }, [])
-
 
   const showToast = (message: string, type: "success" | "error" | "info" = "success") => {
     setToast({ message, type })
@@ -92,8 +70,8 @@ export function Profil() {
     }
 
     try {
-      const token = getToken()
-      await axios.put("http://localhost:3001/api/users/me/password", { password: newPass }, {
+      const token = localStorage.getItem("token")
+      await axios.put("http://localhost:3007/api/users/me/password", { password: newPass }, {
         headers: { Authorization: `Bearer ${token}` }
       })
       showToast("Mot de passe modifié avec succès !", "success")
@@ -105,11 +83,11 @@ export function Profil() {
   const handleDeleteAccount = async () => {
     if (!window.confirm("C'est définitif. Êtes-vous ABSOLUMENT sûr de vouloir supprimer votre compte ?")) return
     try {
-      const token = getToken()
-      await axios.delete("http://localhost:3001/api/users/me", {
+      const token = localStorage.getItem("token")
+      await axios.delete("http://localhost:3007/api/users/me", {
         headers: { Authorization: `Bearer ${token}` }
       })
-      logout()
+      localStorage.removeItem("token")
       window.location.href = "/register"
     } catch {
       showToast("Opération impossible à cause des données liées.", "error")
@@ -117,10 +95,11 @@ export function Profil() {
   }
 
   const toggleDarkMode = () => {
-    const nextDark = !darkMode
-    setDarkMode(nextDark)
-    setTheme(nextDark ? "dark" : "light")
-    showToast(nextDark ? "Mode sombre activé." : "Mode clair activé.", "success")
+    setDarkMode(!darkMode)
+    if (darkMode) {
+      showToast("Le mode clair n'est pas disponible : l'expérience premium CinéConnect est conçue pour l'obscurité.", "info")
+      setTimeout(() => setDarkMode(true), 1500)
+    }
   }
 
   const toggleNotifs = () => {
@@ -129,20 +108,19 @@ export function Profil() {
   }
 
   useEffect(() => {
-    fetchFavorites()
-    const refresh = () => fetchFavorites()
-    window.addEventListener("favorites-changed", refresh)
-    window.addEventListener("focus", refresh)
-    return () => {
-      window.removeEventListener("favorites-changed", refresh)
-      window.removeEventListener("focus", refresh)
+    const fetchFavs = async () => {
+      try {
+        const token = localStorage.getItem("token")
+        if (!token) return
+        const res = await axios.get("http://localhost:3007/api/users/me/favorites", {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setFavoriteFilms(res.data.favorites)
+      } catch (err) {
+        console.error("Erreur lors de la recup des favoris")
+      }
     }
-  }, [fetchFavorites])
-
-  useEffect(() => {
-    const syncTheme = () => setDarkMode(getTheme() === "dark")
-    window.addEventListener("theme-changed", syncTheme as EventListener)
-    return () => window.removeEventListener("theme-changed", syncTheme as EventListener)
+    fetchFavs()
   }, [])
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -177,16 +155,16 @@ export function Profil() {
     : null
 
   return (
-    <main className="profile-page min-h-screen bg-[#050B1C] text-white pb-20">
+    <main className="min-h-screen bg-[#050B1C] text-white pb-20">
       {/* Banner Area */}
-      <div className="profile-banner h-64 md:h-80 w-full bg-gradient-to-br from-[#1D6CE0]/40 via-[#0A132D] to-purple-900/40 relative">
+      <div className="h-64 md:h-80 w-full bg-gradient-to-br from-[#1D6CE0]/40 via-[#0A132D] to-purple-900/40 relative">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#050B1C] to-transparent"></div>
       </div>
 
       <div className="max-w-5xl mx-auto px-6 -mt-32 relative z-10 space-y-8">
         {/* User Profile Header section */}
-        <div className="profile-header-card rounded-3xl border border-white/10 bg-[#0A132D]/80 backdrop-blur-xl p-8 shadow-2xl flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
+        <div className="rounded-3xl border border-white/10 bg-[#0A132D]/80 backdrop-blur-xl p-8 shadow-2xl flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
           <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
             <div className="relative group h-32 w-32 shrink-0 rounded-full border-4 border-[#050B1C] bg-gradient-to-br from-[#1D6CE0] to-[#3EA6FF] flex items-center justify-center text-5xl font-black text-white shadow-xl overflow-hidden">
               {avatar ? (
@@ -250,7 +228,7 @@ export function Profil() {
             <h2 className="text-3xl font-bold tracking-tight text-white">Films favoris</h2>
           </div>
 
-          <div className="profile-favorites-shell rounded-3xl border border-white/10 bg-white/5 p-8 md:p-10 shadow-xl backdrop-blur-sm min-h-[300px]">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 md:p-10 shadow-xl backdrop-blur-sm min-h-[300px]">
             {favoriteFilms.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center space-y-5 text-white/50 pt-8 pb-12">
                 <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center border border-white/10 shadow-lg">
@@ -366,7 +344,7 @@ export function Profil() {
                       <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                     </svg>
                   </button>
-                  <button type="button" onClick={() => { logout(); window.location.href = "/login" }} className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 transition-colors border border-white/10 rounded-xl p-4 text-left font-medium text-white/90 group">
+                  <button type="button" onClick={() => { localStorage.removeItem("token"); window.location.href = "/login" }} className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 transition-colors border border-white/10 rounded-xl p-4 text-left font-medium text-white/90 group">
                     Changer de compte (Déconnexion)
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#3EA6FF]" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />

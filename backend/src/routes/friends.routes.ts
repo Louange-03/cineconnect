@@ -2,7 +2,7 @@ import { Router, type Request, type Response } from "express"
 import { db } from "../db/client.js"
 import { friendships, users } from "../db/schema.js"
 import { authMiddleware } from "../middlewares/auth.js"
-import { eq, and, or, sql, ilike, ne } from "drizzle-orm"
+import { eq, and, or, sql } from "drizzle-orm"
 
 const router = Router()
 
@@ -222,38 +222,10 @@ router.post("/reject", authMiddleware, async (req: Request, res: Response): Prom
   res.json({ status: "rejected", friendship: updated[0] })
 })
 
-// GET /friends/search?q= — recherche d'utilisateurs (ex. nouvelle conversation)
-router.get("/search", authMiddleware, async (req: Request, res: Response): Promise<void> => {
-  const meId = req.user?.id
-  const q = String(req.query.q ?? "").trim()
-
-  if (!meId) {
-    res.status(401).json({ message: "Unauthorized" })
-    return
-  }
-
-  if (!q) {
-    res.json([])
-    return
-  }
-
-  const foundUsers = await db
-    .select({
-      id: users.id,
-      username: users.username,
-    })
-    .from(users)
-    .where(and(ilike(users.username, `%${q}%`), ne(users.id, meId)))
-    .limit(20)
-
-  res.json(foundUsers)
-})
-
 // DELETE /friends/:userId
 router.delete("/:userId", authMiddleware, async (req: Request, res: Response): Promise<void> => {
   const meId = req.user?.id
-  const raw = req.params.userId
-  const userId = Array.isArray(raw) ? raw[0] : raw
+  const userId = req.params.userId
 
   if (!meId) {
     res.status(401).json({ message: "Unauthorized" })

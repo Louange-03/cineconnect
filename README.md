@@ -71,7 +71,7 @@ Copiez (ou créez) les fichiers d'environnement.
 
 Dans le dossier **`backend/`**, créez ou éditez `.env` :
 ```env
-PORT=3001
+PORT=3007
 DATABASE_URL=postgresql://user:motdepasse@localhost:5432/cineconnect
 JWT_SECRET=super_secret_phrase_au_moins_32_caracteres_min
 FRONTEND_URL=http://localhost:5173
@@ -80,7 +80,7 @@ OMDB_API_KEY=votre_cle_omdb
 
 Dans le dossier **`frontend/`**, créez ou éditez `.env` :
 ```env
-VITE_API_URL=http://localhost:3001
+VITE_API_URL=http://localhost:3007
 VITE_OMDB_API_KEY=votre_cle_omdb # Optionnel (si fetché directement via le back)
 ```
 *(Une clé d'API OMDb gratuite est obtenable sur [omdbapi.com](http://www.omdbapi.com/apikey.aspx))*
@@ -103,7 +103,7 @@ Grâce au package root, vous pouvez lancer les deux serveurs en parallèle :
 pnpm dev
 ```
 - Le **Frontend** tournera sur : `http://localhost:5173`
-- Le **Backend** tournera silencieusement sur : `http://localhost:3001`
+- Le **Backend** tournera silencieusement sur : `http://localhost:3007`
 
 *(Vite gère le proxy `/api` via `vite.config.ts`, empêchant la grande majorité des soucis CORS au développement).*
 

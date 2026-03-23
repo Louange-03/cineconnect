@@ -1,12 +1,12 @@
 import { getToken } from "./auth"
 import type { ApiRequestOptions } from "../types"
 
-// backend listens on 3001 by default; make the fallback match
-const RAW_API_URL = (import.meta.env.VITE_API_URL as string | undefined) || "http://localhost:3001"
+// backend listens on 3007 by default; make the fallback match
+const RAW_API_URL = (import.meta.env.VITE_API_URL as string | undefined) || "http://localhost:3007"
 const API_URL = RAW_API_URL.replace(/\/$/, '') // Remove trailing slash if present
 
 if (!import.meta.env.VITE_API_URL) {
-  console.warn("VITE_API_URL not defined, defaulting to http://localhost:3001")
+  console.warn("VITE_API_URL not defined, defaulting to http://localhost:3007")
 }
 
 interface RequestOptions {
