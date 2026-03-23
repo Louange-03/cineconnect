@@ -40,6 +40,16 @@ function parseSharedFilmMessage(text: string): { title: string; year: string; ur
   }
 }
 
+function formatMessageTime(value?: string) {
+  if (!value) return ""
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return ""
+  return d.toLocaleTimeString("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
+
 function Avatar({
   name,
   src,
@@ -336,6 +346,7 @@ export function Discussion() {
               {messages.map((msg) => {
                 const isMine = msg.sender_id === currentUserId;
                 const sharedFilm = parseSharedFilmMessage(msg.text || "")
+                const sentAt = formatMessageTime(msg.created_at || msg.createdAt)
                 return (
                   <div
                     key={msg.id}
@@ -382,13 +393,23 @@ export function Discussion() {
                         <p className="leading-relaxed">{msg.text}</p>
                       )}
 
-                      {isMine && msg.seen && (
-                        <div className="text-[10px] mt-2 text-white/70 text-right font-medium flex justify-end gap-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-white/90">
-                            <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      )}
+                      <div className="mt-2 flex items-center justify-end gap-2 text-[10px] font-medium text-white/70">
+                        {sentAt ? <span>{sentAt}</span> : null}
+                        {isMine ? (
+                          <span className="inline-flex items-center gap-1">
+                            {msg.seen ? (
+                              <>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-white/90">
+                                  <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                                </svg>
+                                <span>Vu</span>
+                              </>
+                            ) : (
+                              <span>Envoye</span>
+                            )}
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
                   </div>
                 );

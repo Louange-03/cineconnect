@@ -93,6 +93,72 @@ export const initSocket = (httpServer: HttpServer, frontendOrigin: string) => {
       }
     })
 
+    socket.on("typing", async ({ conversationId }: { conversationId: string }) => {
+      if (!conversationId) return
+      try {
+        const memberCheck = await pool.query(
+          `
+          SELECT 1 FROM conversation_members
+          WHERE conversation_id = $1 AND user_id = $2
+          `,
+          [conversationId, userId]
+        )
+        if (!memberCheck.rowCount) return
+        socket.to(`conversation-${conversationId}`).emit("user-typing", { userId })
+      } catch (e) {
+        console.error(e)
+      }
+    })
+
+    socket.on("stop-typing", async ({ conversationId }: { conversationId: string }) => {
+      if (!conversationId) return
+      try {
+        const memberCheck = await pool.query(
+          `
+          SELECT 1 FROM conversation_members
+          WHERE conversation_id = $1 AND user_id = $2
+          `,
+          [conversationId, userId]
+        )
+        if (!memberCheck.rowCount) return
+        socket.to(`conversation-${conversationId}`).emit("user-stop-typing", { userId })
+      } catch (e) {
+        console.error(e)
+      }
+    })
+
+    socket.on("mark-as-seen", async ({ conversationId }: { conversationId: string }) => {
+      if (!conversationId) return
+      try {
+        const memberCheck = await pool.query(
+          `
+          SELECT 1 FROM conversation_members
+          WHERE conversation_id = $1 AND user_id = $2
+          `,
+          [conversationId, userId]
+        )
+        if (!memberCheck.rowCount) return
+
+        await pool.query(
+          `
+          UPDATE messages
+          SET seen = true
+          WHERE conversation_id = $1
+            AND sender_id <> $2
+            AND seen = false
+          `,
+          [conversationId, userId]
+        )
+
+        io.to(`conversation-${conversationId}`).emit("messages-seen", {
+          conversationId,
+          seenBy: userId,
+        })
+      } catch (e) {
+        console.error(e)
+      }
+    })
+
     socket.on("disconnect", async () => {
       const sockets = onlineUsers.get(userId)
       if (!sockets) return
