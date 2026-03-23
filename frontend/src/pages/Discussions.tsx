@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
 import { Send } from "lucide-react"
-import { socket } from "../socket"
+import { connectSocket, disconnectSocket, socket } from "../socket"
 import axios from "axios"
 import type { Conversation, Message } from "../types"
+import { getToken, getUser } from "../lib/auth"
 
 interface UserStatusPayload {
   userId: string
@@ -15,13 +16,20 @@ export function Discussion() {
   const [newMessage, setNewMessage] = useState("")
   const [typingUsers, setTypingUsers] = useState<string[]>([])
 
-  const token = localStorage.getItem("token")
-  const currentUserId = localStorage.getItem("userId")
+  const token = getToken()
+  const currentUserId = getUser()?.id ?? null
+
+  useEffect(() => {
+    connectSocket()
+    return () => {
+      disconnectSocket()
+    }
+  }, [])
 
   useEffect(() => {
     const fetchConversations = async () => {
       const res = await axios.get<Conversation[]>(
-        "http://localhost:3007/api/conversations",
+        "/api/conversations",
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setConversations(res.data)
@@ -35,7 +43,7 @@ export function Discussion() {
 
     const fetchMessages = async () => {
       const res = await axios.get<Message[]>(
-        `http://localhost:3007/api/conversations/${selected.id}/messages`,
+        `/api/conversations/${selected.id}/messages`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setMessages(res.data)

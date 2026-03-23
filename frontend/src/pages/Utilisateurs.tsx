@@ -1,6 +1,7 @@
 
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { getToken } from "../lib/auth"
 
 type UserItem = {
   id: string
@@ -27,12 +28,13 @@ type RelationStatus = "ami" | "demande_reçue" | "demande_envoyée" | "none"
 
 // --- Fetch ---
 
-const API = "http://localhost:3007/api"
+const API = "/api"
 
 function authHeader(): HeadersInit {
+  const token = getToken()
   return {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${localStorage.getItem("cineconnect_token")}`,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
 }
 

@@ -75,9 +75,9 @@ export function Navbar() {
     () => [
       { to: "/", label: "Accueil" },
       { to: "/films", label: "Films", search: { q: "", category: "", type: "movie", sort: "" } },
+      { to: "/amis", label: "Amis", requireAuth: true },
       { to: "/discussion", label: "Discussion", requireAuth: true },
       { to: "/profil", label: "Profil", requireAuth: true },
-      { to: "/amis", label: "Amis", requireAuth: true, mobileOnly: true },
     ],
     [],
   )

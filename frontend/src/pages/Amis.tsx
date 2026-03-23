@@ -4,20 +4,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { FriendCard } from "../components/friends/FriendCard"
 import { FriendRequestCard } from "../components/friends/FriendRequestCard"
+import { getToken } from "../lib/auth"
 
 
 type Friend = {
   id: string
   username: string
-  email: string
+  email?: string
 }
 
 type FriendRequest = {
   friendshipId: string
   fromUserId: string
   fromUsername: string
-  email: string
-  sentAt: string
+  email?: string
+  sentAt?: string
+  createdAt?: string
 }
 
 type FriendsResponse = {
@@ -30,12 +32,13 @@ type RequestsResponse = {
 
 // --- Fetch ---
 
-const API = "http://localhost:3007/api"
+const API = "/api"
 
 function authHeader(): HeadersInit {
+  const token = getToken()
   return {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${localStorage.getItem("cineconnect_token")}`,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
 }
 
@@ -77,7 +80,16 @@ async function deleteFriend(userId: string): Promise<void> {
   if (!res.ok) throw new Error("Erreur suppression")
 }
 
-export function Amis(): JSX.Element {
+async function startConversation(userId: string): Promise<void> {
+  const res = await fetch(`${API}/messages/start`, {
+    method: "POST",
+    headers: authHeader(),
+    body: JSON.stringify({ userId }),
+  })
+  if (!res.ok) throw new Error("Erreur création conversation")
+}
+
+export function Amis() {
   const queryClient = useQueryClient()
 
   const { data: friendsData } = useQuery({
@@ -100,7 +112,11 @@ export function Amis(): JSX.Element {
   }
 
   const acceptMutation = useMutation({
-    mutationFn: postAccept,
+    mutationFn: async (userId: string) => {
+      await postAccept(userId)
+      // Prépare la discussion juste après acceptation
+      await startConversation(userId)
+    },
     onSuccess: invalidate,
   })
 
@@ -162,6 +178,15 @@ export function Amis(): JSX.Element {
               <FriendCard
                 key={f.id}
                 user={f}
+                onChat={(userId) => {
+                  startConversation(userId)
+                    .then(() => {
+                      window.location.href = "/discussion"
+                    })
+                    .catch(() => {
+                      window.location.href = "/discussion"
+                    })
+                }}
                 onRemove={(userId) => removeMutation.mutate(userId)}
               />
             ))}

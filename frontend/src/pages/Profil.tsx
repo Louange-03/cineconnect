@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router"
 import { useAuth } from "../hooks/useAuth"
 import { useLocation } from "@tanstack/react-router"
 import axios from "axios"
+import { getToken, logout } from "../lib/auth"
 
 type FavoriteFilm = {
   id: number
@@ -45,6 +46,8 @@ function FilmCard({ film }: FilmCardProps) {
 }
 
 export function Profil() {
+  const API_BASE =
+    (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? ""
   const { user } = useAuth()
   const location = useLocation()
   const message = (location.state as any)?.message as string | undefined
@@ -70,8 +73,8 @@ export function Profil() {
     }
 
     try {
-      const token = localStorage.getItem("token")
-      await axios.put("http://localhost:3007/api/users/me/password", { password: newPass }, {
+      const token = getToken()
+      await axios.put(`${API_BASE}/api/users/me/password`, { password: newPass }, {
         headers: { Authorization: `Bearer ${token}` }
       })
       showToast("Mot de passe modifié avec succès !", "success")
@@ -83,11 +86,11 @@ export function Profil() {
   const handleDeleteAccount = async () => {
     if (!window.confirm("C'est définitif. Êtes-vous ABSOLUMENT sûr de vouloir supprimer votre compte ?")) return
     try {
-      const token = localStorage.getItem("token")
-      await axios.delete("http://localhost:3007/api/users/me", {
+      const token = getToken()
+      await axios.delete(`${API_BASE}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      localStorage.removeItem("token")
+      logout()
       window.location.href = "/register"
     } catch {
       showToast("Opération impossible à cause des données liées.", "error")
@@ -110,9 +113,9 @@ export function Profil() {
   useEffect(() => {
     const fetchFavs = async () => {
       try {
-        const token = localStorage.getItem("token")
+        const token = getToken()
         if (!token) return
-        const res = await axios.get("http://localhost:3007/api/users/me/favorites", {
+        const res = await axios.get(`${API_BASE}/api/users/me/favorites`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         setFavoriteFilms(res.data.favorites)
@@ -121,7 +124,10 @@ export function Profil() {
       }
     }
     fetchFavs()
-  }, [])
+    const onFavoritesChanged = () => fetchFavs()
+    window.addEventListener("favorites-changed", onFavoritesChanged)
+    return () => window.removeEventListener("favorites-changed", onFavoritesChanged)
+  }, [API_BASE])
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -344,7 +350,7 @@ export function Profil() {
                       <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                     </svg>
                   </button>
-                  <button type="button" onClick={() => { localStorage.removeItem("token"); window.location.href = "/login" }} className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 transition-colors border border-white/10 rounded-xl p-4 text-left font-medium text-white/90 group">
+                  <button type="button" onClick={() => { logout(); window.location.href = "/login" }} className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 transition-colors border border-white/10 rounded-xl p-4 text-left font-medium text-white/90 group">
                     Changer de compte (Déconnexion)
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#3EA6FF]" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />

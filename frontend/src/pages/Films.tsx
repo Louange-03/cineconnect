@@ -122,6 +122,13 @@ export function Films() {
             </div>
           )}
         </div>
+
+        {isCatalogEmpty && (
+          <div className="mt-8 rounded-2xl border border-white/10 bg-[#0A132D]/60 p-6 text-center text-white/70">
+            Aucun film trouvé pour le moment. Vérifie que tes films sont bien ajoutés en base,
+            puis recharge la page.
+          </div>
+        )}
       </section>
 
       {/* LOADING */}

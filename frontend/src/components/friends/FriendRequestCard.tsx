@@ -2,8 +2,8 @@
 type FriendRequest = {
   fromUserId: string
   fromUsername: string
-  email: string
-  sentAt: string
+  email?: string
+  sentAt?: string
 }
 
 type FriendRequestCardProps = {
@@ -16,12 +16,12 @@ export function FriendRequestCard({
   user,
   onAccept,
   onReject,
-}: FriendRequestCardProps): JSX.Element {
+}: FriendRequestCardProps) {
   return (
     <div className="flex items-center justify-between gap-3 rounded border p-3">
       <div>
         <p className="font-medium">{user.fromUsername}</p>
-        <p className="text-sm text-slate-600">{user.email}</p>
+        <p className="text-sm text-slate-600">{user.email ?? "—"}</p>
       </div>
 
       <div className="flex gap-2">
