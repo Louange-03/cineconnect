@@ -1,10 +1,12 @@
+import homeCinemaBg from "../../assets/home-cinema-bg.png"
+
 /**
  * URLs TMDB / Unsplash (pas d’Amazon — hotlink souvent bloqué).
  */
 
 /** Fond hero : salle de cinéma (spectateurs / projection) — Unsplash */
 export const CINEMA_BG_PRIMARY =
-  "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=2560&q=85"
+  homeCinemaBg
 
 /** Carrousel sous le titre : affiches dessins animés / animation uniquement (TMDB) */
 export const HERO_POSTERS: { src: string; alt: string; seed: string }[] = [
