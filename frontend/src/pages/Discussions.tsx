@@ -333,7 +333,7 @@ export function Discussion() {
   )
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] mt-20 bg-[#050B1C] text-white overflow-hidden">
+    <div className="discussions-page flex h-[calc(100vh-5rem)] mt-20 bg-[#050B1C] text-white overflow-hidden">
       {/* Sidebar */}
       <div className="w-full max-w-[320px] md:max-w-[380px] flex flex-col border-r border-white/10 bg-[#0A132D]/60 backdrop-blur-xl">
         <div className="p-6 border-b border-white/10 bg-white/5">

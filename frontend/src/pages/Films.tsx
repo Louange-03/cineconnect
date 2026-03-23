@@ -2,7 +2,6 @@ import React, { useMemo, useState } from "react"
 import { useFilms } from "../hooks/useFilms"
 import { useCategories } from "../hooks/useCategories"
 import { SearchBar } from "../components/films/SearchBar"
-import { HeroFeature } from "../components/films/HeroFeature"
 import { CategoryPills } from "../components/films/CategoryPills"
 import { FilmCard } from "../components/films/FilmCard"
 import type { Film } from "../types"
@@ -70,14 +69,6 @@ export function Films() {
   const isCatalogEmpty =
     !isBusy && !error && list.length === 0 && query.trim() === "" && category === ""
 
-  const featuredFilm = useMemo(() => {
-    if (list.length === 0) return undefined
-    return list.find((f) => typeof f.posterUrl === "string" && f.posterUrl.trim() !== "") ?? list[0]
-  }, [list])
-
-  const showHero =
-    !isBusy && !error && !!featuredFilm && query.trim() === "" && category === ""
-
   const titleLabel = query || category ? "Recherche" : "Catalogue"
   const subtitleLabel = query
     ? `Résultats pour “${query.trim()}”`
@@ -87,16 +78,8 @@ export function Films() {
 
   return (
     <main className="films-page min-h-screen bg-[#050B1C] text-white pb-24">
-      {/* HERO */}
-      {showHero && featuredFilm && <HeroFeature film={featuredFilm} />}
-
       {/* PAGE HEADER + STICKY FILTERS */}
-      <section
-        className={[
-          "mx-auto max-w-7xl px-6 md:px-12",
-          showHero ? "-mt-10 relative z-20" : "pt-20",
-        ].join(" ")}
-      >
+      <section className="mx-auto max-w-7xl px-6 md:px-12 pt-20">
         <div className="mb-6 flex flex-col gap-2">
           <h1 className="text-3xl md:text-4xl font-black tracking-tight">{titleLabel}</h1>
           <p className="text-white/60">{subtitleLabel}</p>

@@ -148,7 +148,7 @@ export function Utilisateurs() {
     u.username.toLowerCase().includes(search.toLowerCase())
   )
   return (
-    <main className="min-h-screen bg-[#050B1C] text-white pt-24 pb-20 px-6">
+    <main className="users-page min-h-screen bg-[#050B1C] text-white pt-24 pb-20 px-6">
       <div className="mx-auto max-w-4xl space-y-10">
         <div className="text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-black tracking-tight drop-shadow-lg text-white">Recherche de copains</h1>
