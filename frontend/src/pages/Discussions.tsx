@@ -9,6 +9,47 @@ interface UserStatusPayload {
   userId: string
 }
 
+function Avatar({
+  name,
+  src,
+  selected = false,
+  size = "md",
+}: {
+  name: string | null | undefined
+  src?: string | null
+  selected?: boolean
+  size?: "sm" | "md"
+}) {
+  const [broken, setBroken] = useState(false)
+  const initial = (name || "Inconnu").charAt(0).toUpperCase()
+  const baseSize = size === "sm" ? "h-10 w-10" : "h-12 w-12"
+
+  if (!src || broken) {
+    return (
+      <div
+        className={`flex ${baseSize} shrink-0 items-center justify-center rounded-full text-lg font-bold shadow-inner ${
+          selected ? "bg-white/20 text-white" : "bg-[#1D6CE0]/20 text-[#3EA6FF]"
+        }`}
+      >
+        {initial}
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={src}
+      alt={name || "Utilisateur"}
+      className={`${baseSize} shrink-0 rounded-full object-cover ring-1 ${
+        selected ? "ring-white/40" : "ring-white/15"
+      }`}
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setBroken(true)}
+    />
+  )
+}
+
 export function Discussion() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selected, setSelected] = useState<Conversation | null>(null)
@@ -134,10 +175,7 @@ export function Discussion() {
                   }`}
               >
                 <div className="flex items-center gap-4 overflow-hidden">
-                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold shadow-inner ${isSelected ? "bg-white/20 text-white" : "bg-[#1D6CE0]/20 text-[#3EA6FF]"
-                    }`}>
-                    {(conv.name || "Inconnu").charAt(0).toUpperCase()}
-                  </div>
+                  <Avatar name={conv.name} src={conv.avatar_url} selected={isSelected} />
                   <div className="overflow-hidden">
                     <p className={`font-bold truncate ${isSelected ? "text-white" : "text-white/90"}`}>{conv.name || "Inconnu"}</p>
                     <p className={`text-sm truncate ${isSelected ? "text-white/80" : "text-gray-400"}`}>
@@ -167,9 +205,7 @@ export function Discussion() {
           <>
             {/* Chat Header */}
             <div className="p-6 border-b border-white/10 bg-[#0A132D]/80 backdrop-blur-md flex items-center gap-4 z-10">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#1D6CE0] to-[#3EA6FF] text-lg font-bold shadow-[0_0_15px_rgba(29,108,224,0.4)]">
-                {(selected.name || "Inconnu").charAt(0).toUpperCase()}
-              </div>
+              <Avatar name={selected.name} src={selected.avatar_url} selected size="md" />
               <div>
                 <h3 className="text-xl font-bold text-white tracking-wide">{selected.name || "Inconnu"}</h3>
                 <p className="text-sm text-[#3EA6FF] flex items-center gap-1.5">

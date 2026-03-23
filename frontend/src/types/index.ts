@@ -29,6 +29,8 @@ export interface Conversation {
   name: string | null
   createdAt: string
   updatedAt: string
+  avatar_url?: string | null
+  other_user_id?: string
   userId?: string // used in some context
   lastMessage?: string
   unread?: number

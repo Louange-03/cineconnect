@@ -42,13 +42,22 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
       SELECT
         c.id,
         COALESCE(c.name, other_user.username, 'Inconnu') AS name,
+        other_user.user_id as other_user_id,
+        other_user.avatar_url as avatar_url,
         c.created_at,
         c.updated_at,
         COALESCE(last_msg.text, '') AS last_message
       FROM conversations c
       JOIN conversation_members cm ON cm.conversation_id = c.id
       LEFT JOIN LATERAL (
-        SELECT u.username
+        SELECT
+          u.id as user_id,
+          u.username,
+          CONCAT(
+            'https://www.gravatar.com/avatar/',
+            md5(lower(trim(u.email))),
+            '?d=404&s=128'
+          ) as avatar_url
         FROM conversation_members cm2
         JOIN users u ON u.id = cm2.user_id
         WHERE cm2.conversation_id = c.id
