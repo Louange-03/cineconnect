@@ -88,9 +88,7 @@ export const reviews = pgTable("reviews", {
   comment: text("comment"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (t) => ({
-  userFilmUnique: uniqueIndex("reviews_user_film_unique").on(t.userId, t.filmId),
-}))
+})
 
 export const favorites = pgTable("favorites", {
   id: uuid("id").defaultRandom().primaryKey(),

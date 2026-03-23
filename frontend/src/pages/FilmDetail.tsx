@@ -1,12 +1,13 @@
 import React, { useMemo } from "react"
 import { useNavigate, useParams } from "@tanstack/react-router"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import type { Film } from "../types"
 import { ReviewForm } from "../components/reviews/ReviewForm"
 import { ReviewCard } from "../components/reviews/ReviewCard"
 import { useReviews } from "../hooks/useReviews"
 import { Reveal } from "../components/ui/Reveal"
-import { getToken } from "../lib/auth"
+import { getToken, getUser } from "../lib/auth"
+import type { Review } from "../types"
 
 /** small JSON fetch wrapper that throws useful errors */
 async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
@@ -57,6 +58,7 @@ function MiniToast({ message }: { message: string }) {
 }
 
 export function FilmDetail() {
+  const qc = useQueryClient()
   const { id } = useParams({ from: "/film/$id" })
   const navigate = useNavigate()
 
@@ -64,6 +66,7 @@ export function FilmDetail() {
   const [resolvedFilmId, setResolvedFilmId] = React.useState(id)
   const [isFavorite, setIsFavorite] = React.useState(false)
   const [favoriteBusy, setFavoriteBusy] = React.useState(false)
+  const currentUserId = getUser()?.id ?? null
   function showToast(msg: string) {
     setToast(msg)
     window.setTimeout(() => setToast(null), 1600)
@@ -166,6 +169,77 @@ export function FilmDetail() {
         showToast(msg)
       } finally {
         setFavoriteBusy(false)
+      }
+    })()
+  }
+
+  const deleteMyReview = (reviewId: string) => {
+    void (async () => {
+      const token = getToken()
+      if (!token) {
+        showToast("Connecte-toi pour gerer tes avis.")
+        return
+      }
+      try {
+        const res = await fetch(`/api/reviews/${reviewId}`, {
+          method: "DELETE",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        if (!res.ok) throw new Error("Suppression impossible")
+        await qc.invalidateQueries({ queryKey: ["reviews", resolvedFilmId] })
+        showToast("Avis supprime ✅")
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Erreur suppression avis"
+        showToast(msg)
+      }
+    })()
+  }
+
+  const editMyReview = (review: Review) => {
+    const nextRatingRaw = window.prompt(
+      "Nouvelle note (1 a 5)",
+      String(review.rating ?? 0)
+    )
+    if (nextRatingRaw === null) return
+    const nextRating = Number(nextRatingRaw)
+    if (!Number.isFinite(nextRating) || nextRating < 1 || nextRating > 5) {
+      showToast("Note invalide (1 a 5).")
+      return
+    }
+    const nextComment = window.prompt(
+      "Modifier votre commentaire",
+      review.comment ?? ""
+    )
+    if (nextComment === null) return
+
+    void (async () => {
+      const token = getToken()
+      if (!token) {
+        showToast("Connecte-toi pour modifier ton avis.")
+        return
+      }
+      try {
+        const res = await fetch(`/api/reviews/${review.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            rating: Math.round(nextRating),
+            comment: nextComment,
+          }),
+        })
+        if (!res.ok) throw new Error("Modification impossible")
+        await qc.invalidateQueries({ queryKey: ["reviews", resolvedFilmId] })
+        showToast("Avis modifie ✅")
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Erreur modification avis"
+        showToast(msg)
       }
     })()
   }
@@ -395,9 +469,29 @@ export function FilmDetail() {
                 )}
               </div>
 
+              <p className="mb-5 text-sm text-white/60">
+                Retrouvez ici les avis laisses par les autres personnes de la communaute.
+              </p>
+
               <div className="space-y-6">
                 {reviews && reviews.length > 0 ? (
-                  reviews.map((r) => <ReviewCard key={r.id} review={r} />)
+                  reviews.map((r) => (
+                    <ReviewCard
+                      key={r.id}
+                      review={r}
+                      isMine={Boolean(currentUserId && r.userId === currentUserId)}
+                      onEdit={
+                        currentUserId && r.userId === currentUserId
+                          ? () => editMyReview(r)
+                          : undefined
+                      }
+                      onDelete={
+                        currentUserId && r.userId === currentUserId
+                          ? () => deleteMyReview(r.id)
+                          : undefined
+                      }
+                    />
+                  ))
                 ) : (
                   <div className="rounded-3xl border border-white/10 border-dashed bg-white/5 p-12 text-center">
                     <span className="mb-4 block text-5xl opacity-50">⭐</span>
