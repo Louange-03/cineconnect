@@ -46,7 +46,8 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
         other_user.avatar_url as avatar_url,
         c.created_at,
         c.updated_at,
-        COALESCE(last_msg.text, '') AS last_message
+        COALESCE(last_msg.text, '') AS last_message,
+        COALESCE(unread_stats.unread_count, 0) AS unread_count
       FROM conversations c
       JOIN conversation_members cm ON cm.conversation_id = c.id
       LEFT JOIN LATERAL (
@@ -72,6 +73,13 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
         ORDER BY m.created_at DESC
         LIMIT 1
       ) last_msg ON true
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*)::int AS unread_count
+        FROM messages m2
+        WHERE m2.conversation_id = c.id
+          AND m2.sender_id <> $1
+          AND m2.seen = false
+      ) unread_stats ON true
       WHERE cm.user_id = $1
       ORDER BY COALESCE(last_msg.created_at, c.updated_at) DESC
       `,

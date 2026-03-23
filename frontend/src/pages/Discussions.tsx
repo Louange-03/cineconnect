@@ -149,6 +149,16 @@ export function Discussion() {
 
   const token = getToken()
   const currentUserId = getUser()?.id ?? null
+  const selectedConversationId = selected?.id ?? null
+
+  const handleSelectConversation = (conv: Conversation) => {
+    setSelected(conv)
+    setConversations((prev) =>
+      prev.map((item) =>
+        item.id === conv.id ? { ...item, unread_count: 0 } : item
+      )
+    )
+  }
 
   useEffect(() => {
     connectSocket()
@@ -183,13 +193,50 @@ export function Discussion() {
     fetchMessages()
 
     socket.emit("mark-as-seen", { conversationId: selected.id })
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.id === selected.id ? { ...conv, unread_count: 0 } : conv
+      )
+    )
     setReactionOpenFor(null)
     setReactionsByMessage({})
   }, [selected, token])
 
   useEffect(() => {
     socket.on("new-message", (message: Message) => {
-      setMessages((prev) => [...prev, message])
+      const conversationId = message.conversation_id || message.conversationId
+      const senderId = message.sender_id || message.senderId
+      if (!conversationId) return
+
+      const isCurrentConversation = selectedConversationId === conversationId
+      const isIncoming = Boolean(senderId && senderId !== currentUserId)
+
+      setConversations((prev) => {
+        const updated = prev.map((conv) => {
+          if (conv.id !== conversationId) return conv
+          const nextUnread =
+            isIncoming && !isCurrentConversation
+              ? (conv.unread_count ?? 0) + 1
+              : 0
+          return {
+            ...conv,
+            last_message: message.text || "",
+            unread_count: nextUnread,
+          }
+        })
+        const idx = updated.findIndex((conv) => conv.id === conversationId)
+        if (idx <= 0) return updated
+        const [hit] = updated.splice(idx, 1)
+        updated.unshift(hit)
+        return updated
+      })
+
+      if (isCurrentConversation) {
+        setMessages((prev) => [...prev, message])
+        if (isIncoming) {
+          socket.emit("mark-as-seen", { conversationId })
+        }
+      }
     })
 
     socket.on("user-typing", (data: UserStatusPayload) => {
@@ -204,12 +251,18 @@ export function Discussion() {
       )
     })
 
-    socket.on("messages-seen", () => {
+    socket.on("messages-seen", ({ conversationId }: { conversationId?: string }) => {
       setMessages((prev) =>
         prev.map((m) =>
           m.sender_id === currentUserId
             ? { ...m, seen: true }
             : m
+        )
+      )
+      if (!conversationId) return
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === conversationId ? { ...conv, unread_count: 0 } : conv
         )
       )
     })
@@ -255,7 +308,7 @@ export function Discussion() {
       socket.off("messages-seen")
       socket.off("message-reaction")
     }
-  }, [currentUserId])
+  }, [currentUserId, selectedConversationId])
 
   const sendMessage = () => {
     if (!selected || !newMessage.trim()) return
@@ -376,7 +429,7 @@ export function Discussion() {
             return (
               <div
                 key={conv.id}
-                onClick={() => setSelected(conv)}
+                onClick={() => handleSelectConversation(conv)}
                 className={`p-4 cursor-pointer flex justify-between items-center rounded-2xl transition-all duration-300 border ${isSelected
                   ? "bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] border-transparent shadow-[0_0_20px_rgba(29,108,224,0.3)]"
                   : "bg-white/5 border-white/10 hover:bg-white/10"
