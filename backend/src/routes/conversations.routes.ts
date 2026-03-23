@@ -41,12 +41,21 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
       `
       SELECT
         c.id,
-        c.name,
+        COALESCE(c.name, other_user.username, 'Inconnu') AS name,
         c.created_at,
         c.updated_at,
         COALESCE(last_msg.text, '') AS last_message
       FROM conversations c
       JOIN conversation_members cm ON cm.conversation_id = c.id
+      LEFT JOIN LATERAL (
+        SELECT u.username
+        FROM conversation_members cm2
+        JOIN users u ON u.id = cm2.user_id
+        WHERE cm2.conversation_id = c.id
+          AND cm2.user_id <> $1
+        ORDER BY u.username ASC
+        LIMIT 1
+      ) other_user ON true
       LEFT JOIN LATERAL (
         SELECT m.text, m.created_at
         FROM messages m
