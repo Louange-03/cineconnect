@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -10,8 +10,8 @@
 }
 
 :root {
-  --font-body: "Manrope", system-ui, -apple-system, sans-serif;
-  --font-display: "Sora", "Manrope", system-ui, -apple-system, sans-serif;
+  --font-body: "Orbitron", system-ui, -apple-system, sans-serif;
+  --font-display: "Orbitron", system-ui, -apple-system, sans-serif;
   --cc-bg-900: #050b1c;
   --cc-bg-800: #0a132d;
   --cc-bg-700: #0f1e42;
@@ -101,8 +101,9 @@ h4,
 h5,
 h6 {
   font-family: var(--font-display);
-  letter-spacing: -0.015em;
+  letter-spacing: 0.01em;
   line-height: 1.2;
+  text-transform: uppercase;
 }
 
 button,
