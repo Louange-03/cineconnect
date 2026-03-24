@@ -91,7 +91,7 @@ export function Navbar() {
   }
 
   return (
-    <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-[#050505]/90 backdrop-blur-xl">
+    <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-[#050B1C]/90 backdrop-blur-xl">
       <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between px-4 md:px-10">
         {/* Brand — maquette : icône caméra + mot-clé */}
         <Link to="/" className="group relative z-20 flex items-center gap-2.5 md:gap-3">
@@ -173,7 +173,7 @@ export function Navbar() {
           {!isAuth ? (
             <Link
               to="/login"
-              className="rounded-full bg-[#007BFF] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_20px_rgba(0,123,255,0.4)] transition hover:bg-[#0066dd] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] md:px-6"
+              className="rounded-full bg-[#007BFF] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_20px_rgba(0,123,255,0.4)] transition hover:bg-[#0066dd] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C] md:px-6"
             >
               Connexion
             </Link>

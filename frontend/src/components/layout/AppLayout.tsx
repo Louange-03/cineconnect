@@ -11,7 +11,7 @@ export function AppLayout() {
     <div
       className={[
         "min-h-screen text-white",
-        isHome ? "app-shell-home bg-[#050505]" : "bg-[#050B1C] cine-bg",
+        isHome ? "app-shell-home bg-[#050B1C]" : "bg-[#050B1C] cine-bg",
       ].join(" ")}
     >
       {/* Orbes : masqués sur l’accueil (maquette plein écran) */}

@@ -126,7 +126,7 @@ export function Home() {
   const topFilmsItems = rowsFromDb.topFilms
 
   return (
-    <div data-page="home" className="home-page home-page-mockup bg-[#050505] text-white">
+    <div data-page="home" className="home-page home-page-mockup bg-[#050B1C] text-white">
       {/* ——— HERO ——— */}
       <section className="relative min-h-[calc(100vh-5rem)] overflow-hidden">
         <div className="absolute inset-0">
@@ -139,11 +139,7 @@ export function Home() {
           <div className="home-hero-radial-glow absolute inset-0" aria-hidden />
         </div>
 
-        <div className="home-hero-content relative z-10 mx-auto flex max-w-5xl flex-col items-center px-4 pb-16 pt-8 text-center md:px-8 md:pb-20 md:pt-12">
-          <p className="home-hero-badge mb-6 inline-flex rounded-full border border-amber-300/50 bg-black/45 px-4 py-2 text-xs font-semibold text-amber-100 shadow-sm backdrop-blur-md md:text-sm">
-            La plateforme communautaire n°1 de ciné
-          </p>
-
+        <div className="home-hero-content relative z-10 mx-auto flex max-w-5xl flex-col items-center px-4 pb-14 pt-8 text-center md:px-8 md:pb-18 md:pt-12">
           <h1 className="max-w-4xl text-[clamp(1.75rem,5vw,3.5rem)] font-black leading-[1.1] tracking-tight text-white">
             Découvrez notez,{" "}
             <span className="bg-gradient-to-r from-cyan-300 to-[#00b4ff] bg-clip-text text-transparent">
