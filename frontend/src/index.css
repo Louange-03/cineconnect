@@ -247,6 +247,19 @@ html.theme-light .users-page {
   color: #0f172a !important;
 }
 
+html.theme-light .friends-page {
+  background: linear-gradient(180deg, #f7faff 0%, #edf3ff 60%, #e8effc 100%) !important;
+  color: #0f172a !important;
+}
+
+html.theme-light .friends-hero,
+html.theme-light .friends-panel,
+html.theme-light .friends-card {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08) !important;
+}
+
 html.theme-light .profile-banner {
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(255, 255, 255, 0.9), rgba(59, 130, 246, 0.18)) !important;
 }
@@ -642,23 +655,18 @@ html.theme-light .home-page-mockup .bg-\[\#0c1222\] {
 .home-monsters-overlay {
   background: linear-gradient(
     to right,
-    #050505 0%,
-    rgba(5, 5, 5, 0.9) 55%,
+    rgba(10, 19, 45, 0.92) 0%,
+    rgba(10, 19, 45, 0.82) 55%,
     transparent 100%
   );
 }
 
 .home-monsters-shade {
-  background-color: rgba(5, 5, 5, 0.5);
+  background-color: rgba(10, 19, 45, 0.44);
 }
 
 .home-rows-section {
-  background: linear-gradient(
-    180deg,
-    var(--cc-bg-900) 0%,
-    var(--cc-bg-800) 52%,
-    var(--cc-bg-700) 100%
-  );
+  background-color: var(--cc-bg-900);
 }
 
 /* ——— Accueil maquette : fond animé + entrées ——— */

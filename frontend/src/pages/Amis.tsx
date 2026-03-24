@@ -131,28 +131,33 @@ export function Amis() {
   })
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <main className="friends-page min-h-screen bg-[#050B1C] px-4 pb-20 pt-24 text-white md:px-10">
+      <div className="mx-auto max-w-6xl space-y-6">
+      <div className="friends-hero rounded-2xl border border-white/12 bg-[#0A132D]/70 p-5 shadow-2xl backdrop-blur-xl md:p-6">
+        <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Mes amis</h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <h1 className="text-3xl font-black tracking-tight text-white">Mes amis</h1>
+          <p className="mt-1 text-sm text-white/65">
             Gère tes amis et tes demandes.
           </p>
         </div>
 
         <Link
           to="/utilisateurs"
-          className="rounded border px-3 py-2 text-sm hover:bg-slate-50"
+          className="rounded-xl border border-[#3EA6FF]/35 bg-[#1D6CE0]/20 px-4 py-2.5 text-sm font-semibold text-[#d6ecff] transition hover:bg-[#1D6CE0]/35"
         >
           Trouver des utilisateurs
         </Link>
       </div>
+      </div>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Demandes reçues</h2>
+      <section className="friends-panel space-y-3 rounded-2xl border border-white/12 bg-[#0A132D]/60 p-4 shadow-xl backdrop-blur-lg md:p-5">
+        <h2 className="text-lg font-bold text-white">Demandes reçues</h2>
 
         {requests.length === 0 ? (
-          <p className="text-slate-600">Aucune demande en attente.</p>
+          <p className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white/60">
+            Aucune demande en attente.
+          </p>
         ) : (
           <div className="space-y-3">
             {requests.map((r) => (
@@ -167,11 +172,13 @@ export function Amis() {
         )}
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Amis</h2>
+      <section className="friends-panel space-y-3 rounded-2xl border border-white/12 bg-[#0A132D]/60 p-4 shadow-xl backdrop-blur-lg md:p-5">
+        <h2 className="text-lg font-bold text-white">Amis</h2>
 
         {friends.length === 0 ? (
-          <p className="text-slate-600">Tu n'as pas encore d'amis.</p>
+          <p className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white/60">
+            Tu n&apos;as pas encore d&apos;amis.
+          </p>
         ) : (
           <div className="space-y-3">
             {friends.map((f) => (
@@ -193,6 +200,7 @@ export function Amis() {
           </div>
         )}
       </section>
-    </div>
+      </div>
+    </main>
   )
 }

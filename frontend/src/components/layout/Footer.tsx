@@ -1,105 +1,20 @@
-import React from "react"
 import { Link } from "@tanstack/react-router"
-
-function SocialIcon({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
-  return (
-    <a
-      href="#"
-      aria-label={label}
-      className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/5 text-white transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:bg-[#1D6CE0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3EA6FF]/40"
-    >
-      {children}
-    </a>
-  )
-}
-
-function FooterCol({
-  title,
-  children,
-}: {
-  title: string
-  children: React.ReactNode
-}) {
-  return (
-    <div>
-      <h4 className="mb-6 text-lg font-bold text-white">{title}</h4>
-      <ul className="space-y-3">{children}</ul>
-    </div>
-  )
-}
-
-function FooterLink({
-  to,
-  children,
-}: {
-  to: string
-  children: React.ReactNode
-}) {
-  return (
-    <li>
-      <Link
-        to={to}
-        className="text-gray-400 transition-colors hover:text-[#1D6CE0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3EA6FF]/40"
-      >
-        {children}
-      </Link>
-    </li>
-  )
-}
-
-function FooterExtLink({
-  href = "#",
-  children,
-}: {
-  href?: string
-  children: React.ReactNode
-}) {
-  return (
-    <li>
-      <a
-        href={href}
-        className="text-gray-400 transition-colors hover:text-[#1D6CE0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3EA6FF]/40"
-      >
-        {children}
-      </a>
-    </li>
-  )
-}
 
 export function Footer() {
   return (
-    <footer className="site-footer relative mt-20 overflow-hidden border-t border-white/10 bg-[#050B1C]">
-      {/* Subtle glow line */}
-      <div
-        aria-hidden="true"
-        className="absolute left-1/2 top-0 h-px w-full max-w-lg -translate-x-1/2 bg-gradient-to-r from-transparent via-[#1D6CE0]/50 to-transparent"
-      />
-
-      {/* Soft vignette */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-60 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.04),transparent_55%)]"
-      />
-
-      <div className="mx-auto max-w-7xl px-6 py-16 md:px-12">
-        <div className="grid gap-12 md:grid-cols-4 lg:grid-cols-5">
-          {/* Brand + description */}
-          <div className="md:col-span-2">
-            <Link to="/" className="group mb-6 inline-flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[#1D6CE0] to-[#3EA6FF] shadow-[0_0_15px_rgba(29,108,224,0.35)] transition-transform duration-300 group-hover:scale-105">
+    <footer className="site-footer mt-16 border-t border-white/10 bg-[#050B1C]">
+      <div className="mx-auto max-w-7xl px-6 py-12 md:px-10">
+        <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr] md:gap-8">
+          <div>
+            <Link to="/" className="inline-flex items-center gap-2.5">
+              <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[#1D6CE0] to-[#3EA6FF] shadow-[0_0_16px_rgba(29,108,224,0.35)]">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="white"
-                  className="h-6 w-6"
+                  className="h-4 w-4"
                   aria-hidden="true"
                 >
                   <path
@@ -109,82 +24,46 @@ export function Footer() {
                   />
                 </svg>
               </div>
-
-              <div className="text-2xl font-black tracking-tight">
+              <span className="text-[1.65rem] font-black tracking-tight">
                 <span className="text-white">Ciné</span>
-                <span className="text-[#1D6CE0]">Connect</span>
-              </div>
+                <span className="text-[#3EA6FF]">Connect</span>
+              </span>
             </Link>
 
-            <p className="max-w-sm leading-relaxed text-gray-400">
-              La plateforme communautaire des cinéphiles passionnés. Découvrez des films,
-              notez vos œuvres favorites et échangez en direct autour du 7ème art.
+            <p className="mt-6 max-w-md text-[1.05rem] leading-8 text-white/75">
+              La plateforme communautaire des cinéphiles passionnés. Découvrez des films, notez vos œuvres favorites et échangez en direct autour du 7ème art.
             </p>
-
-            <div className="mt-8 flex gap-4">
-              <SocialIcon label="Twitter">
-                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
-                </svg>
-              </SocialIcon>
-
-              <SocialIcon label="GitHub">
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    fillRule="evenodd"
-                    d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </SocialIcon>
-
-              <SocialIcon label="Discord">
-                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286z" />
-                </svg>
-              </SocialIcon>
-            </div>
           </div>
 
-          <FooterCol title="Plateforme">
-            <FooterLink to="/">Accueil</FooterLink>
-            <FooterLink to="/films">Catalogue Films</FooterLink>
-            <FooterLink to="/discussion">Discussions Live</FooterLink>
-            <FooterLink to="/profil">Mon Profil</FooterLink>
-          </FooterCol>
+          <div>
+            <h4 className="mb-5 text-2xl font-black tracking-tight text-white">Plateforme</h4>
+            <ul className="space-y-3 text-lg font-semibold text-white/85">
+              <li><Link to="/" className="transition hover:text-white">Accueil</Link></li>
+              <li><Link to="/films" search={{ q: "", category: "", type: "movie", sort: "" }} className="transition hover:text-white">Catalogue Films</Link></li>
+              <li><Link to="/discussion" className="transition hover:text-white">Discussions Live</Link></li>
+              <li><Link to="/amis" className="transition hover:text-white">Mes Amis</Link></li>
+              <li><Link to="/profil" className="transition hover:text-white">Mon Profil</Link></li>
+            </ul>
+          </div>
 
-          <FooterCol title="Top catégories">
-            <FooterLink to="/films?category=Action">Action & Aventure</FooterLink>
-            <FooterLink to="/films?category=Drame">Drame émouvant</FooterLink>
-            <FooterLink to="/films?category=Science-Fiction">Science-Fiction</FooterLink>
-            <FooterLink to="/films?category=Comédie">Comédie</FooterLink>
-          </FooterCol>
+          <div>
+            <h4 className="mb-5 text-2xl font-black tracking-tight text-white">Top categories</h4>
+            <ul className="space-y-3 text-lg font-semibold text-white/85">
+              <li><Link to="/films" search={{ q: "", category: "Action", type: "movie", sort: "" }} className="transition hover:text-white">Action & Aventure</Link></li>
+              <li><Link to="/films" search={{ q: "", category: "Drame", type: "movie", sort: "" }} className="transition hover:text-white">Drame émouvant</Link></li>
+              <li><Link to="/films" search={{ q: "", category: "Science-Fiction", type: "movie", sort: "" }} className="transition hover:text-white">Science-Fiction</Link></li>
+              <li><Link to="/films" search={{ q: "", category: "Comédie", type: "movie", sort: "" }} className="transition hover:text-white">Comédie</Link></li>
+            </ul>
+          </div>
 
-          <FooterCol title="Légal & aide">
-            <FooterExtLink>Conditions d&apos;utilisation</FooterExtLink>
-            <FooterExtLink>Politique de confidentialité</FooterExtLink>
-            <FooterExtLink>Centre d&apos;aide</FooterExtLink>
-            <FooterExtLink>Contactez-nous</FooterExtLink>
-          </FooterCol>
-        </div>
-
-        <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 md:flex-row">
-          <p className="text-sm text-gray-500">
-            © {new Date().getFullYear()} CinéConnect. Projet HETIC Web2.
-          </p>
-
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            Fait avec
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="h-4 w-4 text-red-500"
-              aria-hidden="true"
-            >
-              <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
-            </svg>
-            pour les cinéphiles
+          <div>
+            <h4 className="mb-5 text-2xl font-black tracking-tight text-white">Légal & aide</h4>
+            <ul className="space-y-3 text-lg font-semibold text-white/85">
+              <li><Link to="/utilisateurs" className="transition hover:text-white">Trouver des utilisateurs</Link></li>
+              <li><Link to="/discussion" className="transition hover:text-white">Support discussion</Link></li>
+              <li><Link to="/profil" className="transition hover:text-white">Compte & profil</Link></li>
+              <li><a href="mailto:contact@cineconnect.app" className="transition hover:text-white">Contactez-nous</a></li>
+            </ul>
           </div>
         </div>
       </div>

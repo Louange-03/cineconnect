@@ -203,7 +203,7 @@ export function Home() {
 
         <div className="home-section-rise relative z-10 mx-auto grid min-h-[min(92vh,720px)] max-w-7xl items-end gap-8 px-4 py-12 md:grid-cols-2 md:items-center md:gap-10 md:px-10 md:py-16 lg:py-20">
           <div className="max-w-xl pb-4 text-left md:pb-0">
-            <span className="inline-flex rounded-full border border-white/25 bg-black/40 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-white/95 backdrop-blur-sm">
+            <span className="inline-flex rounded-full border border-white/20 bg-[#0A132D]/70 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-white/95 backdrop-blur-sm">
               À découvrir maintenant
             </span>
             <h2 className="mt-5 text-4xl font-black tracking-tight md:text-5xl lg:text-6xl">
@@ -258,7 +258,7 @@ export function Home() {
                       "rounded-full px-4 py-2 text-xs font-semibold transition md:text-sm",
                       active
                         ? "bg-[#007BFF] text-white shadow-[0_0_24px_rgba(0,123,255,0.45)]"
-                        : "border border-white/40 bg-black/30 text-white/90 backdrop-blur-sm hover:border-white/70",
+                        : "border border-white/35 bg-[#0A132D]/70 text-white/90 backdrop-blur-sm hover:border-white/70",
                     ].join(" ")}
                   >
                     {label}
