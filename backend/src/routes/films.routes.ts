@@ -4,8 +4,10 @@ import { films, filmCategories, categories } from "../db/schema"
 import { eq, ilike, inArray, and, type SQL } from "drizzle-orm"
 import { getFilmById, searchOmdb, importFilmFromOmdb } from "../controllers/films.controller"
 import { authMiddleware } from "../middlewares/auth"
+import type { InferSelectModel } from "drizzle-orm"
 
 export const filmsRoutes = Router()
+type FilmRow = InferSelectModel<typeof films>
 
 
 
@@ -67,7 +69,8 @@ filmsRoutes.get("/", async (req, res) => {
     // Now manually attach categories (since SQLite/PG array_agg can be tricky to type cleanly with simple select)
     // We can do a second query to get all categories for the returning films
     const filmIds = resultFilms.map(f => f.id);
-    let filmsWithCategories: any[] = resultFilms.map(f => ({ ...f, categories: [] as string[] }));
+    let filmsWithCategories: Array<FilmRow & { categories: string[] }> =
+      resultFilms.map((f) => ({ ...f, categories: [] as string[] }))
 
     if (filmIds.length > 0) {
       const allLinks = await db

@@ -35,7 +35,6 @@ router.get("/", authMiddleware, async (req: Request, res: Response): Promise<voi
 
 // GET /friends/requests -> demandes reçues
 router.get("/requests", authMiddleware, async (req: Request, res: Response): Promise<void> => {
-     console.log("req.user", req.user) 
   const meId = req.user?.id
 
   if (!meId) {
@@ -225,7 +224,8 @@ router.post("/reject", authMiddleware, async (req: Request, res: Response): Prom
 // DELETE /friends/:userId
 router.delete("/:userId", authMiddleware, async (req: Request, res: Response): Promise<void> => {
   const meId = req.user?.id
-  const userId = req.params.userId
+  const rawUserId = req.params.userId
+  const userId = Array.isArray(rawUserId) ? rawUserId[0] : rawUserId
 
   if (!meId) {
     res.status(401).json({ message: "Unauthorized" })

@@ -15,7 +15,7 @@ export async function startConversationController(
     )
 
     res.json({ conversationId })
-  } catch (_error) {
+  } catch {
     res.status(400).json({ error: "Cannot start conversation" })
   }
 }

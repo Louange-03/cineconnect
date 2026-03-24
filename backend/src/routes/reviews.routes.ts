@@ -1,7 +1,7 @@
 import { Router } from "express"
 import { db } from "../db"
 import { reviews, users } from "../db/schema"
-import { eq, desc, and, sql } from "drizzle-orm"
+import { eq, desc, sql } from "drizzle-orm"
 import { authMiddleware } from "../middlewares/auth"
 
 export const reviewsRoutes = Router()

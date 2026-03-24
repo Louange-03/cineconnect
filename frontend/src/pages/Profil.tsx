@@ -54,8 +54,6 @@ export function Profil() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [favoriteFilms, setFavoriteFilms] = useState<FavoriteFilm[]>([])
   const [avatar, setAvatar] = useState<string | null>(localStorage.getItem("user_avatar"))
-  const [darkMode, setDarkMode] = useState(true)
-  const [emailNotifs, setEmailNotifs] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null)
 
   const showToast = (message: string, type: "success" | "error" | "info" = "success") => {
@@ -95,19 +93,6 @@ export function Profil() {
     } catch {
       showToast("Opération impossible à cause des données liées.", "error")
     }
-  }
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode)
-    if (darkMode) {
-      showToast("Le mode clair n'est pas disponible : l'expérience premium CinéConnect est conçue pour l'obscurité.", "info")
-      setTimeout(() => setDarkMode(true), 1500)
-    }
-  }
-
-  const toggleNotifs = () => {
-    setEmailNotifs(!emailNotifs)
-    showToast(`Les notifications par email sont maintenant ${!emailNotifs ? 'activées' : 'désactivées'}.`, "success")
   }
 
   useEffect(() => {
@@ -309,34 +294,6 @@ export function Profil() {
                   <div>
                     <label className="text-sm font-medium text-white/60 block mb-1">Adresse Email</label>
                     <input type="email" disabled defaultValue={user?.email} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white/80 cursor-not-allowed shadow-inner" />
-                  </div>
-                </div>
-              </div>
-              <hr className="border-white/10" />
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-[#3EA6FF]">Préférences</h3>
-                <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl p-4">
-                  <div>
-                    <p className="font-medium text-white/90">Mode sombre</p>
-                    <p className="text-xs text-white/50">L'interface est toujours magnifique en sombre.</p>
-                  </div>
-                  <div
-                    className={`w-11 h-6 rounded-full relative cursor-pointer shadow-inner transition-colors duration-300 ${darkMode ? 'bg-[#1D6CE0]' : 'bg-white/20'}`}
-                    onClick={toggleDarkMode}
-                  >
-                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${darkMode ? 'left-6' : 'left-1'}`}></div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl p-4">
-                  <div>
-                    <p className="font-medium text-white/90">Notifications par email</p>
-                    <p className="text-xs text-white/50">Recevoir les actualités et recommandations.</p>
-                  </div>
-                  <div
-                    className={`w-11 h-6 rounded-full relative cursor-pointer shadow-inner transition-colors duration-300 ${emailNotifs ? 'bg-[#1D6CE0]' : 'bg-white/20'}`}
-                    onClick={toggleNotifs}
-                  >
-                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${emailNotifs ? 'left-6' : 'left-1'}`}></div>
                   </div>
                 </div>
               </div>

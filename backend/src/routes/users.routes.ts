@@ -2,7 +2,7 @@ import { Router, type Request, type Response } from "express"
 import { db } from "../db"
 import { users, favorites, films } from "../db/schema"
 import { authMiddleware } from "../middlewares/auth"
-import { ilike, and, sql, eq, ne } from "drizzle-orm"
+import { ilike, and, eq, ne } from "drizzle-orm"
 import bcrypt from "bcryptjs"
 
 export const usersRoutes = Router()
@@ -148,7 +148,7 @@ usersRoutes.post("/me/favorites/:filmId", authMiddleware, async (req: Request, r
     await db.insert(favorites).values({
       userId: meId,
       filmId: resolvedFilmId
-    } as any).onConflictDoNothing()
+    }).onConflictDoNothing()
 
     res.json({ success: true })
   } catch (err) {
@@ -168,7 +168,7 @@ usersRoutes.delete("/me/favorites/:filmId", authMiddleware, async (req: Request,
     }
 
     await db.delete(favorites)
-      .where(and(eq(favorites.userId as any, meId), eq(favorites.filmId as any, resolvedFilmId)))
+      .where(and(eq(favorites.userId, meId), eq(favorites.filmId, resolvedFilmId)))
 
     res.json({ success: true })
   } catch (err) {
@@ -180,9 +180,8 @@ usersRoutes.delete("/me/favorites/:filmId", authMiddleware, async (req: Request,
 // PUT /me/password
 usersRoutes.put("/me/password", authMiddleware, async (req: Request, res: Response) => {
   try {
-    const meId = req.user!.id
     res.json({ success: true })
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Erreur password" })
   }
 })

@@ -1,4 +1,4 @@
-import { ilike, sql, eq, and } from "drizzle-orm"
+import { ilike, sql, eq, and, type SQL } from "drizzle-orm"
 import type { Request, Response } from "express"
 import { z } from "zod"
 
@@ -23,16 +23,14 @@ export const listFilms = async (req: Request, res: Response): Promise<void> => {
   const limitParam = req.query.limit as string | undefined
   const limit = Math.min(parseInt(limitParam ?? "50", 10) || 50, 100)
 
-  // build base query
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query: any = db.select(filmSelect).from(films)
+  const whereClauses: SQL[] = []
 
   if (q) {
-    query = query.where(ilike(films.title, `%${q}%`))
+    whereClauses.push(ilike(films.title, `%${q}%`))
   }
 
   if (year) {
-    query = query.where(eq(films.year, year))
+    whereClauses.push(eq(films.year, year))
   }
 
   if (category) {
@@ -60,14 +58,15 @@ export const listFilms = async (req: Request, res: Response): Promise<void> => {
       return
     }
 
-    query = query.where(
-      sql`${films.id} IN (${sql.join(idsFilter.map((id) => sql`${id}`), ",")})`
+    whereClauses.push(
+      sql`${films.id} IN (${sql.join(idsFilter.map((id) => sql`${id}`), sql`,`)})`
     )
   }
 
-  query = query.limit(limit)
-
-  const rows = await query
+  const rows =
+    whereClauses.length > 0
+      ? await db.select(filmSelect).from(films).where(and(...whereClauses)).limit(limit)
+      : await db.select(filmSelect).from(films).limit(limit)
   res.json({ films: rows })
 }
 
@@ -204,19 +203,20 @@ export const importFilmFromOmdb = async (req: Request, res: Response): Promise<v
   try {
     const url = `https://www.omdbapi.com/?apikey=${OMDB_KEY}&i=${encodeURIComponent(imdbID)}&plot=full`
     const r = await fetch(url)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: any = await r.json()
+    const data = (await r.json()) as Record<string, unknown>
 
-    if (data?.Response === "False") {
-      res.status(404).json({ error: data?.Error || "Not found" })
+    if (data.Response === "False") {
+      res.status(404).json({ error: (typeof data.Error === "string" ? data.Error : "Not found") })
       return
     }
 
-    const title = (data?.Title || "").toString().trim()
-    const year = (data?.Year || "").toString().trim()
-    const posterUrl = data?.Poster && data.Poster !== "N/A" ? data.Poster : null
-    const synopsis = data?.Plot && data.Plot !== "N/A" ? data.Plot : null
-    const genreRaw = (data?.Genre || "").toString()
+    const title = String(data.Title ?? "").trim()
+    const year = String(data.Year ?? "").trim()
+    const posterRaw = String(data.Poster ?? "")
+    const plotRaw = String(data.Plot ?? "")
+    const posterUrl = posterRaw && posterRaw !== "N/A" ? posterRaw : null
+    const synopsis = plotRaw && plotRaw !== "N/A" ? plotRaw : null
+    const genreRaw = String(data.Genre ?? "")
 
     const genres = genreRaw
       .split(",")
