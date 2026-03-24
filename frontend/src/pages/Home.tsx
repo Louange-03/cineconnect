@@ -5,28 +5,81 @@ import {
   CINEMA_BG_PRIMARY,
   MONSTERS_BACKDROP,
   MONSTERS_FOREGROUND,
-  ROW_TOP_FILMS,
-  ROW_TOP_SERIES,
 } from "../components/home/homeAssets"
 import { HeroAnimatedCarousel } from "../components/home/HeroAnimatedCarousel"
+import { useFilms } from "../hooks/useFilms"
+import type { Film } from "../types"
 
 const FEATURE_PILLS = ["Tout", "Animé", "Comédie", "Action", "Horreur"] as const
 
 const FILMS_SEARCH = { q: "", category: "", type: "movie" as const, sort: "" as const }
 
-function PosterStrip({
+function normalizeCat(v: string) {
+  return v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+}
+
+function isAnimatedFilm(f: Film): boolean {
+  return (f.categories ?? []).some((c) => {
+    const n = normalizeCat(c)
+    return (
+      n.includes("animation") ||
+      n.includes("anime") ||
+      n.includes("anim") ||
+      n.includes("famil")
+    )
+  })
+}
+
+function readMediaType(f: Film): string {
+  const raw = f.metadata
+  if (!raw) return ""
+  try {
+    const obj = JSON.parse(raw) as Record<string, unknown>
+    const maybe = obj.Type ?? obj.type
+    return typeof maybe === "string" ? maybe.toLowerCase() : ""
+  } catch {
+    return ""
+  }
+}
+
+function isSeriesFilm(f: Film): boolean {
+  const metaType = readMediaType(f)
+  if (metaType.includes("series") || metaType.includes("serie")) return true
+  return (f.categories ?? []).some((c) => {
+    const n = normalizeCat(c)
+    return n.includes("series") || n.includes("serie") || n.includes("tv")
+  })
+}
+
+function isMovieFilm(f: Film): boolean {
+  const metaType = readMediaType(f)
+  if (metaType.includes("movie") || metaType.includes("film")) return true
+  return (f.categories ?? []).some((c) => {
+    const n = normalizeCat(c)
+    return n.includes("movie") || n.includes("film") || n.includes("cinema")
+  })
+}
+
+function PosterRow({
   items,
 }: {
   items: { src: string; alt: string; seed: string }[]
 }) {
+  const max = Math.min(items.length, 6)
+  const shown = items.slice(0, max)
+
   return (
-    <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-2 pt-1 md:gap-4">
-      {items.map((item, i) => (
+    <div className="hide-scrollbar overflow-x-auto pb-2 pt-1">
+      <div
+        className="grid min-w-[860px] gap-3 md:min-w-0 md:gap-4"
+        style={{ gridTemplateColumns: `repeat(${Math.max(shown.length, 1)}, minmax(0, 1fr))` }}
+      >
+      {shown.map((item, i) => (
         <Link
           key={`${item.seed}-${i}`}
           to="/films"
           search={FILMS_SEARCH}
-          className="home-poster-card group relative w-[132px] shrink-0 sm:w-[150px] md:w-[168px]"
+          className="home-poster-card group relative w-full min-w-[132px] md:min-w-0"
         >
           <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/10 bg-[#0c1222] shadow-lg ring-0 transition duration-300 group-hover:-translate-y-1 group-hover:border-[#007BFF]/40 group-hover:shadow-[0_12px_40px_rgba(0,123,255,0.2)]">
             <SafeImage
@@ -38,12 +91,39 @@ function PosterStrip({
           </div>
         </Link>
       ))}
+      </div>
     </div>
   )
 }
 
 export function Home() {
   const [pill, setPill] = React.useState<(typeof FEATURE_PILLS)[number]>("Tout")
+  const { data: allFilms } = useFilms("", "", "")
+
+  const rowsFromDb = React.useMemo(() => {
+    const withPoster = (allFilms ?? []).filter(
+      (f) => typeof f.posterUrl === "string" && f.posterUrl.trim() !== ""
+    )
+    const strictSeries = withPoster.filter(isSeriesFilm)
+    const strictFilms = withPoster.filter(
+      (f) => isMovieFilm(f) || (!isSeriesFilm(f) && !isAnimatedFilm(f))
+    )
+
+    const topSeries = strictSeries.slice(0, 6).map((f) => ({
+      src: f.posterUrl!,
+      alt: f.title,
+      seed: `db-series-${f.id}`,
+    }))
+    const topFilms = strictFilms.slice(0, 6).map((f) => ({
+      src: f.posterUrl!,
+      alt: f.title,
+      seed: `db-films-${f.id}`,
+    }))
+
+    return { topSeries, topFilms }
+  }, [allFilms])
+  const topSeriesItems = rowsFromDb.topSeries
+  const topFilmsItems = rowsFromDb.topFilms
 
   return (
     <div data-page="home" className="home-page home-page-mockup bg-[#050505] text-white">
@@ -217,13 +297,21 @@ export function Home() {
             <h3 className="text-lg font-bold tracking-tight text-white md:text-xl">
               Top series
             </h3>
-            <PosterStrip items={ROW_TOP_SERIES} />
+            {topSeriesItems.length > 0 ? (
+              <PosterRow items={topSeriesItems} />
+            ) : (
+              <p className="mt-3 text-sm text-white/60">Aucune série trouvée dans la base.</p>
+            )}
           </div>
           <div className="home-section-rise">
             <h3 className="text-lg font-bold tracking-tight text-white md:text-xl">
               Top Films
             </h3>
-            <PosterStrip items={ROW_TOP_FILMS} />
+            {topFilmsItems.length > 0 ? (
+              <PosterRow items={topFilmsItems} />
+            ) : (
+              <p className="mt-3 text-sm text-white/60">Aucun film trouvé dans la base.</p>
+            )}
           </div>
         </div>
       </section>

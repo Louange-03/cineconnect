@@ -218,9 +218,9 @@ html.theme-light .home-page-mockup {
 html.theme-light .home-hero-overlay {
   background: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.9),
-    rgba(241, 245, 249, 0.82),
-    #f1f5f9
+    rgba(248, 251, 255, 0.58),
+    rgba(241, 246, 253, 0.66),
+    rgba(239, 244, 251, 0.8)
   ) !important;
 }
 
@@ -537,9 +537,9 @@ html.theme-light .home-page-mockup .bg-\[\#0c1222\] {
 .home-hero-overlay {
   background: linear-gradient(
     to bottom,
-    rgba(5, 5, 5, 0.88),
-    rgba(5, 5, 5, 0.65),
-    #050505
+    rgba(4, 8, 18, 0.76),
+    rgba(4, 8, 18, 0.58),
+    rgba(5, 5, 5, 0.9)
   );
 }
 
@@ -565,7 +565,7 @@ html.theme-light .home-page-mockup .bg-\[\#0c1222\] {
 }
 
 .home-rows-section {
-  background-color: #050505;
+  background: linear-gradient(180deg, #020617 0%, #041238 52%, #071a45 100%);
 }
 
 /* ——— Accueil maquette : fond animé + entrées ——— */
