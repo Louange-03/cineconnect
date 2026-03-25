@@ -11,20 +11,24 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [showPwd, setShowPwd] = useState(false)
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false)
 
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  const passwordsMatch = password === confirmPassword && password.length >= 6
+
   const canSubmit = useMemo(() => {
     return (
       email.trim().length > 0 &&
       username.trim().length >= 3 &&
-      password.trim().length >= 6 &&
+      passwordsMatch &&
       !loading
     )
-  }, [email, username, password, loading])
+  }, [email, username, passwordsMatch, loading])
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -97,6 +101,30 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           }
           rightSlot={<EyeButton pressed={showPwd} onClick={() => setShowPwd((v) => !v)} />}
         />
+        <p className="ml-1 mt-1 text-xs text-gray-500">Au moins 6 caractères.</p>
+      </Field>
+
+      <Field label="Confirmer le mot de passe">
+        <Input
+          type={showConfirmPwd ? "text" : "password"}
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Retapez le mot de passe"
+          autoComplete="new-password"
+          leftIcon={
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+          }
+          rightSlot={<EyeButton pressed={showConfirmPwd} onClick={() => setShowConfirmPwd((v) => !v)} />}
+        />
+        {confirmPassword.length > 0 ? (
+          passwordsMatch ? (
+            <p className="ml-1 mt-1 text-xs text-emerald-400">Les mots de passe correspondent — vous pouvez valider.</p>
+          ) : (
+            <p className="ml-1 mt-1 text-xs text-red-300">Les deux champs doivent être identiques (min. 6 caractères).</p>
+          )
+        ) : null}
       </Field>
 
       <div className="min-h-[24px]">

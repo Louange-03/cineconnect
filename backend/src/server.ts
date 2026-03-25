@@ -14,6 +14,7 @@ import { initSocket } from "./socket"
 import { openApiDocument } from "./swagger"
 import { pool } from "./db/client"
 import { ensurePasswordResetSchema } from "./db/ensurePasswordResetSchema.js"
+import { isSmtpFullyConfigured } from "./utils/mailer"
 
 const app = express()
 
@@ -54,6 +55,14 @@ async function start() {
 
 	httpServer.listen(port, () => {
 		console.log(`API listening on http://localhost:${port}`)
+		if (isSmtpFullyConfigured()) {
+			console.log("[mail] SMTP configuré — les e-mails de réinitialisation de mot de passe seront envoyés.")
+		} else {
+			console.log(
+				"[mail] SMTP non configuré (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM). " +
+					"Mot de passe oublié : lien uniquement dans les logs serveur.",
+			)
+		}
 	})
 }
 

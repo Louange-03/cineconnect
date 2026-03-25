@@ -8,11 +8,18 @@ export function ResetPassword() {
   const { token } = useParams({ from: "/reset-password/$token" })
 
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPwd, setShowPwd] = useState(false)
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const canSubmit = useMemo(() => password.trim().length >= 6 && Boolean(token) && !loading, [password, token, loading])
+  const passwordsMatch = password === confirmPassword && password.length >= 6
+  const canSubmit = useMemo(
+    () => passwordsMatch && Boolean(token) && !loading,
+    [passwordsMatch, token, loading],
+  )
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -54,10 +61,30 @@ export function ResetPassword() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                type="password"
+                type={showPwd ? "text" : "password"}
                 autoComplete="new-password"
-                className="rounded-2xl border-imperial bg-prussian/50 py-5 text-frost placeholder-frost/40 focus:border-ocean focus:shadow-[0_0_30px_rgba(14,107,168,0.2)]"
+                className="rounded-2xl border-imperial bg-prussian/50 py-5 pl-4 pr-12 text-frost placeholder-frost/40 focus:border-ocean focus:shadow-[0_0_30px_rgba(14,107,168,0.2)]"
+                rightSlot={<EyeButton pressed={showPwd} onClick={() => setShowPwd((v) => !v)} />}
               />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm text-frost/60 uppercase tracking-wider">Confirmer le mot de passe</label>
+              <Input
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Retapez le mot de passe"
+                type={showConfirmPwd ? "text" : "password"}
+                autoComplete="new-password"
+                className="rounded-2xl border-imperial bg-prussian/50 py-5 pl-4 pr-12 text-frost placeholder-frost/40 focus:border-ocean focus:shadow-[0_0_30px_rgba(14,107,168,0.2)]"
+                rightSlot={<EyeButton pressed={showConfirmPwd} onClick={() => setShowConfirmPwd((v) => !v)} />}
+              />
+              {confirmPassword.length > 0 ? (
+                passwordsMatch ? (
+                  <p className="text-xs text-emerald-400">Les mots de passe correspondent — vous pouvez valider.</p>
+                ) : (
+                  <p className="text-xs text-red-300">Les deux champs doivent être identiques (min. 6 caractères).</p>
+                )
+              ) : null}
             </div>
 
             {error ? <Alert variant="error">{error}</Alert> : null}

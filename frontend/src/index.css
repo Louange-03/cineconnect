@@ -261,6 +261,118 @@ html.theme-light .friends-card {
   box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08) !important;
 }
 
+/* Auth — connexion, inscription, mot de passe oublié / réinit (carte claire, texte foncé) */
+html.theme-light .auth-page {
+  background: linear-gradient(180deg, #f6f9ff 0%, #edf3ff 100%);
+}
+
+html.theme-light .auth-card {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(29, 108, 224, 0.22) !important;
+  box-shadow: 0 24px 56px rgba(15, 23, 42, 0.09) !important;
+  backdrop-filter: none;
+}
+
+html.theme-light .auth-card h1 {
+  color: #0b1220 !important;
+}
+
+html.theme-light .auth-card .text-center p {
+  color: #475569 !important;
+}
+
+html.theme-light .auth-card span.inline-block[class*="ocean"] {
+  background-color: rgba(29, 108, 224, 0.12) !important;
+  color: #0f172a !important;
+}
+
+html.theme-light .auth-card label {
+  color: #475569 !important;
+}
+
+html.theme-light .auth-card input {
+  background-color: rgba(15, 23, 42, 0.05) !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #0f172a !important;
+}
+
+html.theme-light .auth-card input::placeholder {
+  color: #64748b !important;
+}
+
+html.theme-light .auth-card .text-white\/60 {
+  color: #64748b !important;
+}
+
+html.theme-light .auth-card button.text-white\/60:hover,
+html.theme-light .auth-card button.hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+html.theme-light .auth-card a[class*="ocean"],
+html.theme-light .auth-card button[class*="ocean"] {
+  color: #1d4ed8 !important;
+}
+
+html.theme-light .auth-card a[class*="ocean"]:hover,
+html.theme-light .auth-card button[class*="ocean"]:hover {
+  color: #1e3a8a !important;
+}
+
+html.theme-light .auth-card .text-emerald-400 {
+  color: #047857 !important;
+}
+
+html.theme-light .auth-card .text-red-300 {
+  color: #b91c1c !important;
+}
+
+html.theme-light .auth-card .text-gray-500 {
+  color: #64748b !important;
+}
+
+html.theme-light .auth-card [class*="border-imperial"] {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+html.theme-light .auth-card .border-red-500\/30.bg-red-500\/10 {
+  background-color: rgba(220, 38, 38, 0.08) !important;
+  border-color: rgba(220, 38, 38, 0.28) !important;
+  color: #991b1b !important;
+}
+
+html.theme-light .auth-card .border-red-500\/20 {
+  background-color: rgba(220, 38, 38, 0.08) !important;
+  border-color: rgba(220, 38, 38, 0.25) !important;
+  color: #991b1b !important;
+}
+
+html.theme-light .auth-card .border-emerald-500\/20 {
+  background-color: rgba(5, 150, 105, 0.08) !important;
+  border-color: rgba(5, 150, 105, 0.25) !important;
+  color: #047857 !important;
+}
+
+html.theme-light .auth-card .text-red-200 {
+  color: #991b1b !important;
+}
+
+html.theme-light .auth-card .border-\[\#FFC107\]\/40 {
+  border-color: rgba(202, 138, 4, 0.45) !important;
+}
+
+html.theme-light .auth-card .bg-\[\#FFC107\]\/10 {
+  background-color: rgba(234, 179, 8, 0.12) !important;
+}
+
+html.theme-light .auth-card .text-\[\#FFC107\] {
+  color: #a16207 !important;
+}
+
+html.theme-light .auth-card .text-frost\/70 {
+  color: #475569 !important;
+}
+
 html.theme-light .profile-banner {
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(255, 255, 255, 0.9), rgba(59, 130, 246, 0.18)) !important;
 }

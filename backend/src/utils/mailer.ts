@@ -16,7 +16,8 @@ function isSmtpConfigured(): {
   const host = (process.env.SMTP_HOST ?? "").trim()
   const portRaw = (process.env.SMTP_PORT ?? "").trim()
   const user = (process.env.SMTP_USER ?? "").trim()
-  const pass = (process.env.SMTP_PASS ?? "").trim()
+  // Mots de passe Gmail « application » : souvent collés avec des espaces — les retirer.
+  const pass = (process.env.SMTP_PASS ?? "").replace(/\s+/g, "").trim()
   const from = (process.env.MAIL_FROM ?? user).trim()
 
   const port = Number(portRaw)
@@ -44,6 +45,7 @@ export async function sendPasswordResetEmail(params: { to: string; resetUrl: str
     host: smtp.host,
     port: smtp.port,
     secure: smtp.port === 465,
+    requireTLS: smtp.port === 587,
     auth: { user: smtp.user, pass: smtp.pass },
   })
 
