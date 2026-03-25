@@ -140,7 +140,7 @@ export function Home() {
         </div>
 
         <div className="home-hero-content relative z-10 mx-auto flex max-w-5xl flex-col items-center px-4 pb-14 pt-8 text-center md:px-8 md:pb-18 md:pt-12">
-          <h1 className="max-w-4xl text-[clamp(1.75rem,5vw,3.5rem)] font-black leading-[1.1] tracking-tight text-white">
+          <h1 className="max-w-4xl text-[clamp(1.75rem,5vw,3.5rem)] font-semibold leading-[1.1] tracking-tight text-white">
             Découvrez notez,{" "}
             <span className="bg-gradient-to-r from-cyan-300 to-[#00b4ff] bg-clip-text text-transparent">
               échangez.
@@ -206,7 +206,7 @@ export function Home() {
             <span className="inline-flex rounded-full border border-white/20 bg-[#0A132D]/70 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-white/95 backdrop-blur-sm">
               À découvrir maintenant
             </span>
-            <h2 className="mt-5 text-4xl font-black tracking-tight md:text-5xl lg:text-6xl">
+            <h2 className="mt-5 text-4xl font-semibold tracking-tight md:text-5xl lg:text-6xl">
               Monsters
             </h2>
             <p className="mt-5 text-sm leading-relaxed text-white/85 md:text-base">

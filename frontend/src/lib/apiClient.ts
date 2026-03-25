@@ -31,7 +31,12 @@ async function request<T = any>(path: string, { method = "GET", body, auth = tru
       body: body ? JSON.stringify(body) : undefined,
     })
     const text = await res.text()
-    const data = text ? JSON.parse(text) : null
+    let data: any = null
+    try {
+      data = text ? JSON.parse(text) : null
+    } catch {
+      throw new Error(text?.slice(0, 120) || `Réponse invalide (${res.status})`)
+    }
 
     if (!res.ok) {
       throw new Error(data?.message || `Erreur serveur (${res.status})`)
@@ -39,8 +44,8 @@ async function request<T = any>(path: string, { method = "GET", body, auth = tru
 
     return data as T
   } catch (e) {
-    const err = e as Error
-    throw new Error(err.message || `Failed to fetch ${url}`)
+    if (e instanceof Error) throw e
+    throw new Error(String(e))
   }
 }
 

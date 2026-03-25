@@ -16,7 +16,7 @@ export function FriendCard({ user, onRemove, onChat }: FriendCardProps) {
   return (
     <div className="friends-card flex items-center justify-between gap-4 rounded-2xl border border-white/12 bg-white/5 p-4 shadow-lg backdrop-blur-sm transition hover:bg-white/8">
       <div className="min-w-0 flex items-center gap-3">
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#1D6CE0]/25 text-sm font-black text-[#8cc6ff] ring-1 ring-white/15">
+        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#1D6CE0]/25 text-sm font-semibold text-[#8cc6ff] ring-1 ring-white/15">
           {initial}
         </div>
         <div className="min-w-0">

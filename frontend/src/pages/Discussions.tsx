@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Send } from "lucide-react"
+import { CompactSearchInput } from "../components/ui/CompactSearchInput"
 import { connectSocket, disconnectSocket, socket } from "../socket"
 import axios from "axios"
 import type { Conversation, Message } from "../types"
@@ -390,31 +391,15 @@ export function Discussion() {
       {/* Sidebar */}
       <div className="w-full max-w-[320px] md:max-w-[380px] flex flex-col border-r border-white/10 bg-[#0A132D]/60 backdrop-blur-xl">
         <div className="p-6 border-b border-white/10 bg-white/5">
-          <h2 className="text-2xl font-black tracking-tight text-white">Messages</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-white">Messages</h2>
           <p className="text-sm text-gray-400 mt-1">Vos conversations récentes</p>
-          <div className="mt-4 relative">
-            <input
-              type="text"
+          <div className="mt-4">
+            <CompactSearchInput
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher un ami..."
-              className="w-full rounded-xl border border-white/10 bg-[#050B1C]/70 py-2.5 pl-10 pr-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#3EA6FF]/60 focus:ring-2 focus:ring-[#3EA6FF]/25"
+              onChange={setSearch}
+              placeholder="Rechercher une conversation…"
+              inputType="search"
             />
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-              />
-            </svg>
           </div>
         </div>
 
@@ -680,11 +665,12 @@ export function Discussion() {
                       Fermer
                     </button>
                   </div>
-                  <input
+                  <CompactSearchInput
+                    className="mb-2"
                     value={filmSearch}
-                    onChange={(e) => setFilmSearch(e.target.value)}
-                    placeholder="Rechercher un film..."
-                    className="mb-2 w-full rounded-lg border border-white/10 bg-[#050B1C]/70 px-3 py-2 text-sm text-white placeholder-white/40 outline-none focus:border-[#3EA6FF]/60"
+                    onChange={setFilmSearch}
+                    placeholder="Rechercher un film…"
+                    inputType="search"
                   />
                   <div className="max-h-52 space-y-1 overflow-y-auto">
                     {loadingFilms ? (

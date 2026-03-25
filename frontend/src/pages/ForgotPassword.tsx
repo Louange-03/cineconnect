@@ -36,72 +36,66 @@ export function ForgotPassword() {
 
   return (
     <div className="auth-page min-h-screen flex items-center justify-center px-4 relative pt-24 pb-12">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-ocean/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[520px] h-[520px] bg-ocean/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="auth-card relative w-full max-w-lg p-16 rounded-3xl bg-navy/80 backdrop-blur-xl border border-ocean/20 shadow-2xl">
-        <div className="absolute top-0 left-0 w-20 h-20 border-t-2 border-l-2 border-ocean/30 rounded-tl-3xl" />
-        <div className="absolute bottom-0 right-0 w-20 h-20 border-b-2 border-r-2 border-ocean/30 rounded-br-3xl" />
+      <div className="auth-card relative w-full max-w-md p-8 rounded-2xl bg-navy/80 backdrop-blur-xl border border-ocean/20 shadow-xl">
+        <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-ocean/30 rounded-tl-2xl" />
+        <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-ocean/30 rounded-br-2xl" />
 
-        <div className="text-center mb-10">
-          <span className="inline-block px-4 py-1.5 mb-6 text-xs tracking-widest uppercase bg-ocean/20 text-frost rounded-full">
+        <div className="text-center mb-6">
+          <span className="inline-block px-3 py-1 mb-3 text-[10px] tracking-widest uppercase bg-ocean/20 text-frost rounded-full">
             Mot de passe
           </span>
-          <h1 className="text-4xl font-bold text-frost tracking-wide mb-4">Mot de passe oublié</h1>
-          <p className="text-frost/60">Entrez votre email, on vous enverra un lien de réinitialisation.</p>
+          <h1 className="text-2xl font-bold text-frost tracking-wide mb-2">Mot de passe oublié</h1>
+          <p className="text-frost/60 text-sm">Indiquez votre e-mail pour recevoir un lien.</p>
         </div>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-5">
-          <div className="space-y-2">
-            <label className="text-sm text-frost/60 uppercase tracking-wider">Email</label>
+        <form onSubmit={onSubmit} className="flex flex-col gap-3">
+          <div className="space-y-1">
+            <label className="text-xs text-frost/60 uppercase tracking-wider">Email</label>
             <Input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="votre@email.com"
               type="email"
               autoComplete="email"
-              className="rounded-2xl border-imperial bg-prussian/50 py-5 text-frost placeholder-frost/40 focus:border-ocean focus:shadow-[0_0_30px_rgba(14,107,168,0.2)]"
+              className="border-imperial bg-prussian/50 text-frost placeholder-frost/40"
             />
           </div>
 
           {error ? <Alert variant="error">{error}</Alert> : null}
-          {!error && success ? <Alert variant="success">{success}</Alert> : null}
 
-          {devResetUrl ? (
-            <div className="rounded-2xl border border-[#FFC107]/40 bg-[#FFC107]/10 p-4 text-sm text-frost/90">
-              <p className="mb-2 font-semibold text-[#FFC107]">Mode développement (SMTP non configuré)</p>
-              <p className="mb-2 text-frost/70">
-                Sans serveur SMTP réel, aucun email n&apos;est envoyé. Utilisez ce lien pour réinitialiser votre mot de passe :
-              </p>
-              <a
-                href={devResetUrl}
-                className="break-all text-ocean underline hover:text-frost"
-              >
+          {!error && devResetUrl ? (
+            <div className="rounded-lg border border-[#FFC107]/40 bg-[#FFC107]/10 p-3 text-xs text-frost/90">
+              <p className="mb-1 font-semibold text-[#FFC107]">Mode développement</p>
+              <p className="mb-2 text-frost/80">{success ?? "Lien de réinitialisation ci-dessous."}</p>
+              <a href={devResetUrl} className="break-all text-ocean underline hover:text-frost">
                 {devResetUrl}
               </a>
             </div>
           ) : null}
 
+          {!error && success && !devResetUrl ? <Alert variant="success">{success}</Alert> : null}
+
           <button
-            className="w-full mt-6 rounded-2xl bg-gradient-to-r from-imperial to-ocean px-6 py-5 font-semibold text-frost transition-all hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(14,107,168,0.4)] disabled:opacity-50 disabled:hover:translate-y-0"
+            className="w-full mt-1 rounded-lg bg-gradient-to-r from-imperial to-ocean px-4 py-2.5 text-sm font-semibold text-frost shadow-sm transition hover:brightness-110 disabled:opacity-50"
             disabled={!canSubmit}
+            type="submit"
           >
             {loading ? <Spinner /> : "Envoyer le lien"}
           </button>
         </form>
 
-        <div className="mt-10 pt-10 border-t border-imperial/50 text-center">
-          <p className="text-frost/60 text-sm">
-            <button
-              type="button"
-              onClick={() => navigate({ to: "/login" })}
-              className="text-ocean hover:text-frost transition-colors"
-            >
-              Retour à la connexion
-            </button>
-          </p>
+        <div className="mt-8 pt-6 border-t border-imperial/50 text-center">
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/login" })}
+            className="text-ocean hover:text-frost transition-colors text-xs"
+          >
+            Retour à la connexion
+          </button>
         </div>
       </div>
     </div>
   )
 }
-

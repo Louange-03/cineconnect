@@ -148,7 +148,7 @@ export function Profil() {
   return (
     <main className="min-h-screen bg-[#050B1C] text-white pb-20">
       {/* Banner Area */}
-      <div className="h-64 md:h-80 w-full bg-gradient-to-br from-[#1D6CE0]/40 via-[#0A132D] to-purple-900/40 relative">
+      <div className="h-64 md:h-80 w-full bg-gradient-to-br from-[#1D6CE0]/40 via-[#0A132D] to-[#050B1C] relative">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#050B1C] to-transparent"></div>
       </div>
@@ -157,7 +157,7 @@ export function Profil() {
         {/* User Profile Header section */}
         <div className="rounded-3xl border border-white/10 bg-[#0A132D]/80 backdrop-blur-xl p-8 shadow-2xl flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
           <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
-            <div className="relative group h-32 w-32 shrink-0 rounded-full border-4 border-[#050B1C] bg-gradient-to-br from-[#1D6CE0] to-[#3EA6FF] flex items-center justify-center text-5xl font-black text-white shadow-xl overflow-hidden">
+            <div className="relative group h-32 w-32 shrink-0 rounded-full border-4 border-[#050B1C] bg-gradient-to-br from-[#1D6CE0] to-[#3EA6FF] flex items-center justify-center text-5xl font-semibold text-white shadow-xl overflow-hidden">
               {avatar ? (
                 <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
@@ -173,7 +173,7 @@ export function Profil() {
               </label>
             </div>
             <div className="space-y-1 mb-2">
-              <h1 className="text-4xl font-black tracking-tight text-white shadow-sm">
+              <h1 className="text-4xl font-semibold tracking-tight text-white shadow-sm">
                 {user.username}
               </h1>
               <p className="text-lg text-[#3EA6FF] font-medium">{user.email}</p>

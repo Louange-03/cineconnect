@@ -93,9 +93,8 @@ export function Navbar() {
   return (
     <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-[#050B1C]/90 backdrop-blur-xl">
       <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between px-4 md:px-10">
-        {/* Brand — maquette : icône caméra + mot-clé */}
         <Link to="/" className="group relative z-20 flex items-center gap-2.5 md:gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#007BFF] shadow-[0_0_20px_rgba(0,123,255,0.35)] transition-transform duration-300 group-hover:scale-105 md:h-10 md:w-10">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#007BFF] shadow-[0_0_18px_rgba(0,123,255,0.28)] transition-transform duration-300 group-hover:scale-105 md:h-10 md:w-10">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -113,8 +112,9 @@ export function Navbar() {
             </svg>
           </div>
 
-          <span className="text-xl font-black tracking-tight text-white md:text-2xl">
-            CinéConnect
+          <span className="text-xl font-bold tracking-tight text-white md:text-2xl">
+            <span className="text-white">Ciné</span>
+            <span className="text-[#3EA6FF]">Connect</span>
           </span>
         </Link>
 
@@ -155,7 +155,7 @@ export function Navbar() {
           <button
             type="button"
             onClick={() => setTheme(toggleTheme())}
-            className="hidden h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-300/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 md:inline-flex"
+            className="hidden h-10 w-10 items-center justify-center rounded-md border border-stone-700/50 bg-stone-900/40 text-stone-500 transition hover:border-stone-600 hover:bg-stone-800/50 hover:text-stone-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/30 md:inline-flex"
             title={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
             aria-label={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
           >
@@ -173,14 +173,14 @@ export function Navbar() {
           {!isAuth ? (
             <Link
               to="/login"
-              className="rounded-full bg-[#007BFF] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_20px_rgba(0,123,255,0.4)] transition hover:bg-[#0066dd] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C] md:px-6"
+              className="rounded-full bg-[#007BFF] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_18px_rgba(0,123,255,0.35)] transition hover:bg-[#0066dd] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C] md:px-6"
             >
               Connexion
             </Link>
           ) : (
             <button
               onClick={handleLogout}
-              className="rounded-full bg-white/10 px-6 py-2.5 text-sm font-bold text-white shadow-lg backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/20 hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+              className="rounded-full bg-white/10 px-6 py-2.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             >
               Déconnexion
             </button>
@@ -210,15 +210,15 @@ export function Navbar() {
       {mobileOpen && (
         <div className="md:hidden">
           <div className="mx-auto max-w-7xl px-6 pb-5 md:px-12">
-            <div className="mt-3 rounded-2xl border border-white/10 bg-[#0A132D]/60 p-3 backdrop-blur-xl motion-safe:animate-fade-in">
-              <div className="flex flex-col gap-2">
+            <div className="mt-3 rounded-lg border border-stone-800/80 bg-[#1c1b18]/95 p-2 shadow-lg motion-safe:animate-fade-in">
+              <div className="flex flex-col gap-1">
                 {visibleNav.map((item) => (
                   <Link
                     key={`${item.to}-${item.label}`}
                     to={item.to}
                     search={item.search}
                     onClick={() => setMobileOpen(false)}
-                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10"
+                    className="rounded-md border border-transparent px-4 py-3 text-sm font-medium text-stone-300 transition hover:border-stone-700 hover:bg-stone-800/60"
                   >
                     {item.label}
                   </Link>
@@ -239,7 +239,7 @@ export function Navbar() {
                       handleLogout()
                       setMobileOpen(false)
                     }}
-                    className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10 text-left"
+                    className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/90 transition hover:bg-white/10"
                   >
                     Déconnexion
                   </button>

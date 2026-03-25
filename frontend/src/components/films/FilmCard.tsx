@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router"
 import axios from "axios"
 import { getToken } from "../../lib/auth"
 import { connectSocket, socket } from "../../socket"
+import { CompactSearchInput } from "../ui/CompactSearchInput"
 
 interface FilmCardProps {
   film: Film
@@ -359,12 +360,12 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
                 Fermer
               </button>
             </div>
-            <input
-              type="text"
+            <CompactSearchInput
+              className="mb-3"
               value={friendSearch}
-              onChange={(e) => setFriendSearch(e.target.value)}
-              placeholder="Rechercher un ami..."
-              className="mb-3 w-full rounded-lg border border-white/10 bg-[#050B1C]/70 px-3 py-2 text-sm text-white placeholder-white/40 outline-none focus:border-[#3EA6FF]/60"
+              onChange={setFriendSearch}
+              placeholder="Rechercher un ami…"
+              inputType="search"
             />
 
             <div className="max-h-56 space-y-2 overflow-y-auto pr-1">

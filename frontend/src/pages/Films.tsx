@@ -81,17 +81,17 @@ export function Films() {
       {/* PAGE HEADER + STICKY FILTERS */}
       <section className="mx-auto max-w-7xl px-6 md:px-12 pt-20">
         <div className="mb-6 flex flex-col gap-2">
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight">{titleLabel}</h1>
+          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">{titleLabel}</h1>
           <p className="text-white/60">{subtitleLabel}</p>
         </div>
 
         {/* Sticky group: Search + Category pills */}
         <div className="sticky top-4 z-30 space-y-3">
-          <div className="films-search-shell rounded-2xl border border-white/10 bg-[#0A132D]/80 p-2 shadow-2xl backdrop-blur-xl md:p-4">
+          <div className="films-search-shell rounded-lg border border-white/10 bg-[#0A132D]/70 px-2 py-1.5 shadow-md backdrop-blur-md md:px-3 md:py-2">
             <SearchBar
               value={query}
               onChange={setQuery}
-              placeholder="Rechercher des films, séries, réalisateurs, genres…"
+              placeholder="Rechercher un film, une série ou un réalisateur…"
             />
           </div>
 
@@ -146,7 +146,7 @@ export function Films() {
                 </span>
               </div>
 
-              <h2 className="mb-3 text-3xl font-black">Votre catalogue est vide</h2>
+              <h2 className="mb-3 text-3xl font-semibold">Votre catalogue est vide</h2>
               <p className="mb-8 text-base md:text-lg leading-relaxed text-white/60">
                 Recherchez un film avec la barre ci-dessus pour le trouver dans la base de données.
               </p>
@@ -180,7 +180,7 @@ export function Films() {
           {!hasNoResults && !isCatalogEmpty && list.length > 0 && (
             <section className="mx-auto max-w-7xl px-6 md:px-12 mt-10 pb-24">
               <div className="mb-5 flex items-end justify-between gap-4">
-                <h3 className="text-xl md:text-2xl font-black">
+                <h3 className="text-xl md:text-2xl font-semibold">
                   {query || category ? "Résultats" : "Tout le catalogue"}
                 </h3>
                 <span className="text-sm font-medium text-white/50">

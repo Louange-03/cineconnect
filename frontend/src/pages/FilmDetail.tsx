@@ -415,7 +415,7 @@ export function FilmDetail() {
                   ) : null}
                 </div>
 
-                <h1 className="mt-4 text-4xl font-black tracking-tight text-white md:text-6xl">
+                <h1 className="mt-4 text-4xl font-semibold tracking-tight text-white md:text-6xl">
                   {film.title}
                 </h1>
 
@@ -454,7 +454,7 @@ export function FilmDetail() {
           <div className="mt-14 grid gap-10 lg:grid-cols-[1fr_400px] pb-24">
             <Reveal as="section">
               <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
-                <h2 className="text-2xl md:text-3xl font-black text-white">Avis</h2>
+                <h2 className="text-2xl md:text-3xl font-semibold text-white">Avis</h2>
 
                 {loadingReviews ? (
                   <div
@@ -504,7 +504,7 @@ export function FilmDetail() {
             </Reveal>
 
             <Reveal as="aside" className="sticky top-24 h-fit rounded-3xl border border-white/10 bg-[#0A132D]/70 p-8 shadow-xl backdrop-blur-xl">
-              <h3 className="mb-2 text-2xl font-black text-white">Donnez votre avis</h3>
+              <h3 className="mb-2 text-2xl font-semibold text-white">Donnez votre avis</h3>
               <p className="mb-8 text-white/60">Partagez votre critique avec la communauté CinéConnect.</p>
               <ReviewForm filmId={resolvedFilmId} />
             </Reveal>

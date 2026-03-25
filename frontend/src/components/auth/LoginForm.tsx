@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react"
 import type { FormEvent } from "react"
 import { login } from "../../lib/auth"
-import { Alert, EyeButton, Field, Input, Spinner } from "./AuthFields"
+import { Alert, EyeButton, Input, Spinner } from "./AuthFields"
 
 interface LoginFormProps {
   onSuccess?: () => void
@@ -13,7 +13,6 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const [showPwd, setShowPwd] = useState(false)
 
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   const canSubmit = useMemo(
@@ -47,21 +46,21 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-5">
-      <div className="space-y-2">
-        <label className="text-sm text-frost/60 uppercase tracking-wider">Email</label>
+    <form onSubmit={onSubmit} className="flex flex-col gap-3">
+      <div className="space-y-1">
+        <label className="text-xs text-frost/60 uppercase tracking-wider">Email</label>
         <input
-          className="w-full rounded-2xl border border-imperial bg-prussian/50 px-6 py-5 text-frost placeholder-frost/40 outline-none transition-all focus:border-ocean focus:bg-prussian focus:shadow-[0_0_30px_rgba(14,107,168,0.2)]"
+          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-frost placeholder-frost/35 outline-none transition focus:border-[#3EA6FF]/40 focus:ring-1 focus:ring-[#1D6CE0]/35"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="votre@email.com"
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm text-frost/60 uppercase tracking-wider">Mot de passe</label>
+      <div className="space-y-1">
+        <label className="text-xs text-frost/60 uppercase tracking-wider">Mot de passe</label>
         <Input
-          className="rounded-2xl border-imperial bg-prussian/50 py-5 text-frost placeholder-frost/40 focus:border-ocean focus:bg-prussian focus:shadow-[0_0_30px_rgba(14,107,168,0.2)]"
+          className="border-imperial bg-prussian/50 pr-10 text-frost placeholder-frost/40"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
@@ -70,22 +69,20 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         />
       </div>
 
-      {error && (
-        <div className="px-5 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="px-5 py-2 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
-          {success}
-        </div>
-      )}
+      {error && <Alert variant="error">{error}</Alert>}
 
       <button
-        className="w-full mt-6 rounded-2xl bg-gradient-to-r from-imperial to-ocean px-6 py-5 font-semibold text-frost transition-all hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(14,107,168,0.4)] disabled:opacity-50 disabled:hover:translate-y-0"
-        disabled={loading}
+        className="w-full mt-1 rounded-lg bg-gradient-to-r from-imperial to-ocean px-4 py-2.5 text-sm font-semibold text-frost shadow-sm transition hover:brightness-110 disabled:opacity-50 disabled:brightness-100"
+        disabled={loading || !canSubmit}
+        type="submit"
       >
-        {loading ? "Connexion en cours..." : "Se connecter"}
+        {loading ? (
+          <span className="inline-flex items-center justify-center gap-2">
+            <Spinner /> Connexion…
+          </span>
+        ) : (
+          "Se connecter"
+        )}
       </button>
     </form>
   )
