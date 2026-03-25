@@ -86,3 +86,16 @@ export async function fetchMe() {
   return data?.user
 }
 
+/** Password reset (forgot/reset password) */
+export async function forgotPassword({ email }: { email: string }) {
+  return apiClient.post<{ message: string; resetUrl?: string }>(
+    '/api/auth/forgot-password',
+    { email },
+    { auth: false }
+  )
+}
+
+export async function resetPassword({ token, password }: { token: string; password: string }) {
+  return apiClient.post<{ message: string }>('/api/auth/reset-password', { token, password }, { auth: false })
+}
+

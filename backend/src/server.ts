@@ -12,6 +12,8 @@ import messagesRoutes from "./routes/messages.routes"
 import conversationsRoutes from "./routes/conversations.routes"
 import { initSocket } from "./socket"
 import { openApiDocument } from "./swagger"
+import { pool } from "./db/client"
+import { ensurePasswordResetSchema } from "./db/ensurePasswordResetSchema.js"
 
 const app = express()
 
@@ -38,10 +40,25 @@ app.use("/api/messages", messagesRoutes)
 app.use("/api/conversations", conversationsRoutes)
 
 const port = Number(process.env.PORT ?? 3007)
-const httpServer = createServer(app)
 
-initSocket(httpServer, FRONTEND_ORIGIN as string)
+async function start() {
+	if (!process.env.DATABASE_URL) {
+		console.error("DATABASE_URL manquant dans l'environnement")
+		process.exit(1)
+	}
 
-httpServer.listen(port, () => {
-	console.log(`API listening on http://localhost:${port}`)
+	await ensurePasswordResetSchema()
+
+	const httpServer = createServer(app)
+	initSocket(httpServer, FRONTEND_ORIGIN as string)
+
+	httpServer.listen(port, () => {
+		console.log(`API listening on http://localhost:${port}`)
+	})
+}
+
+start().catch((err) => {
+	console.error("Impossible de démarrer le serveur:", err)
+	pool.end().catch(() => undefined)
+	process.exit(1)
 })

@@ -13,6 +13,7 @@
     "allowJs": false,
     "checkJs": false
   },
-  "include": ["src/**/*", "drizzle/**/*"],
+  "include": ["src/**/*", "drizzle/**/*", "scripts/**/*"],
   "exclude": ["node_modules"]
 }
+

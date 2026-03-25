@@ -82,7 +82,7 @@ async function seed() {
         try {
             console.log(`Recherche pour: ${title}...`)
             const res = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${OMDB_API_KEY}`);
-            const data = await res.json();
+            const data: any = await res.json();
 
             if (data.Response === "False" || !data.imdbID) {
                 console.log(`❌ Non trouvé: ${title}`)

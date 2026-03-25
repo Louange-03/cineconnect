@@ -24,7 +24,6 @@
     "@tailwindcss/postcss": "^4.2.1",
     "@tanstack/react-devtools": "^0.10.0",
     "@tanstack/react-query-devtools": "^5.91.3",
-    "@tanstack/react-router-devtools": "^1.166.9",
     "@types/node": "^20.5.9",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",

@@ -23,6 +23,11 @@ export function Login() {
         <LoginForm onSuccess={() => {
           navigate({ to: "/profil" })
         }} />
+        <div className="mt-8 text-center">
+          <Link to="/forgot-password" className="text-ocean hover:text-frost transition-colors text-sm">
+            Mot de passe oublié ?
+          </Link>
+        </div>
         <div className="mt-14 pt-10 border-t border-imperial/50 text-center">
           <p className="text-frost/60 text-sm">
             Pas encore de compte ?{" "}
