@@ -29,6 +29,30 @@ const COVERAGE_FILES = [
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/react") || id.includes("node_modules/scheduler")) {
+            return "vendor-react"
+          }
+          if (id.includes("node_modules/@tanstack")) {
+            return "vendor-tanstack"
+          }
+          if (id.includes("node_modules/socket.io-client")) {
+            return "vendor-socket"
+          }
+          if (id.includes("node_modules/lucide-react")) {
+            return "vendor-icons"
+          }
+          if (id.includes("node_modules")) {
+            return "vendor"
+          }
+          return undefined
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       react: path.resolve(__dirname, "node_modules/react"),
