@@ -13,6 +13,8 @@ import { Films } from "./pages/Films"
 import { FilmDetail } from "./pages/FilmDetail"
 import { Login } from "./pages/Login"
 import { Register } from "./pages/Register"
+import { ForgotPassword } from "./pages/ForgotPassword"
+import { ResetPassword } from "./pages/ResetPassword"
 import { Profil } from "./pages/Profil"
 import { Discussion } from "./pages/Discussions"
 import { Amis } from "./pages/Amis"
@@ -82,6 +84,18 @@ export const registerRoute = createRoute({
   component: Register,
 })
 
+export const forgotPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/forgot-password",
+  component: ForgotPassword,
+})
+
+export const resetPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/reset-password/$token",
+  component: ResetPassword,
+})
+
 export const profilRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/profil",
@@ -124,6 +138,8 @@ export const routeTree = rootRoute.addChildren([
   filmDetailRoute,
   loginRoute,
   registerRoute,
+  forgotPasswordRoute,
+  resetPasswordRoute,
   profilRoute,
   discussionRoute,
   amisRoute,

@@ -1,10 +1,13 @@
 import React, { useMemo } from "react"
 import { useNavigate, useParams } from "@tanstack/react-router"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import type { Film } from "../types"
 import { ReviewForm } from "../components/reviews/ReviewForm"
 import { ReviewCard } from "../components/reviews/ReviewCard"
 import { useReviews } from "../hooks/useReviews"
+import { Reveal } from "../components/ui/Reveal"
+import { getToken, getUser } from "../lib/auth"
+import type { Review } from "../types"
 
 /** small JSON fetch wrapper that throws useful errors */
 async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
@@ -20,10 +23,10 @@ async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> 
     try {
       if (contentType.includes("application/json")) {
         const json = JSON.parse(text)
-        throw new Error(json?.message || "Erreur serveur")
+        throw new Error(json?.message ?? "Film introuvable")
       }
-    } catch {
-      // ignore parsing error
+    } catch (e) {
+      if (e instanceof Error) throw e
     }
     throw new Error("Film introuvable")
   }
@@ -55,10 +58,15 @@ function MiniToast({ message }: { message: string }) {
 }
 
 export function FilmDetail() {
+  const qc = useQueryClient()
   const { id } = useParams({ from: "/film/$id" })
   const navigate = useNavigate()
 
   const [toast, setToast] = React.useState<string | null>(null)
+  const [resolvedFilmId, setResolvedFilmId] = React.useState(id)
+  const [isFavorite, setIsFavorite] = React.useState(false)
+  const [favoriteBusy, setFavoriteBusy] = React.useState(false)
+  const currentUserId = getUser()?.id ?? null
   function showToast(msg: string) {
     setToast(msg)
     window.setTimeout(() => setToast(null), 1600)
@@ -73,7 +81,7 @@ export function FilmDetail() {
     enabled: !!id,
   })
 
-  const { data: reviews, isLoading: loadingReviews } = useReviews(id)
+  const { data: reviews, isLoading: loadingReviews } = useReviews(resolvedFilmId)
 
   const poster = useMemo(() => safePosterUrl(film?.posterUrl), [film?.posterUrl])
 
@@ -81,6 +89,208 @@ export function FilmDetail() {
     film?.year === null || film?.year === undefined || String(film?.year ?? "").trim() === ""
       ? null
       : String(film?.year)
+
+  const onShare = async () => {
+    const url = window.location.href
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: film?.title ?? "Film", url })
+        showToast("Partagé ✅")
+      } else {
+        await navigator.clipboard.writeText(url)
+        showToast("Lien copié ✅")
+      }
+    } catch {
+      // ignore cancel/errors
+    }
+  }
+
+  const ensureFilmInDb = React.useCallback(
+    async (token: string): Promise<string> => {
+      if (!/^tt\d+$/i.test(resolvedFilmId)) return resolvedFilmId
+
+      const imported = await fetch("/api/films/import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ imdbID: resolvedFilmId }),
+      })
+
+      const contentType = imported.headers.get("content-type") || ""
+      const text = await imported.text()
+      const json = contentType.includes("application/json") && text ? JSON.parse(text) : null
+      if (!imported.ok) {
+        throw new Error(json?.message || "Impossible d'importer le film")
+      }
+
+      const nextId = String(json?.film?.id || resolvedFilmId)
+      setResolvedFilmId(nextId)
+      return nextId
+    },
+    [resolvedFilmId]
+  )
+
+  const onWatchlist = () => {
+    void (async () => {
+      if (!resolvedFilmId || favoriteBusy) return
+      const token = getToken()
+      if (!token) {
+        showToast("Connecte-toi pour gérer ta liste.")
+        return
+      }
+
+      const next = !isFavorite
+      setFavoriteBusy(true)
+      try {
+        const targetFilmId = await ensureFilmInDb(token)
+        const res = await fetch(`/api/users/me/favorites/${targetFilmId}`, {
+          method: next ? "POST" : "DELETE",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        const contentType = res.headers.get("content-type") || ""
+        const text = await res.text()
+        const json = contentType.includes("application/json") && text ? JSON.parse(text) : null
+        if (!res.ok) {
+          throw new Error(json?.message || "Impossible de modifier la liste")
+        }
+        setIsFavorite(next)
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("favorites-changed"))
+        }
+        showToast(next ? "Ajouté à ma liste ✅" : "Retiré de ma liste ✅")
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Erreur liste"
+        showToast(msg)
+      } finally {
+        setFavoriteBusy(false)
+      }
+    })()
+  }
+
+  const deleteMyReview = (reviewId: string) => {
+    void (async () => {
+      const token = getToken()
+      if (!token) {
+        showToast("Connecte-toi pour gerer tes avis.")
+        return
+      }
+      try {
+        const res = await fetch(`/api/reviews/${reviewId}`, {
+          method: "DELETE",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        if (!res.ok) throw new Error("Suppression impossible")
+        await qc.invalidateQueries({ queryKey: ["reviews", resolvedFilmId] })
+        showToast("Avis supprime ✅")
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Erreur suppression avis"
+        showToast(msg)
+      }
+    })()
+  }
+
+  const editMyReview = (review: Review) => {
+    const nextRatingRaw = window.prompt(
+      "Nouvelle note (1 a 5)",
+      String(review.rating ?? 0)
+    )
+    if (nextRatingRaw === null) return
+    const nextRating = Number(nextRatingRaw)
+    if (!Number.isFinite(nextRating) || nextRating < 1 || nextRating > 5) {
+      showToast("Note invalide (1 a 5).")
+      return
+    }
+    const nextComment = window.prompt(
+      "Modifier votre commentaire",
+      review.comment ?? ""
+    )
+    if (nextComment === null) return
+
+    void (async () => {
+      const token = getToken()
+      if (!token) {
+        showToast("Connecte-toi pour modifier ton avis.")
+        return
+      }
+      try {
+        const res = await fetch(`/api/reviews/${review.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            rating: Math.round(nextRating),
+            comment: nextComment,
+          }),
+        })
+        if (!res.ok) throw new Error("Modification impossible")
+        await qc.invalidateQueries({ queryKey: ["reviews", resolvedFilmId] })
+        showToast("Avis modifie ✅")
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Erreur modification avis"
+        showToast(msg)
+      }
+    })()
+  }
+
+  React.useEffect(() => {
+    setResolvedFilmId(id)
+  }, [id])
+
+  React.useEffect(() => {
+    if (!/^tt\d+$/i.test(resolvedFilmId)) return
+    const token = getToken()
+    if (!token) return
+    void ensureFilmInDb(token).catch(() => {
+      // Keep page usable even if import fails; actions will show explicit errors.
+    })
+  }, [resolvedFilmId, ensureFilmInDb])
+
+  React.useEffect(() => {
+    let cancelled = false
+
+    async function syncFavoriteState() {
+      if (!resolvedFilmId) return
+      const token = getToken()
+      if (!token) {
+        if (!cancelled) setIsFavorite(false)
+        return
+      }
+      try {
+        const res = await fetch("/api/users/me/favorites", {
+          headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        const list = Array.isArray(data?.favorites) ? data.favorites : []
+        const found = list.some((f: { id?: string }) => f?.id === resolvedFilmId)
+        if (!cancelled) setIsFavorite(found)
+      } catch {
+        if (!cancelled) setIsFavorite(false)
+      }
+    }
+
+    void syncFavoriteState()
+    const refresh = () => void syncFavoriteState()
+    window.addEventListener("favorites-changed", refresh)
+    window.addEventListener("focus", refresh)
+    return () => {
+      cancelled = true
+      window.removeEventListener("favorites-changed", refresh)
+      window.removeEventListener("focus", refresh)
+    }
+  }, [resolvedFilmId])
 
   if (isLoading) {
     return (
@@ -118,26 +328,6 @@ export function FilmDetail() {
         </div>
       </main>
     )
-  }
-
-  const onShare = async () => {
-    const url = window.location.href
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: film.title, url })
-        showToast("Partagé ✅")
-      } else {
-        await navigator.clipboard.writeText(url)
-        showToast("Lien copié ✅")
-      }
-    } catch {
-      // ignore cancel/errors
-    }
-  }
-
-  const onWatchlist = () => {
-    // À brancher plus tard sur ton endpoint (watchlist/favorites)
-    showToast("Ajout à ma liste : à connecter ✅")
   }
 
   return (
@@ -192,8 +382,9 @@ export function FilmDetail() {
           </div>
 
           {/* MAIN CARD */}
-          <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#0A132D]/65 shadow-2xl backdrop-blur-xl">
-            <div className="grid gap-0 md:grid-cols-[380px_1fr]">
+          <Reveal>
+            <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#0A132D]/65 shadow-2xl backdrop-blur-xl">
+              <div className="grid gap-0 md:grid-cols-[380px_1fr]">
               {/* Poster */}
               <div className="p-4 md:p-6">
                 <div className="aspect-[2/3] overflow-hidden rounded-2xl bg-black/20 shadow-[0_10px_30px_rgba(0,0,0,0.75)]">
@@ -224,7 +415,7 @@ export function FilmDetail() {
                   ) : null}
                 </div>
 
-                <h1 className="mt-4 text-4xl font-black tracking-tight text-white md:text-6xl">
+                <h1 className="mt-4 text-4xl font-semibold tracking-tight text-white md:text-6xl">
                   {film.title}
                 </h1>
 
@@ -240,9 +431,10 @@ export function FilmDetail() {
                   <button
                     type="button"
                     onClick={onWatchlist}
-                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] px-8 py-4 font-bold text-white transition transform hover:-translate-y-1 hover:brightness-110 shadow-[0_0_20px_rgba(29,108,224,0.35)]"
+                    disabled={favoriteBusy}
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] px-8 py-4 font-bold text-white transition transform hover:-translate-y-1 hover:brightness-110 shadow-[0_0_20px_rgba(29,108,224,0.35)] disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Ajouter à ma liste
+                    {isFavorite ? "Retirer de ma liste" : "Ajouter à ma liste"}
                   </button>
 
                   <button
@@ -255,13 +447,14 @@ export function FilmDetail() {
                 </div>
               </div>
             </div>
-          </section>
+            </section>
+          </Reveal>
 
           {/* REVIEWS */}
           <div className="mt-14 grid gap-10 lg:grid-cols-[1fr_400px] pb-24">
-            <section>
+            <Reveal as="section">
               <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
-                <h2 className="text-2xl md:text-3xl font-black text-white">Avis</h2>
+                <h2 className="text-2xl md:text-3xl font-semibold text-white">Avis</h2>
 
                 {loadingReviews ? (
                   <div
@@ -276,9 +469,29 @@ export function FilmDetail() {
                 )}
               </div>
 
+              <p className="mb-5 text-sm text-white/60">
+                Retrouvez ici les avis laisses par les autres personnes de la communaute.
+              </p>
+
               <div className="space-y-6">
                 {reviews && reviews.length > 0 ? (
-                  reviews.map((r) => <ReviewCard key={r.id} review={r} />)
+                  reviews.map((r) => (
+                    <ReviewCard
+                      key={r.id}
+                      review={r}
+                      isMine={Boolean(currentUserId && r.userId === currentUserId)}
+                      onEdit={
+                        currentUserId && r.userId === currentUserId
+                          ? () => editMyReview(r)
+                          : undefined
+                      }
+                      onDelete={
+                        currentUserId && r.userId === currentUserId
+                          ? () => deleteMyReview(r.id)
+                          : undefined
+                      }
+                    />
+                  ))
                 ) : (
                   <div className="rounded-3xl border border-white/10 border-dashed bg-white/5 p-12 text-center">
                     <span className="mb-4 block text-5xl opacity-50">⭐</span>
@@ -288,13 +501,13 @@ export function FilmDetail() {
                   </div>
                 )}
               </div>
-            </section>
+            </Reveal>
 
-            <aside className="sticky top-24 h-fit rounded-3xl border border-white/10 bg-[#0A132D]/70 p-8 shadow-xl backdrop-blur-xl">
-              <h3 className="mb-2 text-2xl font-black text-white">Donnez votre avis</h3>
+            <Reveal as="aside" className="sticky top-24 h-fit rounded-3xl border border-white/10 bg-[#0A132D]/70 p-8 shadow-xl backdrop-blur-xl">
+              <h3 className="mb-2 text-2xl font-semibold text-white">Donnez votre avis</h3>
               <p className="mb-8 text-white/60">Partagez votre critique avec la communauté CinéConnect.</p>
-              <ReviewForm filmId={id} />
-            </aside>
+              <ReviewForm filmId={resolvedFilmId} />
+            </Reveal>
           </div>
         </div>
       </div>

@@ -2,8 +2,6 @@ import React, { useMemo, useState } from "react"
 import { useFilms } from "../hooks/useFilms"
 import { useCategories } from "../hooks/useCategories"
 import { SearchBar } from "../components/films/SearchBar"
-import { OmdbImportPanel } from "../components/films/OmdbImportPanel"
-import { HeroFeature } from "../components/films/HeroFeature"
 import { CategoryPills } from "../components/films/CategoryPills"
 import { FilmCard } from "../components/films/FilmCard"
 import type { Film } from "../types"
@@ -11,14 +9,57 @@ import type { Film } from "../types"
 export function Films() {
   const [query, setQuery] = useState("")
   const [category, setCategory] = useState("")
+  const hasSearchQuery = query.trim() !== ""
+  const effectiveCategory = hasSearchQuery ? "" : category
 
   const { data: categories = [], isLoading: loadingCategories } = useCategories()
-  const { data: films, isLoading, error } = useFilms(query, category, "")
+  const { data: films, isLoading, error } = useFilms(query, effectiveCategory, "")
 
-  const list = useMemo<Film[]>(
-    () => (Array.isArray(films) ? (films as Film[]) : []),
-    [films]
-  )
+  const filteredCategories = useMemo(() => {
+    const byName = new Map(
+      categories.map((c) => [c.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""), c] as const)
+    )
+
+    const preferredGroups = [
+      ["action", "actio"],
+      ["drama", "drame", "drames"],
+      ["movie", "movies", "film", "films"],
+      ["animation", "annimation"],
+      ["comedie", "comedy"],
+      ["serie", "series"],
+      ["horreur", "horror", "horeur"],
+      ["family", "famamily", "familial"],
+    ]
+
+    const picked: typeof categories = []
+    const added = new Set<string>()
+
+    for (const group of preferredGroups) {
+      const found = group
+        .map((key) => byName.get(key))
+        .find((cat): cat is (typeof categories)[number] => Boolean(cat))
+      if (found && !added.has(found.id)) {
+        picked.push(found)
+        added.add(found.id)
+      }
+    }
+
+    return picked
+  }, [categories])
+
+  const list = useMemo<Film[]>(() => {
+    const base = Array.isArray(films) ? (films as Film[]) : []
+    if (!category || hasSearchQuery) return base
+
+    const normalize = (v: string) =>
+      v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    const selected = normalize(category)
+
+    // Filtrage strict côté UI pour garantir que seule la catégorie choisie s'affiche.
+    return base.filter((film) =>
+      (film.categories ?? []).some((c) => normalize(c) === selected)
+    )
+  }, [films, category, hasSearchQuery])
 
   const isBusy = isLoading || loadingCategories
 
@@ -28,16 +69,6 @@ export function Films() {
   const isCatalogEmpty =
     !isBusy && !error && list.length === 0 && query.trim() === "" && category === ""
 
-  const canImportFromOmdb = query.trim().length >= 3
-
-  const featuredFilm = useMemo(() => {
-    if (list.length === 0) return undefined
-    return list.find((f) => typeof f.posterUrl === "string" && f.posterUrl.trim() !== "") ?? list[0]
-  }, [list])
-
-  const showHero =
-    !isBusy && !error && !!featuredFilm && query.trim() === "" && category === ""
-
   const titleLabel = query || category ? "Recherche" : "Catalogue"
   const subtitleLabel = query
     ? `Résultats pour “${query.trim()}”`
@@ -46,42 +77,41 @@ export function Films() {
       : "Explore tous les films & séries disponibles"
 
   return (
-    <main className="min-h-screen bg-[#050B1C] text-white pb-24">
-      {/* HERO */}
-      {showHero && featuredFilm && <HeroFeature film={featuredFilm} />}
-
+    <main className="films-page min-h-screen bg-[#050B1C] text-white pb-24">
       {/* PAGE HEADER + STICKY FILTERS */}
-      <section
-        className={[
-          "mx-auto max-w-7xl px-6 md:px-12",
-          showHero ? "-mt-10 relative z-20" : "pt-20",
-        ].join(" ")}
-      >
+      <section className="mx-auto max-w-7xl px-6 md:px-12 pt-20">
         <div className="mb-6 flex flex-col gap-2">
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight">{titleLabel}</h1>
+          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">{titleLabel}</h1>
           <p className="text-white/60">{subtitleLabel}</p>
         </div>
 
         {/* Sticky group: Search + Category pills */}
         <div className="sticky top-4 z-30 space-y-3">
-          <div className="rounded-2xl border border-white/10 bg-[#0A132D]/80 p-2 shadow-2xl backdrop-blur-xl md:p-4">
+          <div className="films-search-shell rounded-lg border border-white/10 bg-[#0A132D]/70 px-2 py-1.5 shadow-md backdrop-blur-md md:px-3 md:py-2">
             <SearchBar
               value={query}
               onChange={setQuery}
-              placeholder="Rechercher des films, séries, réalisateurs, genres…"
+              placeholder="Rechercher un film, une série ou un réalisateur…"
             />
           </div>
 
           {!isCatalogEmpty && (
-            <div className="rounded-2xl border border-white/10 bg-[#0A132D]/70 p-2 backdrop-blur-xl">
+            <div className="films-category-shell rounded-2xl border border-white/10 bg-[#0A132D]/70 p-2 backdrop-blur-xl">
               <CategoryPills
-                categories={categories}
+                categories={filteredCategories}
                 selectedCategory={category}
                 onCategoryChange={setCategory}
               />
             </div>
           )}
         </div>
+
+        {isCatalogEmpty && (
+          <div className="mt-8 rounded-2xl border border-white/10 bg-[#0A132D]/60 p-6 text-center text-white/70">
+            Aucun film trouvé pour le moment. Vérifie que tes films sont bien ajoutés en base,
+            puis recharge la page.
+          </div>
+        )}
       </section>
 
       {/* LOADING */}
@@ -116,42 +146,21 @@ export function Films() {
                 </span>
               </div>
 
-              <h2 className="mb-3 text-3xl font-black">Votre catalogue est vide</h2>
+              <h2 className="mb-3 text-3xl font-semibold">Votre catalogue est vide</h2>
               <p className="mb-8 text-base md:text-lg leading-relaxed text-white/60">
-                Recherchez un film avec la barre ci-dessus pour commencer à remplir votre base locale
-                (import OMDb).
+                Recherchez un film avec la barre ci-dessus pour le trouver dans la base de données.
               </p>
-
-              {canImportFromOmdb ? (
-                <div className="text-left">
-                  <OmdbImportPanel initialQuery={query} />
-                </div>
-              ) : (
-                <div className="text-white/40">
-                  Tape au moins 3 caractères pour activer l’import OMDb.
-                </div>
-              )}
             </section>
           )}
 
           {/* NO RESULTS */}
           {hasNoResults && (
             <section className="mx-auto mt-10 max-w-2xl px-6 text-center">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-8">
+              <div className="films-empty-shell rounded-2xl border border-white/10 bg-white/5 p-8">
                 <p className="text-lg text-white/70">
-                  Aucun film local trouvé pour{" "}
+                  Aucun film trouvé pour{" "}
                   <span className="font-bold text-[#3EA6FF]">“{query.trim() || category}”</span>
                 </p>
-
-                {canImportFromOmdb ? (
-                  <div className="mt-6 text-left">
-                    <OmdbImportPanel initialQuery={query} />
-                  </div>
-                ) : (
-                  <div className="mt-6 text-white/40">
-                    Tape au moins 3 caractères pour rechercher sur OMDb…
-                  </div>
-                )}
 
                 <button
                   type="button"
@@ -171,7 +180,7 @@ export function Films() {
           {!hasNoResults && !isCatalogEmpty && list.length > 0 && (
             <section className="mx-auto max-w-7xl px-6 md:px-12 mt-10 pb-24">
               <div className="mb-5 flex items-end justify-between gap-4">
-                <h3 className="text-xl md:text-2xl font-black">
+                <h3 className="text-xl md:text-2xl font-semibold">
                   {query || category ? "Résultats" : "Tout le catalogue"}
                 </h3>
                 <span className="text-sm font-medium text-white/50">
@@ -180,8 +189,14 @@ export function Films() {
               </div>
 
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:gap-6">
-                {list.map((film) => (
-                  <FilmCard key={film.id} film={film} />
+                {list.map((film, idx) => (
+                  <div
+                    key={film.id}
+                    className="cine-card-enter"
+                    style={{ ["--stagger" as any]: `${Math.min(idx * 22, 260)}ms` }}
+                  >
+                    <FilmCard film={film} />
+                  </div>
                 ))}
               </div>
             </section>

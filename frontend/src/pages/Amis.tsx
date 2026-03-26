@@ -4,20 +4,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { FriendCard } from "../components/friends/FriendCard"
 import { FriendRequestCard } from "../components/friends/FriendRequestCard"
+import { getToken } from "../lib/auth"
 
 
 type Friend = {
   id: string
   username: string
-  email: string
+  email?: string
 }
 
 type FriendRequest = {
   friendshipId: string
   fromUserId: string
   fromUsername: string
-  email: string
-  sentAt: string
+  email?: string
+  sentAt?: string
+  createdAt?: string
 }
 
 type FriendsResponse = {
@@ -30,12 +32,13 @@ type RequestsResponse = {
 
 // --- Fetch ---
 
-const API = "http://localhost:3007/api"
+const API = "/api"
 
 function authHeader(): HeadersInit {
+  const token = getToken()
   return {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${localStorage.getItem("cineconnect_token")}`,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
 }
 
@@ -77,7 +80,16 @@ async function deleteFriend(userId: string): Promise<void> {
   if (!res.ok) throw new Error("Erreur suppression")
 }
 
-export function Amis(): JSX.Element {
+async function startConversation(userId: string): Promise<void> {
+  const res = await fetch(`${API}/messages/start`, {
+    method: "POST",
+    headers: authHeader(),
+    body: JSON.stringify({ userId }),
+  })
+  if (!res.ok) throw new Error("Erreur création conversation")
+}
+
+export function Amis() {
   const queryClient = useQueryClient()
 
   const { data: friendsData } = useQuery({
@@ -100,7 +112,11 @@ export function Amis(): JSX.Element {
   }
 
   const acceptMutation = useMutation({
-    mutationFn: postAccept,
+    mutationFn: async (userId: string) => {
+      await postAccept(userId)
+      // Prépare la discussion juste après acceptation
+      await startConversation(userId)
+    },
     onSuccess: invalidate,
   })
 
@@ -115,28 +131,34 @@ export function Amis(): JSX.Element {
   })
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <main className="friends-page min-h-screen bg-[#050B1C] px-4 pb-20 pt-24 text-white md:px-10">
+      <div className="mx-auto max-w-6xl space-y-8">
+      <header className="friends-hero border-b border-white/10 pb-8">
+        <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#3EA6FF]/80">Réseau</p>
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Mes amis</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Gère tes amis et tes demandes.
+          <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Mes amis</h1>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/60">
+            Demandes entrantes et liste — même écran qu’une fiche de salle, sans fioritures.
           </p>
         </div>
 
         <Link
           to="/utilisateurs"
-          className="rounded border px-3 py-2 text-sm hover:bg-slate-50"
+          className="inline-flex items-center gap-2 rounded-sm border border-[#3EA6FF]/50 bg-[#0A132D] px-4 py-2.5 text-sm font-semibold text-[#3EA6FF] transition hover:border-[#3EA6FF] hover:bg-[#1D6CE0]/15"
         >
-          Trouver des utilisateurs
+          <span aria-hidden>＋</span> Trouver du monde
         </Link>
       </div>
+      </header>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Demandes reçues</h2>
+      <section className="friends-panel space-y-4 border-l-2 border-[#007BFF]/80 bg-[#0A132D]/35 pl-4 md:pl-5">
+        <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">Demandes reçues</h2>
 
         {requests.length === 0 ? (
-          <p className="text-slate-600">Aucune demande en attente.</p>
+          <p className="border border-dashed border-white/15 bg-white/[0.03] px-4 py-4 text-sm text-white/55">
+            Rien en attente pour l’instant.
+          </p>
         ) : (
           <div className="space-y-3">
             {requests.map((r) => (
@@ -151,23 +173,35 @@ export function Amis(): JSX.Element {
         )}
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Amis</h2>
+      <section className="friends-panel space-y-4 border-l-2 border-white/20 bg-[#0A132D]/35 pl-4 md:pl-5">
+        <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">Ta liste</h2>
 
         {friends.length === 0 ? (
-          <p className="text-slate-600">Tu n'as pas encore d'amis.</p>
+          <p className="border border-dashed border-white/15 bg-white/[0.03] px-4 py-4 text-sm text-white/55">
+            Pas encore de contacts — passe par « Trouver du monde ».
+          </p>
         ) : (
           <div className="space-y-3">
             {friends.map((f) => (
               <FriendCard
                 key={f.id}
                 user={f}
+                onChat={(userId) => {
+                  startConversation(userId)
+                    .then(() => {
+                      window.location.href = "/discussion"
+                    })
+                    .catch(() => {
+                      window.location.href = "/discussion"
+                    })
+                }}
                 onRemove={(userId) => removeMutation.mutate(userId)}
               />
             ))}
           </div>
         )}
       </section>
-    </div>
+      </div>
+    </main>
   )
 }

@@ -86,7 +86,7 @@ export function BrandBadge() {
                     />
                 </svg>
             </div>
-            <div className="text-2xl font-black tracking-tight">
+            <div className="text-2xl font-semibold tracking-tight">
                 <span className="text-white">Ciné</span>
                 <span className="text-[#1D6CE0]">Connect</span>
             </div>
@@ -114,7 +114,7 @@ export function UserBadge() {
                     />
                 </svg>
             </div>
-            <div className="text-2xl font-black tracking-tight">
+            <div className="text-2xl font-semibold tracking-tight">
                 <span className="text-white">Créer un</span>
                 <span className="ml-2 text-[#1D6CE0]">Compte</span>
             </div>

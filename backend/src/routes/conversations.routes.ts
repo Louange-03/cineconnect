@@ -20,14 +20,78 @@ function authMiddleware(req: Request, res: Response, next: NextFunction) {
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET as string
-    ) as { id: string; email: string; username: string }
+    ) as { id?: string; userId?: string; email?: string; username?: string }
+    const id = decoded.id ?? decoded.userId
+    if (!id) {
+      return res.status(401).json({ error: "Unauthorized" })
+    }
 
-    req.user = decoded
+    req.user = { ...decoded, id }
     next()
   } catch {
     return res.status(401).json({ error: "Unauthorized" })
   }
 }
+
+router.get("/", authMiddleware, async (req: Request, res: Response) => {
+  const userId = req.user!.id
+
+  try {
+    const result = await pool.query(
+      `
+      SELECT
+        c.id,
+        COALESCE(c.name, other_user.username, 'Inconnu') AS name,
+        other_user.user_id as other_user_id,
+        other_user.avatar_url as avatar_url,
+        c.created_at,
+        c.updated_at,
+        COALESCE(last_msg.text, '') AS last_message,
+        COALESCE(unread_stats.unread_count, 0) AS unread_count
+      FROM conversations c
+      JOIN conversation_members cm ON cm.conversation_id = c.id
+      LEFT JOIN LATERAL (
+        SELECT
+          u.id as user_id,
+          u.username,
+          CONCAT(
+            'https://www.gravatar.com/avatar/',
+            md5(lower(trim(u.email))),
+            '?d=404&s=128'
+          ) as avatar_url
+        FROM conversation_members cm2
+        JOIN users u ON u.id = cm2.user_id
+        WHERE cm2.conversation_id = c.id
+          AND cm2.user_id <> $1
+        ORDER BY u.username ASC
+        LIMIT 1
+      ) other_user ON true
+      LEFT JOIN LATERAL (
+        SELECT m.text, m.created_at
+        FROM messages m
+        WHERE m.conversation_id = c.id
+        ORDER BY m.created_at DESC
+        LIMIT 1
+      ) last_msg ON true
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*)::int AS unread_count
+        FROM messages m2
+        WHERE m2.conversation_id = c.id
+          AND m2.sender_id <> $1
+          AND m2.seen = false
+      ) unread_stats ON true
+      WHERE cm.user_id = $1
+      ORDER BY COALESCE(last_msg.created_at, c.updated_at) DESC
+      `,
+      [userId]
+    )
+
+    res.json(result.rows)
+  } catch (error) {
+    console.error("Get conversations error:", error)
+    res.status(500).json({ error: "Server error" })
+  }
+})
 
 /* =========================
    GET MESSAGES HISTORY

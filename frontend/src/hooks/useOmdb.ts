@@ -13,7 +13,7 @@ export function useOmdbSearch(query: string) {
     queryKey: ["omdb-search", query],
     enabled: query.trim().length >= 3,
     queryFn: async () => {
-      const res = await fetch(`/api/films/tmdb?q=${encodeURIComponent(query)}`, {
+      const res = await fetch(`/api/films/omdb/search?q=${encodeURIComponent(query)}`, {
         headers: { Accept: "application/json" },
       })
       if (!res.ok) throw new Error("Erreur recherche OMDb")

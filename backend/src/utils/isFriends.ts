@@ -8,8 +8,8 @@ export async function isFriend(
     `
     SELECT 1 FROM friendships
     WHERE 
-      ((requester_id = $1 AND receiver_id = $2)
-      OR (requester_id = $2 AND receiver_id = $1))
+      ((requester_id = $1 AND addressee_id = $2)
+      OR (requester_id = $2 AND addressee_id = $1))
       AND status = 'accepted'
     `,
     [userId, otherUserId]

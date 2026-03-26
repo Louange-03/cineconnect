@@ -1,13 +1,12 @@
 import { getToken } from "./auth"
 import type { ApiRequestOptions } from "../types"
 
-// backend listens on 3007 by default; make the fallback match
-const RAW_API_URL = (import.meta.env.VITE_API_URL as string | undefined) || "http://localhost:3007"
-const API_URL = RAW_API_URL.replace(/\/$/, '') // Remove trailing slash if present
-
-if (!import.meta.env.VITE_API_URL) {
-  console.warn("VITE_API_URL not defined, defaulting to http://localhost:3007")
-}
+/**
+ * Si VITE_API_URL est défini, on l'utilise (ex: http://localhost:3001).
+ * Sinon on passe par le proxy Vite avec des chemins relatifs (/api/...).
+ */
+const RAW_API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? ""
+const API_URL = RAW_API_URL.replace(/\/$/, "")
 
 interface RequestOptions {
   method?: string
@@ -23,20 +22,21 @@ async function request<T = any>(path: string, { method = "GET", body, auth = tru
     if (token) headers.Authorization = `Bearer ${token}`
   }
 
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`
   const url = `${API_URL}${normalizedPath}`
-
-  console.log("apiClient request", { url, method, body, auth, headers })
   try {
     const res = await fetch(url, {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
     })
-    console.log("apiClient response status", res.status)
     const text = await res.text()
-    console.log("apiClient response text", text)
-    const data = text ? JSON.parse(text) : null
+    let data: any = null
+    try {
+      data = text ? JSON.parse(text) : null
+    } catch {
+      throw new Error(`Réponse JSON invalide (${res.status}): ${text.slice(0, 120)}`)
+    }
 
     if (!res.ok) {
       throw new Error(data?.message || `Erreur serveur (${res.status})`)
@@ -44,10 +44,8 @@ async function request<T = any>(path: string, { method = "GET", body, auth = tru
 
     return data as T
   } catch (e) {
-    // rethrow with context
-    const err = e as Error
-    console.error("apiClient error", err)
-    throw new Error(err.message || `Failed to fetch ${url}`)
+    if (e instanceof Error) throw e
+    throw new Error(String(e))
   }
 }
 

@@ -5,6 +5,11 @@ const TOKEN_KEY = "cineconnect_token"
 const USER_KEY = "cineconnect_user"
 
 // the API base URL is handled by apiClient; no need for a second constant here
+function notifyAuthChanged() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("auth-changed"))
+  }
+}
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
@@ -12,10 +17,12 @@ export function getToken(): string | null {
 
 export function setToken(token: string) {
   localStorage.setItem(TOKEN_KEY, token)
+  notifyAuthChanged()
 }
 
 export function clearToken() {
   localStorage.removeItem(TOKEN_KEY)
+  notifyAuthChanged()
 }
 
 export function getUser(): User | null {
@@ -25,10 +32,12 @@ export function getUser(): User | null {
 
 export function setUser(user: User) {
   localStorage.setItem(USER_KEY, JSON.stringify(user))
+  notifyAuthChanged()
 }
 
 export function clearUser() {
   localStorage.removeItem(USER_KEY)
+  notifyAuthChanged()
 }
 
 export function isAuthenticated(): boolean {
@@ -38,6 +47,7 @@ export function isAuthenticated(): boolean {
 export function logout() {
   clearToken()
   clearUser()
+  notifyAuthChanged()
 }
 
 /** Auth API */
@@ -74,5 +84,18 @@ export async function fetchMe() {
 
   if (data?.user) setUser(data.user)
   return data?.user
+}
+
+/** Password reset (forgot/reset password) */
+export async function forgotPassword({ email }: { email: string }) {
+  return apiClient.post<{ message: string; resetUrl?: string }>(
+    '/api/auth/forgot-password',
+    { email },
+    { auth: false }
+  )
+}
+
+export async function resetPassword({ token, password }: { token: string; password: string }) {
+  return apiClient.post<{ message: string }>('/api/auth/reset-password', { token, password }, { auth: false })
 }
 

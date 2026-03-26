@@ -1,6 +1,8 @@
 
 import { useState } from "react"
+import { CompactSearchInput } from "../components/ui/CompactSearchInput"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { getToken } from "../lib/auth"
 
 type UserItem = {
   id: string
@@ -27,12 +29,13 @@ type RelationStatus = "ami" | "demande_reçue" | "demande_envoyée" | "none"
 
 // --- Fetch ---
 
-const API = "http://localhost:3007/api"
+const API = "/api"
 
 function authHeader(): HeadersInit {
+  const token = getToken()
   return {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${localStorage.getItem("cineconnect_token")}`,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
 }
 
@@ -146,31 +149,26 @@ export function Utilisateurs() {
     u.username.toLowerCase().includes(search.toLowerCase())
   )
   return (
-    <main className="min-h-screen bg-[#050B1C] text-white pt-24 pb-20 px-6">
+    <main className="users-page min-h-screen bg-[#050B1C] text-white pt-24 pb-20 px-6">
       <div className="mx-auto max-w-4xl space-y-10">
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight drop-shadow-lg text-white">Recherche de copains</h1>
-          <p className="text-lg text-white/60 max-w-lg mx-auto">
-            Trouvez vos amis par leur pseudo et élargissez votre cercle de passionnés.
+        <header className="space-y-2 border-b border-white/10 pb-8">
+          <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#3EA6FF]/80">Foyer</p>
+          <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Qui vient avec vous ?</h1>
+          <p className="max-w-xl text-sm leading-relaxed text-white/60">
+            Filtrez par pseudo. Les cartes sont volontairement simples : nom, mail, statut — comme un registre d’entrée, pas un widget « Assistant ».
           </p>
-        </div>
+        </header>
 
-        <div className="relative group max-w-2xl mx-auto">
-          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-white/40 group-focus-within:text-[#3EA6FF] transition-colors">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-            </svg>
-          </div>
-          <input
-            type="text"
-            placeholder="Rechercher par pseudo..."
+        <div className="max-w-md">
+          <CompactSearchInput
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-full border border-white/20 bg-white/5 py-4 pl-14 pr-6 text-lg text-white placeholder-white/40 shadow-xl backdrop-blur-md outline-none transition-all focus:border-[#3EA6FF] focus:bg-white/10 focus:ring-4 focus:ring-[#3EA6FF]/20"
+            onChange={setSearch}
+            placeholder="Rechercher un pseudo…"
+            inputType="search"
           />
         </div>
 
-        <div className="mt-12 bg-white/5 border border-white/10 rounded-3xl p-6 md:p-10 shadow-2xl backdrop-blur-sm min-h-[400px]">
+        <div className="mt-8 min-h-[400px] border border-white/10 bg-[#0A132D]/25 p-5 md:p-8">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-full text-white/50 space-y-4 pt-20">
               <div className="w-10 h-10 border-4 border-white/20 border-t-[#3EA6FF] rounded-full animate-spin" />
@@ -194,10 +192,10 @@ export function Utilisateurs() {
                 return (
                   <div
                     key={u.id}
-                    className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#0A132D]/50 p-5 shadow-lg backdrop-blur-md transition-all hover:bg-white/10 hover:-translate-y-1 hover:border-white/20"
+                    className="flex items-center justify-between gap-4 border border-white/10 bg-[#050B1C]/80 p-4 md:p-5 transition-colors hover:border-[#3EA6FF]/25"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-lg font-black text-white shadow-inner">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#1D6CE0] to-[#3EA6FF] text-lg font-semibold text-white shadow-inner">
                         {u.username.charAt(0).toUpperCase()}
                       </div>
                       <div className="overflow-hidden">
@@ -262,7 +260,7 @@ function RelationBadge({
   }
 
   if (status === "demande_reçue") {
-    return <span className="shrink-0 rounded-full bg-purple-500/20 px-4 py-2 text-sm font-bold text-purple-400 border border-purple-500/20">À accepter</span>
+    return <span className="shrink-0 rounded-full border border-[#3EA6FF]/30 bg-[#1D6CE0]/20 px-4 py-2 text-sm font-semibold text-[#8cc6ff]">À accepter</span>
   }
 
   if (status === "demande_envoyée") {

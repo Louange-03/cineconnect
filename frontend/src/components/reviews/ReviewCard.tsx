@@ -35,21 +35,32 @@ function formatDate(iso?: string) {
 }
 
 export function ReviewCard({ review, isMine = false, onEdit, onDelete }: Props) {
+  const author = review.username || "Utilisateur"
+  const initial = author.charAt(0).toUpperCase()
+
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-lg">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="font-semibold text-white">
-            {review.username || "Utilisateur"}
-          </p>
-          <div className="mt-2">
-            <Stars value={review.rating} />
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1D6CE0]/25 text-sm font-bold text-[#8cc6ff]">
+            {initial}
           </div>
-          {review.createdAt && (
-            <p className="mt-2 text-xs text-white/50">
-              {formatDate(review.createdAt)}
-            </p>
-          )}
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-white">{author}</p>
+              {isMine ? (
+                <span className="rounded-full border border-[#3EA6FF]/30 bg-[#1D6CE0]/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#8cc6ff]">
+                  Vous
+                </span>
+              ) : null}
+            </div>
+            <div className="mt-1">
+              <Stars value={review.rating} />
+            </div>
+            {review.createdAt && (
+              <p className="mt-1 text-xs text-white/50">{formatDate(review.createdAt)}</p>
+            )}
+          </div>
         </div>
 
         {isMine && (
@@ -72,7 +83,7 @@ export function ReviewCard({ review, isMine = false, onEdit, onDelete }: Props) 
         )}
       </div>
 
-      <div className="mt-4 text-white/75 leading-relaxed">
+      <div className="mt-4 text-white/80 leading-relaxed">
         {review.comment ? (
           <p>{review.comment}</p>
         ) : (

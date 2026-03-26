@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router"
 import { useAuth } from "../hooks/useAuth"
 import { useLocation } from "@tanstack/react-router"
 import axios from "axios"
+import { getToken, logout } from "../lib/auth"
 
 type FavoriteFilm = {
   id: number
@@ -45,14 +46,14 @@ function FilmCard({ film }: FilmCardProps) {
 }
 
 export function Profil() {
+  const API_BASE =
+    (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? ""
   const { user } = useAuth()
   const location = useLocation()
   const message = (location.state as any)?.message as string | undefined
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [favoriteFilms, setFavoriteFilms] = useState<FavoriteFilm[]>([])
   const [avatar, setAvatar] = useState<string | null>(localStorage.getItem("user_avatar"))
-  const [darkMode, setDarkMode] = useState(true)
-  const [emailNotifs, setEmailNotifs] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null)
 
   const showToast = (message: string, type: "success" | "error" | "info" = "success") => {
@@ -70,8 +71,8 @@ export function Profil() {
     }
 
     try {
-      const token = localStorage.getItem("token")
-      await axios.put("http://localhost:3007/api/users/me/password", { password: newPass }, {
+      const token = getToken()
+      await axios.put(`${API_BASE}/api/users/me/password`, { password: newPass }, {
         headers: { Authorization: `Bearer ${token}` }
       })
       showToast("Mot de passe modifié avec succès !", "success")
@@ -83,36 +84,23 @@ export function Profil() {
   const handleDeleteAccount = async () => {
     if (!window.confirm("C'est définitif. Êtes-vous ABSOLUMENT sûr de vouloir supprimer votre compte ?")) return
     try {
-      const token = localStorage.getItem("token")
-      await axios.delete("http://localhost:3007/api/users/me", {
+      const token = getToken()
+      await axios.delete(`${API_BASE}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      localStorage.removeItem("token")
+      logout()
       window.location.href = "/register"
     } catch {
       showToast("Opération impossible à cause des données liées.", "error")
     }
   }
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode)
-    if (darkMode) {
-      showToast("Le mode clair n'est pas disponible : l'expérience premium CinéConnect est conçue pour l'obscurité.", "info")
-      setTimeout(() => setDarkMode(true), 1500)
-    }
-  }
-
-  const toggleNotifs = () => {
-    setEmailNotifs(!emailNotifs)
-    showToast(`Les notifications par email sont maintenant ${!emailNotifs ? 'activées' : 'désactivées'}.`, "success")
-  }
-
   useEffect(() => {
     const fetchFavs = async () => {
       try {
-        const token = localStorage.getItem("token")
+        const token = getToken()
         if (!token) return
-        const res = await axios.get("http://localhost:3007/api/users/me/favorites", {
+        const res = await axios.get(`${API_BASE}/api/users/me/favorites`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         setFavoriteFilms(res.data.favorites)
@@ -121,7 +109,10 @@ export function Profil() {
       }
     }
     fetchFavs()
-  }, [])
+    const onFavoritesChanged = () => fetchFavs()
+    window.addEventListener("favorites-changed", onFavoritesChanged)
+    return () => window.removeEventListener("favorites-changed", onFavoritesChanged)
+  }, [API_BASE])
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -157,7 +148,7 @@ export function Profil() {
   return (
     <main className="min-h-screen bg-[#050B1C] text-white pb-20">
       {/* Banner Area */}
-      <div className="h-64 md:h-80 w-full bg-gradient-to-br from-[#1D6CE0]/40 via-[#0A132D] to-purple-900/40 relative">
+      <div className="h-64 md:h-80 w-full bg-gradient-to-br from-[#1D6CE0]/40 via-[#0A132D] to-[#050B1C] relative">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#050B1C] to-transparent"></div>
       </div>
@@ -166,7 +157,7 @@ export function Profil() {
         {/* User Profile Header section */}
         <div className="rounded-3xl border border-white/10 bg-[#0A132D]/80 backdrop-blur-xl p-8 shadow-2xl flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
           <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
-            <div className="relative group h-32 w-32 shrink-0 rounded-full border-4 border-[#050B1C] bg-gradient-to-br from-[#1D6CE0] to-[#3EA6FF] flex items-center justify-center text-5xl font-black text-white shadow-xl overflow-hidden">
+            <div className="relative group h-32 w-32 shrink-0 rounded-full border-4 border-[#050B1C] bg-gradient-to-br from-[#1D6CE0] to-[#3EA6FF] flex items-center justify-center text-5xl font-semibold text-white shadow-xl overflow-hidden">
               {avatar ? (
                 <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
@@ -182,7 +173,7 @@ export function Profil() {
               </label>
             </div>
             <div className="space-y-1 mb-2">
-              <h1 className="text-4xl font-black tracking-tight text-white shadow-sm">
+              <h1 className="text-4xl font-semibold tracking-tight text-white shadow-sm">
                 {user.username}
               </h1>
               <p className="text-lg text-[#3EA6FF] font-medium">{user.email}</p>
@@ -308,34 +299,6 @@ export function Profil() {
               </div>
               <hr className="border-white/10" />
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-[#3EA6FF]">Préférences</h3>
-                <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl p-4">
-                  <div>
-                    <p className="font-medium text-white/90">Mode sombre</p>
-                    <p className="text-xs text-white/50">L'interface est toujours magnifique en sombre.</p>
-                  </div>
-                  <div
-                    className={`w-11 h-6 rounded-full relative cursor-pointer shadow-inner transition-colors duration-300 ${darkMode ? 'bg-[#1D6CE0]' : 'bg-white/20'}`}
-                    onClick={toggleDarkMode}
-                  >
-                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${darkMode ? 'left-6' : 'left-1'}`}></div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl p-4">
-                  <div>
-                    <p className="font-medium text-white/90">Notifications par email</p>
-                    <p className="text-xs text-white/50">Recevoir les actualités et recommandations.</p>
-                  </div>
-                  <div
-                    className={`w-11 h-6 rounded-full relative cursor-pointer shadow-inner transition-colors duration-300 ${emailNotifs ? 'bg-[#1D6CE0]' : 'bg-white/20'}`}
-                    onClick={toggleNotifs}
-                  >
-                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${emailNotifs ? 'left-6' : 'left-1'}`}></div>
-                  </div>
-                </div>
-              </div>
-              <hr className="border-white/10" />
-              <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-red-400">Sécurité & Compte</h3>
                 <div className="space-y-3">
                   <button type="button" onClick={handleChangePassword} className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 transition-colors border border-white/10 rounded-xl p-4 text-left font-medium text-white/90 group">
@@ -344,7 +307,7 @@ export function Profil() {
                       <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                     </svg>
                   </button>
-                  <button type="button" onClick={() => { localStorage.removeItem("token"); window.location.href = "/login" }} className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 transition-colors border border-white/10 rounded-xl p-4 text-left font-medium text-white/90 group">
+                  <button type="button" onClick={() => { logout(); window.location.href = "/login" }} className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 transition-colors border border-white/10 rounded-xl p-4 text-left font-medium text-white/90 group">
                     Changer de compte (Déconnexion)
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#3EA6FF]" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />

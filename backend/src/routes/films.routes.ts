@@ -2,9 +2,12 @@ import { Router } from "express"
 import { db } from "../db"
 import { films, filmCategories, categories } from "../db/schema"
 import { eq, ilike, inArray, and, type SQL } from "drizzle-orm"
-import { getFilmById } from "../controllers/films.controller" // Ajouté
+import { getFilmById, searchOmdb, importFilmFromOmdb } from "../controllers/films.controller"
+import { authMiddleware } from "../middlewares/auth"
+import type { InferSelectModel } from "drizzle-orm"
 
 export const filmsRoutes = Router()
+type FilmRow = InferSelectModel<typeof films>
 
 
 
@@ -66,7 +69,8 @@ filmsRoutes.get("/", async (req, res) => {
     // Now manually attach categories (since SQLite/PG array_agg can be tricky to type cleanly with simple select)
     // We can do a second query to get all categories for the returning films
     const filmIds = resultFilms.map(f => f.id);
-    let filmsWithCategories: any[] = resultFilms.map(f => ({ ...f, categories: [] as string[] }));
+    let filmsWithCategories: Array<FilmRow & { categories: string[] }> =
+      resultFilms.map((f) => ({ ...f, categories: [] as string[] }))
 
     if (filmIds.length > 0) {
       const allLinks = await db
@@ -107,5 +111,9 @@ filmsRoutes.get("/categories", async (_req, res) => {
     res.status(500).json({ message: "Erreur récupération catégories" })
   }
 })
+
+// Recherche OMDb (externe) pour l’import — avant /:id
+filmsRoutes.get("/omdb/search", searchOmdb)
+filmsRoutes.post("/import", authMiddleware, importFilmFromOmdb)
 
 filmsRoutes.get("/:id", getFilmById)

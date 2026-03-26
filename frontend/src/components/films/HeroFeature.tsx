@@ -77,7 +77,7 @@ export function HeroFeature({ film }: HeroFeatureProps) {
 
         {/* Title (cliquable, mieux qu’un overlay global) */}
         <Link to="/film/$id" params={{ id: film.id }} className="inline-block">
-          <h1 className="max-w-4xl text-5xl font-black tracking-tight text-white drop-shadow-2xl sm:text-6xl md:text-7xl lg:text-8xl hover:text-white/95 transition-colors">
+          <h1 className="max-w-4xl text-5xl font-semibold tracking-tight text-white drop-shadow-2xl sm:text-6xl md:text-7xl lg:text-8xl hover:text-white/95 transition-colors">
             {film.title}
           </h1>
         </Link>
