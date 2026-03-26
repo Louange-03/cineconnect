@@ -7,6 +7,15 @@ const SVG_FALLBACK =
     `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"><rect fill="#0f172a" width="400" height="600"/><text x="50%" y="50%" fill="#64748b" font-family="system-ui,sans-serif" font-size="14" text-anchor="middle" dy=".3em">Cinéma</text></svg>`
   )
 
+/** Cache des URLs d'images déjà en 404 pour éviter les retries réseau répétés. */
+const BROKEN_IMAGE_URLS = new Set<string>()
+
+function sanitizeRemoteImageUrl(raw: string): string | null {
+  const value = raw.trim()
+  if (!value || value === "N/A") return null
+  return value
+}
+
 type SafeImageProps = {
   src: string
   alt: string
@@ -31,11 +40,22 @@ export function SafeImage({
   loading = "lazy",
   onLoad,
 }: SafeImageProps) {
-  const [step, setStep] = useState<0 | 1 | 2>(0)
+  const primarySrc = sanitizeRemoteImageUrl(src)
+  const startsBroken = primarySrc ? BROKEN_IMAGE_URLS.has(primarySrc) : true
+  const [step, setStep] = useState<0 | 1 | 2>(startsBroken ? 1 : 0)
+
+  useEffect(() => {
+    const nextPrimary = sanitizeRemoteImageUrl(src)
+    if (!nextPrimary) {
+      setStep(1)
+      return
+    }
+    setStep(BROKEN_IMAGE_URLS.has(nextPrimary) ? 1 : 0)
+  }, [src])
 
   const currentSrc =
     step === 0
-      ? src
+      ? (primarySrc ?? SVG_FALLBACK)
       : step === 1
         ? `https://picsum.photos/seed/${encodeURIComponent(fallbackSeed)}/400/600`
         : SVG_FALLBACK
@@ -51,7 +71,12 @@ export function SafeImage({
       referrerPolicy="no-referrer"
       decoding="async"
       onLoad={() => onLoad?.()}
-      onError={() => setStep((s) => (s < 2 ? ((s + 1) as 0 | 1 | 2) : 2))}
+      onError={() => {
+        if (step === 0 && primarySrc) {
+          BROKEN_IMAGE_URLS.add(primarySrc)
+        }
+        setStep((s) => (s < 2 ? ((s + 1) as 0 | 1 | 2) : 2))
+      }}
     />
   )
 }

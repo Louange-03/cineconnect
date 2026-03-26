@@ -108,12 +108,20 @@ Depuis la racine:
 Checks package:
 
 - `pnpm --dir backend typecheck`
-- `pnpm --dir backend test:coverage`
+- `pnpm --dir backend test:coverage` (demande PostgreSQL local : `docker compose up -d db` puis `pnpm --dir backend db:migrate`)
 - `pnpm --dir frontend typecheck`
 - `pnpm --dir frontend build`
 - `pnpm --dir frontend test:coverage`
 
 ## Deploiement (guide pratique)
+
+### Option Render (recommandee pour ce depot)
+
+Le fichier `render.yaml` definit un **Blueprint** : Postgres + API Node + site statique (Vite).
+
+- Sur Render : **New** → **Blueprint** → connectez le depot GitHub.
+- A la premiere creation, renseignez les variables marquees `sync: false` (secrets) dans le dashboard Render.
+- Appliquez les migrations sur la base fournie par Render : `pnpm --dir backend db:migrate` (en local avec `DATABASE_URL` pointant vers la base Render, ou via un job Render).
 
 ### 1) Backend
 

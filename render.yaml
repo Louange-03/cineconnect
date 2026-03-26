@@ -1,0 +1,60 @@
+databases:
+  - name: cineconnect-db
+    databaseName: cineconnect
+    user: cineconnect
+    plan: free
+
+services:
+  - type: web
+    name: cineconnect-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    autoDeploy: true
+    buildCommand: corepack enable && pnpm install --frozen-lockfile
+    startCommand: pnpm --dir backend start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cineconnect-db
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: OMDB_API_KEY
+        sync: false
+      - key: MAIL_PROVIDER
+        value: mailgun
+      - key: MAILGUN_API_KEY
+        sync: false
+      - key: MAILGUN_DOMAIN
+        sync: false
+      - key: MAILGUN_FROM
+        sync: false
+      - key: MAILGUN_BASE_URL
+        value: https://api.eu.mailgun.net
+      - key: PASSWORD_RESET_TOKEN_TTL_MINUTES
+        value: 30
+      - key: PASSWORD_RESET_EMAIL_SUBJECT
+        value: Reinitialisation du mot de passe
+      - key: PASSWORD_RESET_DEV_RETURN_LINK
+        value: false
+
+  - type: web
+    name: cineconnect-web
+    runtime: static
+    plan: free
+    autoDeploy: true
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --dir frontend build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_SOCKET_URL
+        sync: false
