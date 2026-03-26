@@ -34,5 +34,12 @@ describe("Films routes", () => {
     expect(res.body).toHaveProperty("films")
     expect(Array.isArray(res.body.films)).toBe(true)
   })
+
+  it("should list categories", async () => {
+    const res = await request(httpServer).get("/api/films/categories")
+    expect(res.status).toBe(200)
+    expect(res.body).toHaveProperty("categories")
+    expect(Array.isArray(res.body.categories)).toBe(true)
+  })
 })
 
