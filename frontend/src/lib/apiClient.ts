@@ -35,7 +35,7 @@ async function request<T = any>(path: string, { method = "GET", body, auth = tru
     try {
       data = text ? JSON.parse(text) : null
     } catch {
-      throw new Error(text?.slice(0, 120) || `Réponse invalide (${res.status})`)
+      throw new Error(`Réponse JSON invalide (${res.status}): ${text.slice(0, 120)}`)
     }
 
     if (!res.ok) {

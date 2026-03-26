@@ -19,7 +19,9 @@
     "predev": "node scripts/free-port.mjs 3001",
     "dev": "concurrently -n BACK,FRONT -c auto \"pnpm --dir backend dev\" \"pnpm --dir frontend dev\"",
     "dev:backend": "pnpm --dir backend dev",
-    "dev:frontend": "pnpm --dir frontend dev"
+    "dev:frontend": "pnpm --dir frontend dev",
+    "test": "pnpm --dir backend test && pnpm --dir frontend test",
+    "test:coverage": "pnpm --dir backend test:coverage && pnpm --dir frontend test:coverage"
   },
   "devDependencies": {
     "@types/node": "^25.3.3",

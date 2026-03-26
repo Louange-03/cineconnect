@@ -23,12 +23,10 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    setSuccess(null)
     setLoading(true)
 
     try {
       await login({ email, password })
-      setSuccess("Connecté avec succès !")
       onSuccess?.()
     } catch (err: any) {
       if (err?.message?.includes("Identifiants incorrects")) {

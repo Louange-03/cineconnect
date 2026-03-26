@@ -15,6 +15,10 @@ dist
 dist-ssr
 *.tsbuildinfo
 
+# Tests
+coverage
+**/coverage
+
 # Environment variables
 .env
 .env.local
@@ -31,4 +35,6 @@ backend/.env
 *.njsproj
 *.sln
 *.sw?
-//
+
+# Copie locale imbriquée du dépôt (ne pas versionner)
+/cineconnect/

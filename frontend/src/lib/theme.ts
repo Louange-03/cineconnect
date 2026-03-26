@@ -3,7 +3,6 @@ export type ThemeMode = "dark" | "light"
 const THEME_KEY = "theme-mode"
 
 function getSystemTheme(): ThemeMode {
-  if (typeof window === "undefined") return "dark"
   return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"
 }
 
