@@ -1,5 +1,9 @@
 .git
 .gitignore
+.env
+.env.*
+backend/.env
+backend/.env.*
 node_modules
 **/node_modules
 **/coverage
