@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-const ioFn = vi.hoisted(() => vi.fn(() => ({ id: "mock-socket" })))
+const ioFn = vi.hoisted(() => vi.fn((..._args: any[]) => ({ id: "mock-socket" })))
 
 vi.mock("socket.io-client", () => ({
-  io: (...args: unknown[]) => ioFn(...args),
+  io: (...args: any[]) => ioFn(...args),
 }))
 
-const getTokenMock = vi.hoisted(() => vi.fn(() => "jwt-1"))
+const getTokenMock = vi.hoisted(() => vi.fn(() => "jwt-1" as string | null))
 
 vi.mock("./auth", () => ({
   getToken: getTokenMock,

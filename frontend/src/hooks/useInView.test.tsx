@@ -30,14 +30,14 @@ describe("useInView", () => {
 
   it("observe et bascule inView quand intersecting", () => {
     function Box() {
-      const { ref, inView } = useInView({ threshold: 0.2 })
+      const { ref, inView } = useInView<HTMLDivElement>({ threshold: 0.2 })
       return <div ref={ref} data-testid="box" data-in={String(inView)} />
     }
     render(<Box />)
     expect(screen.getByTestId("box").dataset.in).toBe("false")
     act(() => {
       callback(
-        [{ isIntersecting: true, target: document.body } as IntersectionObserverEntry],
+        [{ isIntersecting: true, target: document.body } as unknown as IntersectionObserverEntry],
         {} as IntersectionObserver,
       )
     })
@@ -46,13 +46,13 @@ describe("useInView", () => {
 
   it("ignore entrée non intersecting et entries vides", () => {
     function Box() {
-      const { ref, inView } = useInView()
+      const { ref, inView } = useInView<HTMLDivElement>()
       return <div ref={ref} data-testid="box" data-in={String(inView)} />
     }
     render(<Box />)
     act(() => {
       callback(
-        [{ isIntersecting: false, target: document.body } as IntersectionObserverEntry],
+        [{ isIntersecting: false, target: document.body } as unknown as IntersectionObserverEntry],
         {} as IntersectionObserver,
       )
     })

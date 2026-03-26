@@ -48,7 +48,7 @@ describe("api (legacy apiFetch)", () => {
       ok: true,
       status: 200,
       headers: { get: () => "text/html" },
-    } as Response)
+    } as unknown as Response)
     const { apiFetch } = await import("./api")
     await expect(apiFetch("/html")).resolves.toBeNull()
   })
@@ -94,7 +94,7 @@ describe("api (legacy apiFetch)", () => {
       status: 500,
       headers: { get: () => "application/json" },
       json: async () => ({}),
-    } as Response)
+    } as unknown as Response)
     const { apiFetch } = await import("./api")
     await expect(apiFetch("/e2")).rejects.toThrow(/500/)
   })
@@ -104,7 +104,7 @@ describe("api (legacy apiFetch)", () => {
       ok: false,
       status: 502,
       headers: { get: () => "text/plain" },
-    } as Response)
+    } as unknown as Response)
     const { apiFetch } = await import("./api")
     await expect(apiFetch("/e3")).rejects.toThrow(/502/)
   })

@@ -2,7 +2,7 @@
 
 ### Liens utiles
 
-- **Swagger (API)** : `http://localhost:3001/api/docs`
+- **Swagger (API)** : `http://localhost:3007/api/docs`
 
 ### Contenu
 

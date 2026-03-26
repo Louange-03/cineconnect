@@ -1,122 +1,156 @@
-# CinéConnect
+# CineConnect
 
-CinéConnect est une plateforme communautaire moderne dédiée aux passionnés de cinéma. Elle permet de découvrir des films, de gérer un catalogue interactif (connecté à OMDb), de partager ses avis, et d'échanger avec d'autres cinéphiles via une interface de messagerie intégrée. Le tout dans une esthétique professionnelle "Premium Dark Theme", fluide et hautement réactive.
+Plateforme web full stack pour decouvrir des films, les noter et discuter en temps reel entre utilisateurs.
 
-##  Fonctionnalités Principales
+## Fonctionnalites
 
-- **Catalogue de Films Intelligent** : Parcourez, filtrez et cherchez directement dans les films de la base de données.
-- **Importation depuis OMDb** : Si le catalogue est vide ou si un film manque, recherchez-le directement depuis l'application via l'API OMDb et ajoutez-le à la volée.
-- **Authentification Sécurisée** : Inscription et connexion gérées avec JWT (JSON Web Tokens), et hachage sécurisé des mots de passe.
-- **Système d'Avis et Notes** : Notez les œuvres et lisez les longues critiques détaillées de la communauté sur de magnifiques fiches de films.
-- **Messagerie Intégrée (Discussions)** : Interface de chat façon *Discord/Messages* pour retrouver vos boîtes de réception et échanger en temps réel avec tous vos amis.
-- **Design Premium** : Interface utilisateur UI/UX refaite à neuf (Tailwind CSS v4) incluant des effets de Glassmorphism (flou), des animations immersives, des lueurs (glows) abstraites en arrière-plan et un support full responsive.
+- Authentification JWT: inscription, connexion, session utilisateur.
+- Catalogue films: listing, details, categories, recherche.
+- Import OMDb: recherche externe et ajout de films dans le catalogue local.
+- Avis/notes: creation, edition, suppression des reviews.
+- Social: gestion des amis.
+- Messagerie: conversations, messages, evenements temps reel (Socket.io).
+- Documentation API: Swagger UI et document OpenAPI JSON.
 
-## 🛠️ Stack Technologique
+## Stack
 
-**Frontend (Web & Interface)**
-- **React 18** (TypeScript)
-- **Vite** (Build Tool ultra rapide et Proxy)
-- **TanStack Router** (Système de routage basé sur les fichiers, type-safe)
-- **TanStack Query** (Gestion fine du cache, des mutations et états asynchrones)
-- **Tailwind CSS v4** (Design system utilitaire et flexible)
+- Frontend: React, TypeScript, Vite, TanStack Router, TanStack Query, Tailwind CSS.
+- Backend: Node.js, Express, TypeScript, Drizzle ORM, PostgreSQL, Socket.io.
+- Outillage: pnpm workspace, Vitest, Supertest.
 
-**Backend (API & Data)**
-- **Node.js** & **Express**
-- **TypeScript**
-- **Drizzle ORM** (Liaisons SQL rapides et type-safe)
-- **PostgreSQL** (Structure de base de données relationnelle robuste)
-- **Zod** (Validation fine des requêtes entrantes)
-
-##  Structure du Projet (Monorepo)
-
-Le dépôt est organisé en mode *Workspace* `pnpm` :
+## Structure du monorepo
 
 ```text
-cineconnect/
-├── backend/               # Serveur API
-│   ├── src/controllers/   # Logique métier pour Auth, Films, Messages, etc.
-│   ├── src/db/            # Connecteur PostgreSQL et schémas Drizzle (schema.ts)
-│   ├── src/middlewares/   # Protections et sécurisation (ex: validation JWT)
-│   ├── src/routes/        # Déclaration de tous les Endpoints REST
-│   └── src/server.ts      # Le cœur de l'application Express
-│
-├── frontend/              # Interface client
-│   ├── src/components/    # Composants d'UI isolés (films, auth, layout, ui)
-│   ├── src/hooks/         # Logique API connectée avec les contextes
-│   ├── src/lib/           # Utilitaires globaux (apiClient, auth manager)
-│   ├── src/pages/         # Mappage avec le routeur (Films, Accueil, Connexion...)
-│   ├── src/routeTree.gen.ts # Routage automatique (Tanstack Router)
-│   └── src/index.css      # Règles CSS globales et Keyframes d'animations
-│
-├── docker-compose.yml     # Conteneur pour s'initialiser facilement avec PostgreSQL
-└── package.json           # Racine du workspace
+/
+├─ frontend/    # app React
+├─ backend/     # API Express + DB + Swagger + Socket
+├─ shared/      # types/artefacts partages
+├─ docs/        # rapport, schema
+└─ scripts/     # scripts utilitaires
 ```
 
-##  Prérequis et Installation
+## Prerequis
 
-Pour exécuter et contribuer à ce projet localement, il vous faut :
-- **Node.js** (v20.x ou >)
-- **pnpm** (comme gestionnaire de paquets)
-- **PostgreSQL** (installé en dur, ou lancé via Docker)
+- Node.js 20+
+- pnpm 9+
+- PostgreSQL 16+ (ou Docker)
 
-### 1. Clonage et Installation
+## Installation locale
+
 ```bash
 git clone https://github.com/Louange-03/cineconnect.git
 cd cineconnect
 pnpm install
 ```
 
-### 2. Configuration des .env
-Copiez (ou créez) les fichiers d'environnement.
+### Variables d'environnement
 
-Dans le dossier **`backend/`**, créez ou éditez `.env` :
+#### Backend (`backend/.env`)
+
 ```env
 PORT=3007
-DATABASE_URL=postgresql://user:motdepasse@localhost:5432/cineconnect
-JWT_SECRET=super_secret_phrase_au_moins_32_caracteres_min
+DATABASE_URL=postgresql://cineconnect:cineconnect@localhost:5437/cineconnect
+JWT_SECRET=change_this_secret_min_32_chars
 FRONTEND_URL=http://localhost:5173
-OMDB_API_KEY=votre_cle_omdb
+
+OMDB_API_KEY=your_omdb_key
+# OMDB_KEY=your_omdb_key   # alias supporte
+
+SMTP_HOST=
+SMTP_PORT=
+SMTP_USER=
+SMTP_PASS=
+MAIL_FROM=
+PASSWORD_RESET_EMAIL_SUBJECT=Reinitialisation du mot de passe
+PASSWORD_RESET_TOKEN_TTL_MINUTES=30
+PASSWORD_RESET_DEV_RETURN_LINK=true
 ```
 
-Dans le dossier **`frontend/`**, créez ou éditez `.env` :
+#### Frontend (`frontend/.env`)
+
 ```env
 VITE_API_URL=http://localhost:3007
-VITE_OMDB_API_KEY=votre_cle_omdb # Optionnel (si fetché directement via le back)
+VITE_SOCKET_URL=http://localhost:3007
 ```
-*(Une clé d'API OMDb gratuite est obtenable sur [omdbapi.com](http://www.omdbapi.com/apikey.aspx))*
 
+## Base de donnees
 
-### 3. Base de données
-Assurez-vous d'avoir une instance Postgres lancée :
+Si vous utilisez Docker:
+
 ```bash
-# Optionnel : lancer le docker natif si vous ne l'avez pas
-docker compose up -d postgres
-```
-Poursuivez avec la structuration et la migration (`Drizzle`) :
-```bash
+docker compose up -d db
 pnpm --dir backend db:migrate
 ```
 
-### 4. Démarrer l'application (Dev)
-Grâce au package root, vous pouvez lancer les deux serveurs en parallèle :
+Adminer est expose sur `http://localhost:8080`.
+
+## Lancer en developpement
+
 ```bash
 pnpm dev
 ```
-- Le **Frontend** tournera sur : `http://localhost:5173`
-- Le **Backend** tournera silencieusement sur : `http://localhost:3007`
 
-*(Vite gère le proxy `/api` via `vite.config.ts`, empêchant la grande majorité des soucis CORS au développement).*
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:3007`
+- Swagger UI: `http://localhost:3007/api/docs`
+- OpenAPI JSON: `http://localhost:3007/api/docs-json`
 
-## 📡 Rendu sur l'API
+## Scripts utiles
 
-L'application expose une collection de routes REST solides, par exemple :
-- **Authentification** : `/api/auth/register`, `/api/auth/login`
-- **Contenu Modéré** : `/api/films`, `/api/films/:id`
-- **Recherches et Importation Externe** : `/api/films/tmdb?q=...`, `/api/films/import`
-- **Contributions (Réseau social)** : `/api/reviews`, `/api/messages`, `/api/users`
+Depuis la racine:
 
-Tous les appels sécurisés attendent un `Authorization: Bearer <votre_token_jwt>` obtenu suivant la connexion. Le tout est injecté automatiquement la fonction `apiClient()` construite dans le Front.
+- `pnpm dev` - lance front + back
+- `pnpm test` - lance les tests backend puis frontend
+- `pnpm test:coverage` - tests + couverture (seuils 100% sur le perimetre configure)
 
----
+Checks package:
 
-Projet réalisé dans le cadre académique de développement de la structure "WebApplication complète", **HETIC Web2**.
+- `pnpm --dir backend typecheck`
+- `pnpm --dir backend test:coverage`
+- `pnpm --dir frontend typecheck`
+- `pnpm --dir frontend build`
+- `pnpm --dir frontend test:coverage`
+
+## Deploiement (guide pratique)
+
+### 1) Backend
+
+- Deployer `backend` sur une plateforme Node (Render/Railway/Fly/VM).
+- Configurer les variables backend (`DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL`, `OMDB_API_KEY`, etc.).
+- Exposer le port via la variable `PORT`.
+- Verifier:
+  - `GET /health`
+  - `GET /api/docs-json`
+
+### 2) Frontend
+
+- Builder et deployer `frontend` (Vercel/Netlify/Cloudflare Pages).
+- Configurer:
+  - `VITE_API_URL=https://<votre-backend>`
+  - `VITE_SOCKET_URL=https://<votre-backend>`
+
+### 3) Base de donnees
+
+- Fournir une base PostgreSQL managée ou auto-hebergee.
+- Appliquer `pnpm --dir backend db:migrate` sur l'environnement cible.
+
+## Statut de preparation deploiement
+
+Etat actuel verifie:
+
+- Backend typecheck: OK
+- Frontend typecheck: OK
+- Frontend build production: OK
+- Tests + couverture monorepo: OK (100% sur le perimetre configure)
+- Swagger/OpenAPI: OK
+
+Points d'attention avant prod:
+
+- Definir un `JWT_SECRET` robuste.
+- Configurer `FRONTEND_URL` exact pour CORS.
+- Renseigner `VITE_API_URL` et `VITE_SOCKET_URL` sur le frontend deploye.
+- Configurer SMTP si vous voulez l'envoi email reinitialisation en production.
+
+## Licence
+
+Projet academique Web2 HETIC.
