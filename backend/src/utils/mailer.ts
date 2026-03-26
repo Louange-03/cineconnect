@@ -1,9 +1,51 @@
-import "dotenv/config"
 import nodemailer from "nodemailer"
 
 /** Exported for forgot-password (optional dev response link). */
 export function isSmtpFullyConfigured(): boolean {
-  return isSmtpConfigured() !== null
+  return isMailTransportConfigured()
+}
+
+export function getMailTransportStatus(): {
+  requestedProvider: "auto" | "mailgun" | "smtp"
+  effectiveProvider: "mailgun" | "smtp" | "none"
+  configured: boolean
+} {
+  const requestedProvider = getMailProvider()
+  const mailgun = getMailgunConfig() !== null
+  const smtp = isSmtpConfigured() !== null
+
+  if (requestedProvider === "mailgun") {
+    if (mailgun) return { requestedProvider, effectiveProvider: "mailgun", configured: true }
+    if (smtp) return { requestedProvider, effectiveProvider: "smtp", configured: true }
+    return { requestedProvider, effectiveProvider: "none", configured: false }
+  }
+  if (requestedProvider === "smtp") {
+    if (smtp) return { requestedProvider, effectiveProvider: "smtp", configured: true }
+    if (mailgun) return { requestedProvider, effectiveProvider: "mailgun", configured: true }
+    return { requestedProvider, effectiveProvider: "none", configured: false }
+  }
+  // auto
+  if (mailgun) return { requestedProvider, effectiveProvider: "mailgun", configured: true }
+  if (smtp) return { requestedProvider, effectiveProvider: "smtp", configured: true }
+  return { requestedProvider, effectiveProvider: "none", configured: false }
+}
+
+function isMailTransportConfigured(): boolean {
+  return getMailTransportStatus().configured
+}
+
+function getMailProvider(): "auto" | "mailgun" | "smtp" {
+  const raw = (process.env.MAIL_PROVIDER ?? "auto").trim().toLowerCase()
+  if (raw === "mailgun") return "mailgun"
+  if (raw === "smtp") return "smtp"
+  return "auto"
+}
+
+function getMailgunConfig(): { apiKey: string; domain: string } | null {
+  const apiKey = (process.env.MAILGUN_API_KEY ?? "").trim()
+  const domain = (process.env.MAILGUN_DOMAIN ?? "").trim()
+  if (!apiKey || !domain) return null
+  return { apiKey, domain }
 }
 
 function isSmtpConfigured(): {
@@ -31,11 +73,95 @@ function isSmtpConfigured(): {
 export async function sendPasswordResetEmail(params: { to: string; resetUrl: string }): Promise<void> {
   const { to, resetUrl } = params
   const subject = process.env.PASSWORD_RESET_EMAIL_SUBJECT ?? "Réinitialisation du mot de passe"
+  const fromFallback = (process.env.MAIL_FROM ?? "").trim()
+  const provider = getMailProvider()
+
+  const mailgun = getMailgunConfig()
+  if (provider !== "smtp" && mailgun) {
+    const { apiKey, domain } = mailgun
+    const baseUrl = (process.env.MAILGUN_BASE_URL ?? "https://api.mailgun.net").trim()
+    const from = ((process.env.MAILGUN_FROM ?? "").trim() || fromFallback)
+
+    if (!from) {
+      throw new Error("MAILGUN_FROM (ou MAIL_FROM) manquant pour l'envoi Mailgun")
+    }
+
+    const text = [
+      `Bonjour,`,
+      ``,
+      `Vous avez demandé la réinitialisation de votre mot de passe.`,
+      `Cliquez sur le lien ci-dessous pour définir un nouveau mot de passe :`,
+      ``,
+      resetUrl,
+      ``,
+      `Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.`,
+    ].join("\n")
+
+    const html = `
+      <div style="font-family: Arial, Helvetica, sans-serif; color: #111827; line-height: 1.5;">
+        <h2 style="margin: 0 0 12px;">Reinitialisation de votre mot de passe</h2>
+        <p style="margin: 0 0 12px;">Bonjour,</p>
+        <p style="margin: 0 0 12px;">
+          Vous avez demande la reinitialisation de votre mot de passe CineConnect.
+        </p>
+        <p style="margin: 0 0 18px;">
+          Cliquez sur le bouton ci-dessous pour definir un nouveau mot de passe:
+        </p>
+        <p style="margin: 0 0 18px;">
+          <a
+            href="${resetUrl}"
+            style="
+              display:inline-block;
+              background:#1d4ed8;
+              color:#ffffff;
+              text-decoration:none;
+              padding:10px 16px;
+              border-radius:8px;
+              font-weight:600;
+            "
+          >
+            Reinitialiser mon mot de passe
+          </a>
+        </p>
+        <p style="margin: 0 0 8px;">
+          Si le bouton ne fonctionne pas, copiez-collez ce lien dans votre navigateur:
+        </p>
+        <p style="word-break: break-all; margin: 0 0 18px; color:#1d4ed8;">${resetUrl}</p>
+        <p style="margin: 0; color: #6b7280; font-size: 13px;">
+          Si vous n'etes pas a l'origine de cette demande, ignorez simplement cet email.
+        </p>
+      </div>
+    `
+
+    const body = new URLSearchParams()
+    body.set("from", from)
+    body.set("to", to)
+    body.set("subject", subject)
+    body.set("text", text)
+    body.set("html", html)
+
+    const encoded = Buffer.from(`api:${apiKey}`).toString("base64")
+    const response = await fetch(`${baseUrl}/v3/${domain}/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${encoded}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: body.toString(),
+    })
+
+    if (!response.ok) {
+      const details = await response.text().catch(() => "")
+      throw new Error(`Échec envoi email (Mailgun): ${response.status} ${details}`.trim())
+    }
+    return
+  }
 
   const smtp = isSmtpConfigured()
   if (!smtp) {
+    const provider = getMailProvider()
     console.log(
-      `[mail][password-reset] SMTP incomplet ou absent — lien de réinitialisation (mode dev) :\n` +
+      `[mail][password-reset] transport mail non configuré (provider=${provider}) — lien de réinitialisation (mode dev) :\n` +
         `to: ${to}\nresetUrl: ${resetUrl}`
     )
     return
@@ -60,12 +186,49 @@ export async function sendPasswordResetEmail(params: { to: string; resetUrl: str
     `Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.`,
   ].join("\n")
 
+  const html = `
+    <div style="font-family: Arial, Helvetica, sans-serif; color: #111827; line-height: 1.5;">
+      <h2 style="margin: 0 0 12px;">Reinitialisation de votre mot de passe</h2>
+      <p style="margin: 0 0 12px;">Bonjour,</p>
+      <p style="margin: 0 0 12px;">
+        Vous avez demande la reinitialisation de votre mot de passe CineConnect.
+      </p>
+      <p style="margin: 0 0 18px;">
+        Cliquez sur le bouton ci-dessous pour definir un nouveau mot de passe:
+      </p>
+      <p style="margin: 0 0 18px;">
+        <a
+          href="${resetUrl}"
+          style="
+            display:inline-block;
+            background:#1d4ed8;
+            color:#ffffff;
+            text-decoration:none;
+            padding:10px 16px;
+            border-radius:8px;
+            font-weight:600;
+          "
+        >
+          Reinitialiser mon mot de passe
+        </a>
+      </p>
+      <p style="margin: 0 0 8px;">
+        Si le bouton ne fonctionne pas, copiez-collez ce lien dans votre navigateur:
+      </p>
+      <p style="word-break: break-all; margin: 0 0 18px; color:#1d4ed8;">${resetUrl}</p>
+      <p style="margin: 0; color: #6b7280; font-size: 13px;">
+        Si vous n'etes pas a l'origine de cette demande, ignorez simplement cet email.
+      </p>
+    </div>
+  `
+
   try {
     await transporter.sendMail({
       from: smtp.from,
       to,
       subject,
       text,
+      html,
     })
   } catch (e) {
     const msg = (e as Error)?.message ?? String(e)

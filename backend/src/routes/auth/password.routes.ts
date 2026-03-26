@@ -29,6 +29,15 @@ passwordAuthRoutes.post("/forgot-password", async (req, res) => {
       })
     }
 
+    const devReturnLink = process.env.PASSWORD_RESET_DEV_RETURN_LINK === "true"
+    const smtpReady = isSmtpFullyConfigured()
+    if (!smtpReady && !devReturnLink) {
+      return res.status(503).json({
+        message:
+          "Réinitialisation indisponible: SMTP non configuré. Contactez l'administrateur ou activez le mode dev local.",
+      })
+    }
+
     const ttlMinutes = Number(process.env.PASSWORD_RESET_TOKEN_TTL_MINUTES ?? "30")
     const { rawToken, tokenHash } = createPasswordResetToken()
     const expiresAt = new Date(Date.now() + Math.max(1, ttlMinutes) * 60_000)
@@ -66,14 +75,14 @@ passwordAuthRoutes.post("/forgot-password", async (req, res) => {
       console.error("[auth] forgot-password: envoi email", mailErr)
       return res.status(503).json({
         message:
-          "Impossible d'envoyer l'email pour le moment. Vérifiez la configuration SMTP ou réessayez plus tard.",
+          "Impossible d'envoyer l'email pour le moment. Vérifiez la configuration Mailgun ou réessayez plus tard.",
       })
     }
 
     const payload: { message: string; resetUrl?: string } = {
       message: "Si votre compte existe, vous recevrez un email avec un lien de réinitialisation.",
     }
-    if (process.env.PASSWORD_RESET_DEV_RETURN_LINK === "true" && !isSmtpFullyConfigured()) {
+    if (devReturnLink && !smtpReady) {
       payload.resetUrl = resetUrl
     }
     res.json(payload)

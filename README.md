@@ -55,15 +55,17 @@ FRONTEND_URL=http://localhost:5173
 
 OMDB_API_KEY=your_omdb_key
 # OMDB_KEY=your_omdb_key   # alias supporte
-
-SMTP_HOST=
-SMTP_PORT=
-SMTP_USER=
-SMTP_PASS=
-MAIL_FROM=
 PASSWORD_RESET_EMAIL_SUBJECT=Reinitialisation du mot de passe
 PASSWORD_RESET_TOKEN_TTL_MINUTES=30
-PASSWORD_RESET_DEV_RETURN_LINK=true
+PASSWORD_RESET_DEV_RETURN_LINK=false
+MAIL_PROVIDER=mailgun
+
+MAILGUN_API_KEY=key-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+MAILGUN_DOMAIN=mg.your-domain.com
+MAILGUN_FROM=CineConnect <postmaster@mg.your-domain.com>
+# EU: https://api.eu.mailgun.net
+# US: https://api.mailgun.net
+MAILGUN_BASE_URL=https://api.mailgun.net
 ```
 
 #### Frontend (`frontend/.env`)
@@ -117,6 +119,7 @@ Checks package:
 
 - Deployer `backend` sur une plateforme Node (Render/Railway/Fly/VM).
 - Configurer les variables backend (`DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL`, `OMDB_API_KEY`, etc.).
+- Configurer Mailgun: `MAIL_PROVIDER=mailgun` + `MAILGUN_*`.
 - Exposer le port via la variable `PORT`.
 - Verifier:
   - `GET /health`
@@ -149,7 +152,7 @@ Points d'attention avant prod:
 - Definir un `JWT_SECRET` robuste.
 - Configurer `FRONTEND_URL` exact pour CORS.
 - Renseigner `VITE_API_URL` et `VITE_SOCKET_URL` sur le frontend deploye.
-- Configurer SMTP si vous voulez l'envoi email reinitialisation en production.
+- Configurer Mailgun (`MAILGUN_*`) pour l'envoi email de reinitialisation.
 
 ## Licence
 

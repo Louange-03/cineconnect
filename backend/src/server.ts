@@ -3,7 +3,7 @@ import { createApp } from "./app"
 import { initSocket } from "./socket"
 import { pool } from "./db/client"
 import { ensurePasswordResetSchema } from "./db/ensurePasswordResetSchema.js"
-import { isSmtpFullyConfigured } from "./utils/mailer"
+import { getMailTransportStatus } from "./utils/mailer"
 
 const app = createApp()
 const port = Number(process.env.PORT ?? 3007)
@@ -22,12 +22,15 @@ async function start() {
 
   httpServer.listen(port, () => {
     console.log(`API listening on http://localhost:${port}`)
-    if (isSmtpFullyConfigured()) {
-      console.log("[mail] SMTP configuré — les e-mails de réinitialisation de mot de passe seront envoyés.")
+    const mail = getMailTransportStatus()
+    if (mail.configured) {
+      console.log(
+        `[mail] transport configuré (provider=${mail.effectiveProvider}, requested=${mail.requestedProvider}) — les e-mails de réinitialisation seront envoyés.`,
+      )
     } else {
       console.log(
-        "[mail] SMTP non configuré (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM). " +
-          "Mot de passe oublié : lien uniquement dans les logs serveur.",
+        "[mail] aucun transport mail configuré (MAILGUN_*). " +
+          "Mot de passe oublié : lien uniquement dans les logs serveur (mode dev).",
       )
     }
   })
