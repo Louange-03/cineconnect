@@ -1,0 +1,36 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "node",
+      "react"
+    ],
+    "target": "ESNext",
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
+    "allowJs": false,
+    "checkJs": false,
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "composite": true,
+    "baseUrl": "src",
+    "paths": {
+      "~/*": [
+        "*"
+      ]
+    }
+  },
+  "include": [
+    "src"
+  ]
+}

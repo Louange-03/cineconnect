@@ -1,0 +1,37 @@
+{
+  "name": "cineconnect",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Une plateforme collaborative pour découvrir, filtrer, noter et discuter de films avec des amis.",
+  "homepage": "https://github.com/Louange-03/cineconnect#readme",
+  "bugs": {
+    "url": "https://github.com/Louange-03/cineconnect/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Louange-03/cineconnect.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "predev": "node scripts/free-port.mjs 3001",
+    "dev": "concurrently -n BACK,FRONT -c auto \"pnpm --dir backend dev\" \"pnpm --dir frontend dev\"",
+    "dev:backend": "pnpm --dir backend dev",
+    "dev:frontend": "pnpm --dir frontend dev",
+    "test": "pnpm --dir backend test && pnpm --dir frontend test",
+    "test:coverage": "pnpm --dir backend test:coverage && pnpm --dir frontend test:coverage"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "concurrently": "^9.0.1"
+  },
+  "dependencies": {
+    "autoprefixer": "^10.4.24",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.2.0"
+  }
+}
