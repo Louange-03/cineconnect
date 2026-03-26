@@ -1,0 +1,24 @@
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { getFriends } from "./Friends.service"
+import axios from "axios"
+
+vi.mock("axios", () => ({
+  default: {
+    get: vi.fn(),
+  },
+}))
+
+describe("Friends.service", () => {
+  beforeEach(() => {
+    vi.mocked(axios.get).mockReset()
+  })
+
+  it("getFriends appelle l'endpoint avec credentials", async () => {
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: [{ id: "u1" }] })
+    const data = await getFriends()
+    expect(data).toEqual([{ id: "u1" }])
+    expect(axios.get).toHaveBeenCalledWith("http://localhost:3007/api/friends", {
+      withCredentials: true,
+    })
+  })
+})

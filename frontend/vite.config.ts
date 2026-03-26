@@ -23,6 +23,8 @@ const COVERAGE_FILES = [
   "src/hooks/useMessages.ts",
   "src/hooks/useOmdb.ts",
   "src/hooks/useReviews.ts",
+  "src/services/Friends.service.ts",
+  "src/services/Message.service.ts",
 ]
 
 export default defineConfig({
