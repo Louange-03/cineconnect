@@ -25,6 +25,9 @@ coverage
 .env.local
 .env.*.local
 backend/.env
+backend/.env.*
+!backend/.env.example
+cloudrun.env.local.yaml
 
 # Editor / OS
 .vscode/*
