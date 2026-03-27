@@ -46,11 +46,12 @@ services:
       - key: PASSWORD_RESET_DEV_RETURN_LINK
         value: false
 
-  - type: static
+  - type: web
     name: cineconnect-web
+    env: static
     autoDeploy: true
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --dir frontend build
-    publishPath: frontend/dist
+    staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
         sync: false
