@@ -10,6 +10,27 @@ services:
       POSTGRES_DB: cineconnect
     volumes:
       - cineconnect_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cineconnect -d cineconnect"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cineconnect-api
+    ports:
+      - "3001:8080"
+    environment:
+      PORT: 8080
+      NODE_ENV: development
+      DATABASE_URL: postgresql://cineconnect:cineconnect@db:5432/cineconnect
+      FRONTEND_URL: http://localhost:5173
+    depends_on:
+      db:
+        condition: service_healthy
 
   adminer:
     image: adminer
@@ -18,6 +39,19 @@ services:
       - "8083:8080"
     depends_on:
       - db
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3001
+        VITE_SOCKET_URL: http://localhost:3001
+    container_name: cineconnect-web
+    ports:
+      - "5173:8080"
+    depends_on:
+      - api
 
 volumes:
   cineconnect_pg:
