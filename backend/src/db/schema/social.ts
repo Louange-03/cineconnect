@@ -1,5 +1,5 @@
 import { pgTable, pgEnum, uuid, timestamp, uniqueIndex, index } from "drizzle-orm/pg-core"
-import { users } from "./users.js"
+import { users } from "./users"
 
 export const friendshipStatus = pgEnum("friendship_status", ["pending", "accepted", "rejected"])
 

@@ -1,4 +1,4 @@
-import { pool } from "./client.js"
+import { pool } from "./client"
 
 /**
  * Garantit que la table password_reset_tokens existe (idempotent).

@@ -57,6 +57,13 @@
       "when": 1772000000000,
       "tag": "0007_rename_tmdb_to_imdb",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1774616244418,
+      "tag": "0008_hot_black_cat",
+      "breakpoints": true
     }
   ]
 }
