@@ -1,0 +1,19 @@
+substitutions:
+  _VITE_API_URL: ""
+  _VITE_SOCKET_URL: ""
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - gcr.io/$PROJECT_ID/cineconnect-web
+      - --build-arg
+      - VITE_API_URL=${_VITE_API_URL}
+      - --build-arg
+      - VITE_SOCKET_URL=${_VITE_SOCKET_URL}
+      - .
+    dir: frontend
+
+images:
+  - gcr.io/$PROJECT_ID/cineconnect-web

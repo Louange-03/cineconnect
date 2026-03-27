@@ -113,37 +113,142 @@ Checks package:
 - `pnpm --dir frontend build`
 - `pnpm --dir frontend test:coverage`
 
-## Deploiement (guide pratique)
+## Deploiement Cloud Run (guide pratique)
 
-### Option Render (recommandee pour ce depot)
+Le depot est configure pour un deploiement Cloud Run via deux conteneurs:
 
-Le fichier `render.yaml` definit un **Blueprint** : Postgres + API Node + site statique (Vite).
+- `backend/Dockerfile` pour l'API Express
+- `frontend/Dockerfile` pour l'application React (statique)
 
-- Sur Render : **New** → **Blueprint** → connectez le depot GitHub.
-- A la premiere creation, renseignez les variables marquees `sync: false` (secrets) dans le dashboard Render.
-- Appliquez les migrations sur la base fournie par Render : `pnpm --dir backend db:migrate` (en local avec `DATABASE_URL` pointant vers la base Render, ou via un job Render).
+### Prerequis GCP
 
-### 1) Backend
+- Activer APIs: Cloud Run, Cloud Build, Artifact Registry.
+- Avoir un projet GCP + `gcloud` configure:
+  - `gcloud auth login`
+  - `gcloud config set project <PROJECT_ID>`
 
-- Deployer `backend` sur une plateforme Node (Render/Railway/Fly/VM).
-- Configurer les variables backend (`DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL`, `OMDB_API_KEY`, etc.).
-- Configurer Mailgun: `MAIL_PROVIDER=mailgun` + `MAILGUN_*`.
-- Exposer le port via la variable `PORT`.
-- Verifier:
-  - `GET /health`
-  - `GET /api/docs-json`
+### 1) Deployer le backend sur Cloud Run
 
-### 2) Frontend
+Construire et publier l'image:
 
-- Builder et deployer `frontend` (Vercel/Netlify/Cloudflare Pages).
-- Configurer:
-  - `VITE_API_URL=https://<votre-backend>`
-  - `VITE_SOCKET_URL=https://<votre-backend>`
+```bash
+gcloud builds submit --config cloudbuild.backend.yaml
+```
 
-### 3) Base de donnees
+Deployer le service:
 
-- Fournir une base PostgreSQL managée ou auto-hebergee.
-- Appliquer `pnpm --dir backend db:migrate` sur l'environnement cible.
+```bash
+gcloud run deploy cineconnect-api \
+  --image gcr.io/<PROJECT_ID>/cineconnect-api \
+  --platform managed \
+  --region <REGION> \
+  --allow-unauthenticated \
+  --set-env-vars NODE_ENV=production \
+  --set-env-vars FRONTEND_URL=https://<FRONTEND_CLOUD_RUN_URL> \
+  --set-env-vars DATABASE_URL=postgresql://<...> \
+  --set-env-vars JWT_SECRET=<SECRET> \
+  --set-env-vars OMDB_API_KEY=<OMDB_KEY> \
+  --set-env-vars MAIL_PROVIDER=mailgun \
+  --set-env-vars MAILGUN_API_KEY=<...> \
+  --set-env-vars MAILGUN_DOMAIN=<...> \
+  --set-env-vars MAILGUN_FROM=<...> \
+  --set-env-vars MAILGUN_BASE_URL=https://api.eu.mailgun.net \
+  --set-env-vars PASSWORD_RESET_TOKEN_TTL_MINUTES=30 \
+  --set-env-vars PASSWORD_RESET_EMAIL_SUBJECT="Reinitialisation du mot de passe" \
+  --set-env-vars PASSWORD_RESET_DEV_RETURN_LINK=false
+```
+
+Verifier:
+
+- `GET /health`
+- `GET /api/docs-json`
+
+### 2) Deployer le frontend sur Cloud Run
+
+Le frontend lit `VITE_API_URL` et `VITE_SOCKET_URL` au build.
+
+Construire et publier l'image:
+
+```bash
+gcloud builds submit \
+  --config cloudbuild.frontend.yaml \
+  --substitutions _VITE_API_URL=https://<API_CLOUD_RUN_URL>,_VITE_SOCKET_URL=https://<API_CLOUD_RUN_URL>
+```
+
+Deployer le service:
+
+```bash
+gcloud run deploy cineconnect-web \
+  --image gcr.io/<PROJECT_ID>/cineconnect-web \
+  --platform managed \
+  --region <REGION> \
+  --allow-unauthenticated
+```
+
+### 3) Base de donnees (PostgreSQL)
+
+- Fournir une base PostgreSQL managée (Cloud SQL ou autre).
+- Appliquer les migrations:
+
+```bash
+pnpm --dir backend db:migrate
+```
+
+Vous pouvez executer cette commande localement avec `DATABASE_URL` de production, ou depuis une CI/CD securisee.
+
+### 4) Script one-click (PowerShell)
+
+Un script est disponible pour deployer backend + frontend automatiquement:
+
+```powershell
+./scripts/deploy-cloudrun.ps1 -ProjectId <PROJECT_ID> -Region <REGION>
+```
+
+Mode recommande avec Secret Manager:
+
+```powershell
+./scripts/deploy-cloudrun.ps1 -ProjectId <PROJECT_ID> -Region <REGION> -Environment prod -UseSecretManager
+```
+
+Secrets attendus (nom -> variable backend):
+
+- `cineconnect-<env>-database-url` -> `DATABASE_URL`
+- `cineconnect-<env>-jwt-secret` -> `JWT_SECRET`
+- `cineconnect-<env>-omdb-api-key` -> `OMDB_API_KEY`
+- `cineconnect-<env>-mailgun-api-key` -> `MAILGUN_API_KEY`
+
+`<env>` correspond a `dev`, `staging` ou `prod`.
+
+Exemple de creation:
+
+```powershell
+echo -n "postgresql://..." | gcloud secrets create cineconnect-prod-database-url --data-file=-
+echo -n "super_secret_jwt" | gcloud secrets create cineconnect-prod-jwt-secret --data-file=-
+echo -n "your_omdb_key" | gcloud secrets create cineconnect-prod-omdb-api-key --data-file=-
+echo -n "key-xxxx" | gcloud secrets create cineconnect-prod-mailgun-api-key --data-file=-
+```
+
+Si les secrets existent deja, utilisez `gcloud secrets versions add <secret-name> --data-file=-`.
+
+Rotation: vous pouvez deployer avec une version precise:
+
+```powershell
+./scripts/deploy-cloudrun.ps1 -ProjectId <PROJECT_ID> -Region <REGION> -Environment prod -UseSecretManager -SecretVersion 3
+```
+
+Le script cree des services Cloud Run suffixes par environnement:
+
+- `prod`: `cineconnect-api` / `cineconnect-web`
+- `dev`: `cineconnect-api-dev` / `cineconnect-web-dev`
+- `staging`: `cineconnect-api-staging` / `cineconnect-web-staging`
+
+Mode manuel (sans Secret Manager): editez les variables en tete de `scripts/deploy-cloudrun.ps1` (`DATABASE_URL`, `JWT_SECRET`, `OMDB_API_KEY`, `MAILGUN_*`), puis lancez la commande sans `-UseSecretManager`.
+
+Mode verification (sans deploy):
+
+```powershell
+./scripts/deploy-cloudrun.ps1 -ProjectId <PROJECT_ID> -Region <REGION> -Environment prod -UseSecretManager -DryRun
+```
 
 ## Statut de preparation deploiement
 
