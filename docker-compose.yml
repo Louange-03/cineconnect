@@ -15,7 +15,7 @@ services:
     image: adminer
     container_name: cineconnect-adminer
     ports:
-      - "8083:8083"
+      - "8083:8080"
     depends_on:
       - db
 
