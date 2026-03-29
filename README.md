@@ -242,6 +242,40 @@ Le script cree des services Cloud Run suffixes par environnement:
 - `dev`: `cineconnect-api-dev` / `cineconnect-web-dev`
 - `staging`: `cineconnect-api-staging` / `cineconnect-web-staging`
 
+## Deploiement OVH + Coolify (Docker Compose)
+
+Pour un deploiement sur ton serveur OVH via Coolify, utilise `docker-compose.coolify.yml` (et non `docker-compose.yml` qui est destine au local).
+
+### 1) Dans Coolify (application Docker Compose)
+
+- Base Directory: `/`
+- Docker Compose Location: `/docker-compose.coolify.yml`
+- Active les domaines:
+  - service `web` -> `app.ton-domaine.com`
+  - service `api` -> `api.ton-domaine.com`
+- Ne publie pas `db` publiquement.
+
+### 2) Variables d'environnement a renseigner dans Coolify
+
+Copie les cles depuis `.env.coolify.example` et remplace toutes les valeurs `CHANGE_ME_*`.
+
+Valeurs critiques:
+
+- `FRONTEND_URL=https://app.ton-domaine.com`
+- `VITE_API_URL=https://api.ton-domaine.com`
+- `VITE_SOCKET_URL=https://api.ton-domaine.com`
+- `JWT_SECRET` fort (32+ caracteres)
+- `POSTGRES_PASSWORD` fort
+
+### 3) DNS OVH
+
+Creer 2 enregistrements DNS vers ton serveur OVH (ou vers le reverse proxy Coolify):
+
+- `app.ton-domaine.com`
+- `api.ton-domaine.com`
+
+Puis redeployer dans Coolify.
+
 Mode manuel (sans Secret Manager): editez les variables en tete de `scripts/deploy-cloudrun.ps1` (`DATABASE_URL`, `JWT_SECRET`, `OMDB_API_KEY`, `MAILGUN_*`), puis lancez la commande sans `-UseSecretManager`.
 
 Mode verification (sans deploy):
