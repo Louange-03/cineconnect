@@ -244,14 +244,18 @@ Le script cree des services Cloud Run suffixes par environnement:
 
 ## Deploiement OVH + Coolify (Docker Compose)
 
-Pour un deploiement sur ton serveur OVH via Coolify, la stack production est dans `docker-compose.coolify.yml`, incluse par `docker-compose.yaml` (chemin par defaut Coolify). Le fichier `docker-compose.yml` reste reserve au **local**.
+Pour un deploiement sur ton serveur OVH via Coolify, la stack production est dans **`docker-compose.yaml`** (fichier complet, pas seulement un `include` — certains serveurs Coolify ne resolvent pas les `include` correctement). `docker-compose.coolify.yml` reexporte le meme contenu via `include` si tu preferes ce chemin. Le fichier `docker-compose.yml` reste reserve au **local**.
+
+### 0) Si l’app affiche « Exited » et les domaines sont vides
+
+Sans domaines sur **`web`** et **`api`**, Coolify ne cree pas les variables magiques (`SERVICE_URL_*`, secrets auto). Il faut alors aller dans **Environment Variables** et definir au minimum **`JWT_SECRET`** (32+ caracteres) et **`POSTGRES_PASSWORD`**, plus **`FRONTEND_URL`**, **`VITE_API_URL`** et **`VITE_SOCKET_URL`** (URLs publiques prevues pour ton app et ton API) jusqu’a ce que les domaines soient configures. Ensuite **Save** et **Deploy**. Consulte l’onglet **Logs** si ca echoue encore.
 
 ### 1) Dans Coolify (application Docker Compose)
 
 - Type de ressource: **Docker Compose** (pas une seule app « Dockerfile »).
 - Base Directory: `/`
-- Docker Compose Location: **`/docker-compose.yaml`** (defaut Coolify) — ce fichier inclut `docker-compose.coolify.yml`. Tu peux aussi pointer directement vers `/docker-compose.coolify.yml` si tu preferes.
-- **Domaines et port interne 8080** (obligatoire, voir [doc Coolify — Docker Compose](https://coolify.io/docs/knowledge-base/docker/compose)) : les services `web` et `api` ecoutent sur **8080** dans le conteneur. Lorsque tu associes un domaine a chaque service, indique ce port dans l’URL Coolify — le proxy continue d’exposer le site en 80/443 publics.
+- Docker Compose Location: **`/docker-compose.yaml`** (recommande). Alternative: `/docker-compose.coolify.yml` (alias vers le meme stack).
+- **Domaines et port interne 8080** (recommande pour l’automatisation, voir [doc Coolify — Docker Compose](https://coolify.io/docs/knowledge-base/docker/compose)) : les services `web` et `api` ecoutent sur **8080** dans le conteneur. Lorsque tu associes un domaine a chaque service, indique ce port dans l’URL Coolify — le proxy continue d’exposer le site en 80/443 publics.
 
   Exemples (remplace par ton domaine reel) :
 
@@ -264,7 +268,7 @@ Pour un deploiement sur ton serveur OVH via Coolify, la stack production est dan
 
 ### 2) Automatisation (variables generees par Coolify)
 
-Le fichier `docker-compose.coolify.yml` s’appuie sur les [variables magiques](https://coolify.io/docs/knowledge-base/docker/compose#coolify-s-magic-environment-variables) des que les domaines sont poses sur `web` et `api` (avec **:8080**) :
+Le compose s’appuie sur les [variables magiques](https://coolify.io/docs/knowledge-base/docker/compose#coolify-s-magic-environment-variables) des que les domaines sont poses sur `web` et `api` (avec **:8080**) :
 
 | Besoin | Remplissage automatique (Coolify) | Surcharge manuelle dans l’UI |
 |--------|-----------------------------------|------------------------------|
@@ -308,7 +312,7 @@ Si tu as choisi **Build Pack: Dockerfile** (au lieu de **Docker Compose**), veri
    Les fichiers sont dans `backend/Dockerfile` et `frontend/Dockerfile`.  
    - Soit tu configures **Base Directory** = `backend` (ou `frontend`) **et** le chemin du Dockerfile correspondant,  
    - soit tu deployes **deux** ressources (une API, une Web),  
-   - soit tu passes en **Docker Compose** avec `docker-compose.coolify.yml` (recommande pour tout le stack).
+   - soit tu passes en **Docker Compose** avec `docker-compose.yaml` (recommande pour tout le stack).
 
 3. **Backend sans base**  
    Si tu ne deployes que l’API, il faut `DATABASE_URL` (et les autres variables) dans **Environment Variables**. Sans `DATABASE_URL`, le processus quitte au demarrage (`process.exit(1)`).

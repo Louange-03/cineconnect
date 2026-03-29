@@ -1,4 +1,93 @@
-# Coolify cherche souvent ce fichier par defaut : /docker-compose.yaml
-# La stack est definie dans docker-compose.coolify.yml (une seule source de verite).
-include:
-  - path: docker-compose.coolify.yml
+# Coolify (v4 beta.411+) — fichier unique (pas de `include`: certains serveurs ne le resolvent pas).
+#
+# SANS domaines sur `web` / `api`: Coolify ne genere pas SERVICE_URL_* ni les secrets magiques.
+# Va dans Environment Variables et definis au minimum:
+#   JWT_SECRET (32+ caracteres), POSTGRES_PASSWORD
+# puis (si pas encore de domaines) FRONTEND_URL, VITE_API_URL, VITE_SOCKET_URL pour CORS + build Vite.
+#
+# AVEC domaines: attache chaque service avec le port interne 8080, ex. https://app.ton-domaine.com:8080
+#
+# Deploiement Git: .github/workflows/deploy-coolify.yml + secret COOLIFY_WEBHOOK_URL
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cineconnect}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-${SERVICE_PASSWORD_POSTGRES:-${SERVICE_PASSWORD_DB}}}
+      POSTGRES_DB: ${POSTGRES_DB:-cineconnect}
+    volumes:
+      - cineconnect_pg:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-cineconnect} -d ${POSTGRES_DB:-cineconnect}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-cineconnect}:${POSTGRES_PASSWORD:-${SERVICE_PASSWORD_POSTGRES:-${SERVICE_PASSWORD_DB}}}@db:5432/${POSTGRES_DB:-cineconnect}
+      FRONTEND_URL: ${FRONTEND_URL:-${SERVICE_URL_WEB_8080}}
+      JWT_SECRET: ${JWT_SECRET:-${SERVICE_BASE64_64_API}}
+      OMDB_API_KEY: ${OMDB_API_KEY:-}
+      MAIL_PROVIDER: ${MAIL_PROVIDER:-auto}
+      MAILGUN_API_KEY: ${MAILGUN_API_KEY:-}
+      MAILGUN_DOMAIN: ${MAILGUN_DOMAIN:-}
+      MAILGUN_FROM: ${MAILGUN_FROM:-}
+      MAILGUN_BASE_URL: ${MAILGUN_BASE_URL:-https://api.mailgun.net}
+      PASSWORD_RESET_TOKEN_TTL_MINUTES: ${PASSWORD_RESET_TOKEN_TTL_MINUTES:-30}
+      PASSWORD_RESET_EMAIL_SUBJECT: ${PASSWORD_RESET_EMAIL_SUBJECT:-Reinitialisation du mot de passe}
+      PASSWORD_RESET_DEV_RETURN_LINK: ${PASSWORD_RESET_DEV_RETURN_LINK:-false}
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "8080"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-${SERVICE_URL_API_8080}}
+        VITE_SOCKET_URL: ${VITE_SOCKET_URL:-${SERVICE_URL_API_8080}}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    expose:
+      - "8080"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:8080/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  cineconnect_pg:
