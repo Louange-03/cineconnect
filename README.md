@@ -244,13 +244,13 @@ Le script cree des services Cloud Run suffixes par environnement:
 
 ## Deploiement OVH + Coolify (Docker Compose)
 
-Pour un deploiement sur ton serveur OVH via Coolify, utilise `docker-compose.coolify.yml` (et non `docker-compose.yml` qui est destine au local).
+Pour un deploiement sur ton serveur OVH via Coolify, la stack production est dans `docker-compose.coolify.yml`, incluse par `docker-compose.yaml` (chemin par defaut Coolify). Le fichier `docker-compose.yml` reste reserve au **local**.
 
 ### 1) Dans Coolify (application Docker Compose)
 
 - Type de ressource: **Docker Compose** (pas une seule app « Dockerfile »).
 - Base Directory: `/`
-- Docker Compose Location: `/docker-compose.coolify.yml`
+- Docker Compose Location: **`/docker-compose.yaml`** (defaut Coolify) — ce fichier inclut `docker-compose.coolify.yml`. Tu peux aussi pointer directement vers `/docker-compose.coolify.yml` si tu preferes.
 - **Domaines et port interne 8080** (obligatoire, voir [doc Coolify — Docker Compose](https://coolify.io/docs/knowledge-base/docker/compose)) : les services `web` et `api` ecoutent sur **8080** dans le conteneur. Lorsque tu associes un domaine a chaque service, indique ce port dans l’URL Coolify — le proxy continue d’exposer le site en 80/443 publics.
 
   Exemples (remplace par ton domaine reel) :

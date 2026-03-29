@@ -1,0 +1,4 @@
+# Coolify cherche souvent ce fichier par defaut : /docker-compose.yaml
+# La stack est definie dans docker-compose.coolify.yml (une seule source de verite).
+include:
+  - path: docker-compose.coolify.yml
