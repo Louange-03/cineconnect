@@ -248,24 +248,44 @@ Pour un deploiement sur ton serveur OVH via Coolify, utilise `docker-compose.coo
 
 ### 1) Dans Coolify (application Docker Compose)
 
+- Type de ressource: **Docker Compose** (pas une seule app « Dockerfile »).
 - Base Directory: `/`
 - Docker Compose Location: `/docker-compose.coolify.yml`
-- Active les domaines:
-  - service `web` -> `app.ton-domaine.com`
-  - service `api` -> `api.ton-domaine.com`
-- Ne publie pas `db` publiquement.
+- **Domaines et port interne 8080** (obligatoire, voir [doc Coolify — Docker Compose](https://coolify.io/docs/knowledge-base/docker/compose)) : les services `web` et `api` ecoutent sur **8080** dans le conteneur. Lorsque tu associes un domaine a chaque service, indique ce port dans l’URL Coolify — le proxy continue d’exposer le site en 80/443 publics.
 
-### 2) Variables d'environnement a renseigner dans Coolify
+  Exemples (remplace par ton domaine reel) :
 
-Copie les cles depuis `.env.coolify.example` et remplace toutes les valeurs `CHANGE_ME_*`.
+  - service **`web`** : `https://app.ton-domaine.com:8080`
+  - service **`api`** : `https://api.ton-domaine.com:8080`
 
-Valeurs critiques:
+  Sans ce **`:8080`**, Coolify route souvent vers le port 80 interne → rien ne repond ou conteneur « unhealthy ».
 
-- `FRONTEND_URL=https://app.ton-domaine.com`
-- `VITE_API_URL=https://api.ton-domaine.com`
-- `VITE_SOCKET_URL=https://api.ton-domaine.com`
-- `JWT_SECRET` fort (32+ caracteres)
-- `POSTGRES_PASSWORD` fort
+- Ne publie pas `db` publiquement (pas de domaine, pas de `ports:` sur `db`).
+
+### 2) Automatisation (variables generees par Coolify)
+
+Le fichier `docker-compose.coolify.yml` s’appuie sur les [variables magiques](https://coolify.io/docs/knowledge-base/docker/compose#coolify-s-magic-environment-variables) des que les domaines sont poses sur `web` et `api` (avec **:8080**) :
+
+| Besoin | Remplissage automatique (Coolify) | Surcharge manuelle dans l’UI |
+|--------|-----------------------------------|------------------------------|
+| URL du frontend (CORS) | `SERVICE_URL_WEB_8080` | `FRONTEND_URL` |
+| Build Vite (API / Socket) | `SERVICE_URL_API_8080` | `VITE_API_URL`, `VITE_SOCKET_URL` |
+| Mot de passe Postgres | `SERVICE_PASSWORD_POSTGRES` ou `SERVICE_PASSWORD_DB` | `POSTGRES_PASSWORD` |
+| Secret JWT | `SERVICE_BASE64_64_API` | `JWT_SECRET` |
+
+En production, l’API refuse de demarrer si `JWT_SECRET` est absent ou egal a `secret` (apres interpolation Coolify).
+
+Au demarrage, **`api`** execute `pnpm db:migrate` puis le serveur (`backend/docker-entrypoint.sh`).
+
+**Optionnel** : `OMDB_API_KEY`, `MAILGUN_*` (voir `.env.coolify.example`).
+
+### 2b) Deploiement continu (Git push → Coolify)
+
+1. Dans Coolify : **Deployments** → copier l’URL du **Deploy Webhook**.
+2. Sur GitHub : **Settings → Secrets and variables → Actions** → creer `COOLIFY_WEBHOOK_URL` avec cette URL.
+3. A chaque push sur `main` ou `master`, le workflow `.github/workflows/deploy-coolify.yml` declenche un redeploiement.
+
+En local : `./scripts/trigger-coolify-deploy.ps1` (variable d’environnement `COOLIFY_WEBHOOK_URL` ou parametre `-WebhookUrl`).
 
 ### 3) DNS OVH
 
@@ -275,6 +295,26 @@ Creer 2 enregistrements DNS vers ton serveur OVH (ou vers le reverse proxy Cooli
 - `api.ton-domaine.com`
 
 Puis redeployer dans Coolify.
+
+### 4) Erreur "Exited" en mode Dockerfile (une seule app)
+
+Si tu as choisi **Build Pack: Dockerfile** (au lieu de **Docker Compose**), verifie ces points — ce sont les causes les plus frequentes de conteneur qui quitte tout de suite ou qui ne repond pas :
+
+1. **Port du conteneur = 8080**  
+   Nos images `backend/Dockerfile` et `frontend/Dockerfile` exposent **`8080`** (`PORT=8080`). Coolify genere souvent des labels Traefik/Caddy vers le port **3000** par defaut.  
+   Dans la configuration de l’application Coolify, regle le **port expose / port interne** sur **8080** (souvent "Ports", "Exposed Port", ou dans les labels : `loadbalancer.server.port=8080`). Sinon le proxy parle au mauvais port → echec ou `Exited`.
+
+2. **Il n’y a pas de `Dockerfile` a la racine du depot**  
+   Les fichiers sont dans `backend/Dockerfile` et `frontend/Dockerfile`.  
+   - Soit tu configures **Base Directory** = `backend` (ou `frontend`) **et** le chemin du Dockerfile correspondant,  
+   - soit tu deployes **deux** ressources (une API, une Web),  
+   - soit tu passes en **Docker Compose** avec `docker-compose.coolify.yml` (recommande pour tout le stack).
+
+3. **Backend sans base**  
+   Si tu ne deployes que l’API, il faut `DATABASE_URL` (et les autres variables) dans **Environment Variables**. Sans `DATABASE_URL`, le processus quitte au demarrage (`process.exit(1)`).
+
+4. **Logs**  
+   Onglet **Logs** de l’application dans Coolify : la premiere ligne d’erreur indique presque toujours la cause (port, env manquant, build).
 
 Mode manuel (sans Secret Manager): editez les variables en tete de `scripts/deploy-cloudrun.ps1` (`DATABASE_URL`, `JWT_SECRET`, `OMDB_API_KEY`, `MAILGUN_*`), puis lancez la commande sans `-UseSecretManager`.
 
@@ -296,10 +336,9 @@ Etat actuel verifie:
 
 Points d'attention avant prod:
 
-- Definir un `JWT_SECRET` robuste.
-- Configurer `FRONTEND_URL` exact pour CORS.
-- Renseigner `VITE_API_URL` et `VITE_SOCKET_URL` sur le frontend deploye.
-- Configurer Mailgun (`MAILGUN_*`) pour l'envoi email de reinitialisation.
+- Coolify : domaines `web` / `api` avec **:8080** pour que les `SERVICE_URL_*_8080` soient corrects.
+- Si une variable magique JWT / Postgres n’apparait pas, surcharger `JWT_SECRET` / `POSTGRES_PASSWORD` dans l’UI Coolify.
+- Configurer Mailgun (`MAILGUN_*`) pour l’envoi e-mail de reinitialisation (sinon mode logs uniquement).
 
 ## Licence
 

@@ -1,0 +1,29 @@
+# Declenche un redeploiement Coolify apres push sur la branche par defaut.
+# Configuration: Repository secrets -> COOLIFY_WEBHOOK_URL = URL du webhook (Deployments > Webhooks dans Coolify).
+# Si le secret est absent, le job reussit sans appeler Coolify (deploiement manuel possible).
+
+name: Deploy Coolify
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: coolify-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Coolify deployment
+        env:
+          COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
+        run: |
+          if [ -z "$COOLIFY_WEBHOOK_URL" ]; then
+            echo "::notice::Secret COOLIFY_WEBHOOK_URL non defini — aucun appel Coolify (ajoute le webhook dans GitHub > Settings > Secrets)."
+            exit 0
+          fi
+          echo "POST Coolify webhook…"
+          curl -fsS -m 180 -X POST "$COOLIFY_WEBHOOK_URL"

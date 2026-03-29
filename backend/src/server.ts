@@ -15,6 +15,16 @@ async function start() {
     process.exit(1)
   }
 
+  if (process.env.NODE_ENV === "production") {
+    const jwt = process.env.JWT_SECRET?.trim()
+    if (!jwt || jwt === "secret") {
+      console.error(
+        "JWT_SECRET manquant ou non securise en production (definis-le dans Coolify ou verifie la variable magique SERVICE_BASE64_64_API dans docker-compose.coolify.yml).",
+      )
+      process.exit(1)
+    }
+  }
+
   await ensurePasswordResetSchema()
 
   const httpServer = createServer(app)
