@@ -53,8 +53,12 @@ services:
       PASSWORD_RESET_DEV_RETURN_LINK: ${PASSWORD_RESET_DEV_RETURN_LINK:-false}
       # Origines CORS supplementaires (virgule), si FRONTEND_URL ne correspond pas au navigateur (http vs https, autre host).
       CORS_EXTRA_ORIGINS: ${CORS_EXTRA_ORIGINS:-}
-      # Quelques films de démo si la table `films` est vide (aucune clé API). Désactive avec SEED_DEMO_IF_EMPTY=false.
+      # Titres démo sans OMDb (fusion : n’insère que les imdbId manquants). Désactive avec SEED_DEMO_IF_EMPTY=false.
       SEED_DEMO_IF_EMPTY: ${SEED_DEMO_IF_EMPTY:-true}
+      # Après le démo : même import que `pnpm seed:omdb` si OMDB_API_KEY ou OMDB_KEY est défini. Désactive avec SEED_OMDB_ON_START=false.
+      SEED_OMDB_ON_START: ${SEED_OMDB_ON_START:-true}
+      # Ne pas relancer OMDb si le catalogue compte déjà au moins ce nombre de films (évite 100+ requêtes à chaque redémarrage).
+      SEED_OMDB_SKIP_IF_COUNT: ${SEED_OMDB_SKIP_IF_COUNT:-100}
     depends_on:
       db:
         condition: service_healthy

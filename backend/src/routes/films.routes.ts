@@ -25,7 +25,7 @@ filmsRoutes.get("/", async (req, res) => {
   try {
     const q = toStringQuery(req.query.q).trim()
     const category = toStringQuery(req.query.category).trim()
-    const limit = toNumberQuery(req.query.limit, 60)
+    const limit = toNumberQuery(req.query.limit, 300)
 
     const whereParts: SQL[] = []
 

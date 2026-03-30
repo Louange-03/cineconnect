@@ -3,8 +3,16 @@ set -e
 echo "[entrypoint] Running database migrations..."
 pnpm db:migrate
 if [ "${SEED_DEMO_IF_EMPTY:-true}" != "false" ]; then
-  echo "[entrypoint] Demo seed if catalog is empty (set SEED_DEMO_IF_EMPTY=false to skip)..."
+  echo "[entrypoint] Demo seed — ajoute les titres démo manquants (SEED_DEMO_IF_EMPTY=false pour désactiver)..."
   pnpm seed:demo || echo "[entrypoint] warning: seed:demo failed, continuing anyway"
+fi
+if [ "${SEED_OMDB_ON_START:-true}" != "false" ]; then
+  if [ -n "${OMDB_API_KEY:-}" ] || [ -n "${OMDB_KEY:-}" ]; then
+    echo "[entrypoint] OMDb seed — catalogue étendu comme en local (clé présente)..."
+    pnpm seed:omdb || echo "[entrypoint] warning: seed:omdb failed, continuing anyway"
+  else
+    echo "[entrypoint] Pas de OMDB_API_KEY — catalogue limité au seed démo. Définis la clé pour importer la liste OMDb (comme en local)."
+  fi
 fi
 echo "[entrypoint] Starting API..."
 exec "$@"

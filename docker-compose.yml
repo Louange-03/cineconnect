@@ -28,7 +28,10 @@ services:
       NODE_ENV: development
       DATABASE_URL: postgresql://cineconnect:cineconnect@db:5432/cineconnect
       FRONTEND_URL: http://localhost:5173
+      OMDB_API_KEY: ${OMDB_API_KEY:-}
       SEED_DEMO_IF_EMPTY: "true"
+      SEED_OMDB_ON_START: "true"
+      SEED_OMDB_SKIP_IF_COUNT: "100"
     depends_on:
       db:
         condition: service_healthy

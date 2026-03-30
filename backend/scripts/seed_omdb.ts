@@ -3,7 +3,7 @@ import { fileURLToPath } from "url"
 import dotenv from "dotenv"
 import { db } from "../src/db"
 import { films, categories, filmCategories } from "../src/db/schema"
-import { eq } from "drizzle-orm"
+import { eq, count } from "drizzle-orm"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config()
@@ -75,8 +75,18 @@ const GENRE_MAP: Record<string, string> = {
 };
 
 async function seed() {
+    const skipIfGte = Number(process.env.SEED_OMDB_SKIP_IF_COUNT ?? "100")
+    const [countRow] = await db.select({ c: count() }).from(films)
+    const existingTotal = Number(countRow?.c ?? 0)
+    if (existingTotal >= skipIfGte) {
+        console.log(
+            `[seed:omdb] Déjà ${existingTotal} film(s) (seuil SEED_OMDB_SKIP_IF_COUNT=${skipIfGte}), import ignoré.`,
+        )
+        process.exit(0)
+    }
+
     console.log("Démarrage de l'importation de films et séries depuis OMDb...")
-    let imported = 0;
+    let imported = 0
 
     for (const title of TITLES_TO_SEED) {
         try {
