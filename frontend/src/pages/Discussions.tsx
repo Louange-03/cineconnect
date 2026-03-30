@@ -386,16 +386,16 @@ export function Discussion() {
   )
 
   return (
-    <div className="discussions-page mt-20 flex h-[calc(100vh-5rem)] overflow-hidden bg-[#050B1C] text-white">
+    <div className="discussions-page flex h-[calc(100dvh-5rem)] min-h-[calc(100dvh-5rem)] overflow-hidden bg-[#050B1C] text-white">
       {/* Sidebar */}
       <div
         className={[
           "w-full md:flex md:max-w-[380px] md:flex-col md:border-r md:border-white/10",
           "bg-[#0A132D]/60 backdrop-blur-xl",
-          selected ? "hidden md:flex" : "flex flex-col",
+          selected ? "hidden md:flex" : "flex min-h-0 flex-col",
         ].join(" ")}
       >
-        <div className="p-6 border-b border-white/10 bg-white/5">
+        <div className="border-b border-white/10 bg-white/5 p-4 md:p-6">
           <h2 className="text-2xl font-semibold tracking-tight text-white">Messages</h2>
           <p className="text-sm text-gray-400 mt-1">Vos conversations récentes</p>
           <div className="mt-4">
@@ -408,7 +408,7 @@ export function Discussion() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto hide-scrollbar p-3 space-y-2">
+        <div className="hide-scrollbar flex-1 space-y-2 overflow-y-auto p-3">
           {filteredConversations.length === 0 ? (
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/60">
               Aucun ami ne correspond a ta recherche.
@@ -448,7 +448,12 @@ export function Discussion() {
       </div>
 
       {/* Main Chat Area */}
-      <div className={["relative flex-1 flex-col bg-[#050B1C]", selected ? "flex" : "hidden md:flex"].join(" ")}>
+      <div
+        className={[
+          "relative min-h-0 flex-1 flex-col bg-[#050B1C]",
+          selected ? "flex" : "hidden md:flex",
+        ].join(" ")}
+      >
         {/* Background gradient & texture overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#1D6CE0]/5 via-transparent to-[#3EA6FF]/5 pointer-events-none" />
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay pointer-events-none" />
@@ -456,7 +461,7 @@ export function Discussion() {
         {selected ? (
           <>
             {/* Chat Header */}
-            <div className="z-10 flex items-center gap-3 border-b border-white/10 bg-[#0A132D]/80 p-4 backdrop-blur-md md:gap-4 md:p-6">
+            <div className="z-10 flex items-center gap-3 border-b border-white/10 bg-[#0A132D]/80 p-3 backdrop-blur-md md:gap-4 md:p-6">
               <button
                 type="button"
                 onClick={() => setSelected(null)}
@@ -467,7 +472,7 @@ export function Discussion() {
               </button>
               <Avatar name={selected.name} src={selected.avatar_url} selected size="md" />
               <div>
-                <h3 className="text-xl font-bold text-white tracking-wide">{selected.name || "Inconnu"}</h3>
+                <h3 className="text-base font-bold tracking-wide text-white md:text-xl">{selected.name || "Inconnu"}</h3>
                 <p className="text-sm text-[#3EA6FF] flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                   En ligne
@@ -476,7 +481,7 @@ export function Discussion() {
             </div>
 
             {/* Messages body */}
-            <div className="z-10 flex-1 space-y-4 overflow-y-auto p-3 scroll-smooth hide-scrollbar md:p-6">
+            <div className="hide-scrollbar z-10 flex-1 space-y-4 overflow-y-auto p-3 scroll-smooth md:p-6">
               {messages.map((msg, idx) => {
                 const isMine = msg.sender_id === currentUserId;
                 const sharedFilm = parseSharedFilmMessage(msg.text || "")
@@ -625,7 +630,7 @@ export function Discussion() {
             </div>
 
             {/* Input area */}
-            <div className="z-10 mb-2 bg-transparent p-2 md:p-4">
+            <div className="z-10 bg-transparent p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:p-4">
               <div className="mx-auto flex max-w-4xl items-center gap-2 rounded-2xl border border-white/10 bg-[#0A132D]/90 p-2 pr-2 shadow-[0_10px_40px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:gap-3 md:rounded-full md:pr-3">
                 <button
                   type="button"
@@ -644,7 +649,7 @@ export function Discussion() {
                     }}
                     onBlur={handleStopTyping}
                     onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                    className="w-full bg-transparent border-none py-3 pl-6 pr-12 text-white placeholder-white/40 focus:outline-none focus:ring-0 transition-all"
+                    className="w-full border-none bg-transparent py-2.5 pl-4 pr-12 text-sm text-white placeholder-white/40 transition-all focus:outline-none focus:ring-0 md:py-3 md:pl-6 md:text-base"
                     placeholder="Écrivez votre message..."
                   />
                   <button className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-white/40 hover:text-[#3EA6FF] transition-colors">
@@ -657,7 +662,7 @@ export function Discussion() {
                 <button
                   onClick={sendMessage}
                   disabled={!newMessage.trim()}
-                  className="bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] h-10 w-10 rounded-full text-white shadow-[0_0_15px_rgba(29,108,224,0.4)] transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center shrink-0"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] text-white shadow-[0_0_15px_rgba(29,108,224,0.4)] transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 md:h-10 md:w-10"
                   aria-label="Envoyer"
                 >
                   <Send size={18} className="ml-0.5" />
@@ -666,7 +671,7 @@ export function Discussion() {
             </div>
 
             {shareOpen && (
-              <div className="px-4 pb-3">
+              <div className="px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:px-4 md:pb-3">
                 <div className="mx-auto max-w-4xl rounded-2xl border border-white/10 bg-[#0A132D]/95 p-3 shadow-2xl">
                   <div className="mb-2 flex items-center justify-between">
                     <p className="text-sm font-semibold text-white">Partager un film dans cette discussion</p>
@@ -709,7 +714,7 @@ export function Discussion() {
             )}
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-white/40 space-y-4">
+          <div className="flex flex-1 flex-col items-center justify-center space-y-4 text-white/40">
             <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center border border-white/10 shadow-xl">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-12 h-12 opacity-50">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />

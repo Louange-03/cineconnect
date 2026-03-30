@@ -6,6 +6,7 @@ import { Footer } from "./Footer"
 export function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const isHome = pathname === "/"
+  const isDiscussion = pathname.startsWith("/discussion")
 
   return (
     <div
@@ -23,10 +24,10 @@ export function AppLayout() {
       )}
 
       <Navbar />
-      <main className="pt-20">
+      <main className={["pt-20", isDiscussion ? "min-h-[calc(100dvh-5rem)]" : ""].join(" ")}>
         <Outlet />
       </main>
-      <Footer />
+      {!isDiscussion ? <Footer /> : null}
     </div>
   )
 }
