@@ -1,3 +1,9 @@
+# Etapes finales :
+#   - Par defaut (derniere etape) : Node + serve sur 8080 — local, Cloud Run, docker-compose.yml
+#   - target: coolify : nginx sur 80 — docker-compose.yaml / Coolify (domaine web sans :8080 dans l’UI)
+#
+# Build Coolify : docker compose -f docker-compose.yaml build web  (compose definit target: coolify)
+
 FROM node:20-alpine AS build
 
 WORKDIR /app
@@ -12,10 +18,16 @@ COPY . .
 ARG VITE_API_URL
 ARG VITE_SOCKET_URL
 
-# Coolify met parfois :8080 dans l’URL (port conteneur) ; le navigateur doit appeler le proxy (:80 / :443).
 RUN export VITE_API_URL=$(printf '%s' "${VITE_API_URL}" | sed -E 's/:8080\/?$//') && \
     export VITE_SOCKET_URL=$(printf '%s' "${VITE_SOCKET_URL}" | sed -E 's/:8080\/?$//') && \
     pnpm build
+
+FROM nginx:alpine AS coolify
+
+COPY nginx-docker.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
 
 FROM node:20-alpine
 
@@ -29,5 +41,4 @@ ENV PORT=8080
 
 EXPOSE 8080
 
-# Ecouter sur toutes les interfaces (sinon le proxy Coolify/Traefik ne joint pas le conteneur).
 CMD ["sh", "-c", "serve -s dist -l tcp://0.0.0.0:${PORT}"]
