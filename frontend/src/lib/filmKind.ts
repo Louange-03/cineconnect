@@ -7,7 +7,7 @@ export function normalizeFilmToken(v: string) {
  * Détecte une série TV via les catégories (ex. OMDb « Série »), sans exclure les films TMDB
  * dont un libellé contiendrait par erreur « tv » (ex. faux positif sur includes("tv")).
  */
-export function isTvSeriesCategories(categories: string[] | undefined): boolean {
+export function isTvSeriesCategories(categories: string[] | null | undefined): boolean {
   if (!categories?.length) return false
   return categories.some((c) => {
     const n = normalizeFilmToken(c)
@@ -32,7 +32,7 @@ export function isSeriesFromMetadata(metadata: string | null | undefined): boole
 
 /** Catalogue / filtres : série si meta OMDb ou catégories explicites (TMDB reste « film »). */
 export function isSeriesFilmListed(f: {
-  categories?: string[]
+  categories?: string[] | null
   metadata?: string | null
 }): boolean {
   if (isSeriesFromMetadata(f.metadata)) return true

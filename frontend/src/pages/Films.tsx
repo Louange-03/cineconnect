@@ -34,7 +34,7 @@ export function Films() {
 
   const filteredCategories = useMemo(() => {
     const byName = new Map(
-      categories.map((c) => [normalizeToken(c.name), c] as const),
+      categories.map((c) => [normalizeFilmToken(c.name), c] as const),
     )
 
     const preferredGroups = [
