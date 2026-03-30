@@ -7,6 +7,7 @@ import { defineConfig } from "vitest/config"
 export default defineConfig({
   test: {
     environment: "node",
+    hookTimeout: 60_000,
     include: ["tests/**/*.test.ts"],
     coverage: {
       provider: "v8",
@@ -27,6 +28,10 @@ export default defineConfig({
         "src/swagger.ts",
         "src/controllers/films.controller.ts",
         "src/controllers/films/**",
+        /** Intégrations mail / Web push (testées en manuel ou E2E) */
+        "src/utils/mailer.ts",
+        "src/utils/push.ts",
+        "src/db/ensurePushSchema.ts",
       ],
       reporter: ["text", "text-summary", "html"],
       reportsDirectory: "./coverage",

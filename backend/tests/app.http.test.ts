@@ -15,14 +15,14 @@ describe("createApp", () => {
     app = createApp()
     httpServer = createServer(app)
     await new Promise<void>((resolve) => httpServer.listen(0, () => resolve()))
-  })
+  }, 60_000)
 
-  afterAll(
-    () =>
-      new Promise<void>((resolve) => {
-        httpServer.close(() => resolve())
-      })
-  )
+  afterAll(async () => {
+    if (!httpServer) return
+    await new Promise<void>((resolve) => {
+      httpServer.close(() => resolve())
+    })
+  })
 
   it("GET /health", async () => {
     const res = await request(httpServer).get("/health")

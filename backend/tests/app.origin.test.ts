@@ -60,3 +60,19 @@ describe("resolveAllowedFrontendOrigins", () => {
     ])
   })
 })
+
+describe("createApp", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    delete process.env.NODE_ENV
+    vi.resetModules()
+  })
+
+  it("active trust proxy en production", async () => {
+    vi.stubEnv("NODE_ENV", "production")
+    vi.resetModules()
+    const { createApp } = await import("../src/app")
+    const app = createApp()
+    expect(app.get("trust proxy")).toBe(1)
+  })
+})
