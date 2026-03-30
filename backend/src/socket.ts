@@ -77,6 +77,7 @@ export const initSocket = (
         )
 
         if (!memberCheck.rowCount) return
+        socket.join(`conversation-${conversationId}`)
 
         const result = await pool.query(
           `
@@ -154,6 +155,23 @@ export const initSocket = (
             console.error("[mail][new-message] send failed:", err)
           })
         }
+      } catch (e) {
+        console.error(e)
+      }
+    })
+
+    socket.on("join-conversation", async ({ conversationId }: { conversationId: string }) => {
+      if (!conversationId) return
+      try {
+        const memberCheck = await pool.query(
+          `
+          SELECT 1 FROM conversation_members
+          WHERE conversation_id = $1 AND user_id = $2
+          `,
+          [conversationId, userId],
+        )
+        if (!memberCheck.rowCount) return
+        socket.join(`conversation-${conversationId}`)
       } catch (e) {
         console.error(e)
       }

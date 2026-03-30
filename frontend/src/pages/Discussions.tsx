@@ -155,6 +155,7 @@ export function Discussion() {
 
   const handleSelectConversation = (conv: Conversation) => {
     setSelected(conv)
+    socket.emit("join-conversation", { conversationId: conv.id })
     setConversations((prev) =>
       prev.map((item) =>
         item.id === conv.id ? { ...item, unread_count: 0 } : item
@@ -182,6 +183,7 @@ export function Discussion() {
 
   useEffect(() => {
     if (!selected) return
+    socket.emit("join-conversation", { conversationId: selected.id })
 
     const fetchMessages = async () => {
       const res = await axios.get<Message[]>(buildApiUrl(`/api/conversations/${selected.id}/messages`), {
