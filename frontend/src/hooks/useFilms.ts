@@ -3,7 +3,7 @@ import { buildApiUrl } from "../lib/apiUrl"
 import type { Film } from "../types"
 
 /** Aligné sur DEFAULT_FILMS_LIMIT côté API (catalogues larges + TMDB). */
-export const FILMS_PAGE_LIMIT = "2000"
+export const FILMS_PAGE_LIMIT = "10000"
 
 async function fetchFilms(query: string, category: string, year: string): Promise<Film[]> {
   const params = new URLSearchParams()

@@ -56,7 +56,7 @@ describe("useFilms (omdb module)", () => {
     expect(url).toContain("q=a")
     expect(url).toContain("category=b")
     expect(url).toContain("year=c")
-    expect(url).toContain("limit=2000")
+    expect(url).toContain("limit=10000")
   })
 
   it("content-type absent → erreur", async () => {
