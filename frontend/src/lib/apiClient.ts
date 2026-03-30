@@ -1,12 +1,11 @@
 import { getToken } from "./auth"
 import type { ApiRequestOptions } from "../types"
+import { buildApiUrl } from "./apiUrl"
 
 /**
  * Si VITE_API_URL est défini, on l'utilise (ex: http://localhost:3001).
  * Sinon on passe par le proxy Vite avec des chemins relatifs (/api/...).
  */
-const RAW_API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? ""
-const API_URL = RAW_API_URL.replace(/\/$/, "")
 
 interface RequestOptions {
   method?: string
@@ -23,7 +22,7 @@ async function request<T = any>(path: string, { method = "GET", body, auth = tru
   }
 
   const normalizedPath = path.startsWith("/") ? path : `/${path}`
-  const url = `${API_URL}${normalizedPath}`
+  const url = buildApiUrl(normalizedPath)
   try {
     const res = await fetch(url, {
       method,

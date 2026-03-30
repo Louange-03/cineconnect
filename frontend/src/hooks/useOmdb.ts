@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getToken } from "../lib/auth"
+import { buildApiUrl } from "../lib/apiUrl"
 import type { OMDBMovie } from "../types"
 
 type OmdbSearchResponse = {
@@ -13,7 +14,7 @@ export function useOmdbSearch(query: string) {
     queryKey: ["omdb-search", query],
     enabled: query.trim().length >= 3,
     queryFn: async () => {
-      const res = await fetch(`/api/films/omdb/search?q=${encodeURIComponent(query)}`, {
+      const res = await fetch(buildApiUrl(`/api/films/omdb/search?q=${encodeURIComponent(query)}`), {
         headers: { Accept: "application/json" },
       })
       if (!res.ok) throw new Error("Erreur recherche OMDb")
@@ -33,7 +34,7 @@ export function useImportOmdbFilm() {
       const token = getToken()
       if (!token) throw new Error("Connecte-toi pour importer un film.")
 
-      const res = await fetch("/api/films/import", {
+      const res = await fetch(buildApiUrl("/api/films/import"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

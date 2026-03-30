@@ -17,7 +17,7 @@ describe("Friends.service", () => {
     vi.mocked(axios.get).mockResolvedValueOnce({ data: [{ id: "u1" }] })
     const data = await getFriends()
     expect(data).toEqual([{ id: "u1" }])
-    expect(axios.get).toHaveBeenCalledWith("http://localhost:3007/api/friends", {
+    expect(axios.get).toHaveBeenCalledWith("/api/friends", {
       withCredentials: true,
     })
   })

@@ -5,6 +5,7 @@ import axios from "axios"
 import { getToken } from "../../lib/auth"
 import { connectSocket, socket } from "../../socket"
 import { CompactSearchInput } from "../ui/CompactSearchInput"
+import { buildApiUrl } from "../../lib/apiUrl"
 
 interface FilmCardProps {
   film: Film
@@ -77,12 +78,11 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
     onFavoriteChange?.(film.id, next)
 
     try {
-      const api = getApiBaseUrl()
       let targetFilmId = film.id
 
       // OMDb fallback rows use imdbID as id; import first so favorites can persist in DB.
       if (/^tt\d+$/i.test(targetFilmId)) {
-        const imported = await fetch(`${api}/api/films/import`, {
+        const imported = await fetch(buildApiUrl("/api/films/import"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -137,8 +137,7 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
     setLoadingFriends(true)
 
     try {
-      const api = getApiBaseUrl()
-      const res = await fetch(`${api}/api/friends`, {
+      const res = await fetch(buildApiUrl("/api/friends"), {
         headers: {
           Accept: "application/json",
           Authorization: `Bearer ${token}`,
@@ -162,7 +161,6 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
       showToast("Connecte-toi pour partager un film.")
       return
     }
-    const api = getApiBaseUrl()
     const filmUrl = `${window.location.origin}/film/${film.id}`
     const posterUrl = safePosterUrl(film.posterUrl)
     const text =
@@ -172,7 +170,7 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
 
     setSharingTo(friend.id)
     try {
-      const started = await fetch(`${api}/api/messages/start`, {
+      const started = await fetch(buildApiUrl("/api/messages/start"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

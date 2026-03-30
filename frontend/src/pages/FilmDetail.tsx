@@ -7,6 +7,7 @@ import { ReviewCard } from "../components/reviews/ReviewCard"
 import { useReviews } from "../hooks/useReviews"
 import { Reveal } from "../components/ui/Reveal"
 import { getToken, getUser } from "../lib/auth"
+import { buildApiUrl } from "../lib/apiUrl"
 import type { Review } from "../types"
 
 /** small JSON fetch wrapper that throws useful errors */
@@ -75,7 +76,7 @@ export function FilmDetail() {
   const { data: film, isLoading, error } = useQuery<Film | null, Error>({
     queryKey: ["film", id],
     queryFn: async () => {
-      const data = await fetchJson<{ film?: Film | null }>(`/api/films/${id}`)
+      const data = await fetchJson<{ film?: Film | null }>(buildApiUrl(`/api/films/${id}`))
       return data.film ?? null
     },
     enabled: !!id,
@@ -109,7 +110,7 @@ export function FilmDetail() {
     async (token: string): Promise<string> => {
       if (!/^tt\d+$/i.test(resolvedFilmId)) return resolvedFilmId
 
-      const imported = await fetch("/api/films/import", {
+      const imported = await fetch(buildApiUrl("/api/films/import"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -146,7 +147,7 @@ export function FilmDetail() {
       setFavoriteBusy(true)
       try {
         const targetFilmId = await ensureFilmInDb(token)
-        const res = await fetch(`/api/users/me/favorites/${targetFilmId}`, {
+        const res = await fetch(buildApiUrl(`/api/users/me/favorites/${targetFilmId}`), {
           method: next ? "POST" : "DELETE",
           headers: {
             Accept: "application/json",
@@ -181,7 +182,7 @@ export function FilmDetail() {
         return
       }
       try {
-        const res = await fetch(`/api/reviews/${reviewId}`, {
+        const res = await fetch(buildApiUrl(`/api/reviews/${reviewId}`), {
           method: "DELETE",
           headers: {
             Accept: "application/json",
@@ -222,7 +223,7 @@ export function FilmDetail() {
         return
       }
       try {
-        const res = await fetch(`/api/reviews/${review.id}`, {
+        const res = await fetch(buildApiUrl(`/api/reviews/${review.id}`), {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -268,7 +269,7 @@ export function FilmDetail() {
         return
       }
       try {
-        const res = await fetch("/api/users/me/favorites", {
+        const res = await fetch(buildApiUrl("/api/users/me/favorites"), {
           headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
         })
         if (!res.ok) return

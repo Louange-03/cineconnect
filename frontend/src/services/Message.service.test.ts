@@ -17,7 +17,7 @@ describe("Message.service", () => {
     vi.mocked(axios.get).mockResolvedValueOnce({ data: [{ id: "m1" }] })
     const data = await getMessages(42)
     expect(data).toEqual([{ id: "m1" }])
-    expect(axios.get).toHaveBeenCalledWith("http://localhost:3007/api/messages/42", {
+    expect(axios.get).toHaveBeenCalledWith("/api/messages/42", {
       withCredentials: true,
     })
   })

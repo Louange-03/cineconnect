@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query"
+import { buildApiUrl } from "../lib/apiUrl"
 import type { Review } from "../types"
 
 async function fetchReviews(filmId: string): Promise<Review[]> {
-  const res = await fetch(`/api/reviews/film/${filmId}`, {
+  const res = await fetch(buildApiUrl(`/api/reviews/film/${filmId}`), {
     headers: { Accept: "application/json" },
   })
 

@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query"
+import { buildApiUrl } from "../lib/apiUrl"
 import type { Category } from "../types"
 
 async function fetchCategories(): Promise<Category[]> {
-  const res = await fetch("/api/films/categories", {
+  const res = await fetch(buildApiUrl("/api/films/categories"), {
     headers: {
       Accept: "application/json",
     },

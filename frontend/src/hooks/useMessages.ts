@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getToken } from "../lib/auth"
+import { buildApiUrl } from "../lib/apiUrl"
 
 export type Message = {
     id: string
@@ -27,7 +28,7 @@ export function useInbox() {
             const token = getToken()
             if (!token) return [] // or throw
 
-            const res = await fetch("/api/messages/inbox", {
+            const res = await fetch(buildApiUrl("/api/messages/inbox"), {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     Accept: "application/json",
@@ -50,7 +51,7 @@ export function useConversation(otherUserId: string | null) {
             const token = getToken()
             if (!token) return []
 
-            const res = await fetch(`/api/messages/conversation/${otherUserId}`, {
+            const res = await fetch(buildApiUrl(`/api/messages/conversation/${otherUserId}`), {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     Accept: "application/json",
@@ -73,7 +74,7 @@ export function useSendMessage() {
             const token = getToken()
             if (!token) throw new Error("Non connecté")
 
-            const res = await fetch("/api/messages", {
+            const res = await fetch(buildApiUrl("/api/messages"), {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

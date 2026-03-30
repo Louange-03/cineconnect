@@ -4,6 +4,7 @@ import { useAuth } from "../hooks/useAuth"
 import { useLocation } from "@tanstack/react-router"
 import axios from "axios"
 import { getToken, logout } from "../lib/auth"
+import { buildApiUrl } from "../lib/apiUrl"
 
 type FavoriteFilm = {
   id: number
@@ -72,7 +73,7 @@ export function Profil() {
 
     try {
       const token = getToken()
-      await axios.put(`${API_BASE}/api/users/me/password`, { password: newPass }, {
+      await axios.put(buildApiUrl("/api/users/me/password"), { password: newPass }, {
         headers: { Authorization: `Bearer ${token}` }
       })
       showToast("Mot de passe modifié avec succès !", "success")
@@ -85,7 +86,7 @@ export function Profil() {
     if (!window.confirm("C'est définitif. Êtes-vous ABSOLUMENT sûr de vouloir supprimer votre compte ?")) return
     try {
       const token = getToken()
-      await axios.delete(`${API_BASE}/api/users/me`, {
+      await axios.delete(buildApiUrl("/api/users/me"), {
         headers: { Authorization: `Bearer ${token}` }
       })
       logout()
@@ -100,7 +101,7 @@ export function Profil() {
       try {
         const token = getToken()
         if (!token) return
-        const res = await axios.get(`${API_BASE}/api/users/me/favorites`, {
+        const res = await axios.get(buildApiUrl("/api/users/me/favorites"), {
           headers: { Authorization: `Bearer ${token}` }
         })
         setFavoriteFilms(res.data.favorites)
@@ -112,7 +113,7 @@ export function Profil() {
     const onFavoritesChanged = () => fetchFavs()
     window.addEventListener("favorites-changed", onFavoritesChanged)
     return () => window.removeEventListener("favorites-changed", onFavoritesChanged)
-  }, [API_BASE])
+  }, [])
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

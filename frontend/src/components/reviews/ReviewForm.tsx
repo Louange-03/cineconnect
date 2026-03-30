@@ -2,6 +2,7 @@ import React, { useState, FormEvent } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { StarRating } from "./StarRating"
 import { getToken } from "../../lib/auth"
+import { buildApiUrl } from "../../lib/apiUrl"
 
 interface Props {
   filmId: string
@@ -35,7 +36,7 @@ export function ReviewForm({ filmId }: Props) {
     try {
       setIsSubmitting(true)
 
-      const res = await fetch("/api/reviews", {
+      const res = await fetch(buildApiUrl("/api/reviews"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

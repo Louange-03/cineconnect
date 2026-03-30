@@ -53,5 +53,22 @@ services:
     depends_on:
       - api
 
+  # Remplit le catalogue avec quelques films si la table est vide (aucune clé API).
+  # Usage : docker compose --profile seed up seed
+  seed:
+    profiles: ["seed"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cineconnect-seed
+    environment:
+      DATABASE_URL: postgresql://cineconnect:cineconnect@db:5432/cineconnect
+      NODE_ENV: development
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+    command: ["pnpm", "seed:demo"]
+
 volumes:
   cineconnect_pg:

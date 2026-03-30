@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
+import { buildApiUrl } from "../lib/apiUrl"
 import type { Film } from "../types"
 
 async function fetchFilms(query: string, category: string, year: string): Promise<Film[]> {
@@ -7,7 +8,7 @@ async function fetchFilms(query: string, category: string, year: string): Promis
   if (category) params.append("category", category)
   if (year) params.append("year", year)
 
-  const res = await fetch(`/api/films?${params.toString()}`, {
+  const res = await fetch(buildApiUrl(`/api/films?${params.toString()}`), {
     headers: { Accept: "application/json" },
   })
 

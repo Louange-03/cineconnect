@@ -5,6 +5,7 @@ import { connectSocket, disconnectSocket, socket } from "../socket"
 import axios from "axios"
 import type { Conversation, Message } from "../types"
 import { getToken, getUser } from "../lib/auth"
+import { buildApiUrl } from "../lib/apiUrl"
 
 interface UserStatusPayload {
   userId: string
@@ -170,10 +171,9 @@ export function Discussion() {
 
   useEffect(() => {
     const fetchConversations = async () => {
-      const res = await axios.get<Conversation[]>(
-        "/api/conversations",
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      const res = await axios.get<Conversation[]>(buildApiUrl("/api/conversations"), {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       setConversations(res.data)
     }
 
@@ -184,10 +184,9 @@ export function Discussion() {
     if (!selected) return
 
     const fetchMessages = async () => {
-      const res = await axios.get<Message[]>(
-        `/api/conversations/${selected.id}/messages`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      const res = await axios.get<Message[]>(buildApiUrl(`/api/conversations/${selected.id}/messages`), {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       setMessages(res.data)
     }
 
@@ -343,7 +342,7 @@ export function Discussion() {
 
     setLoadingFilms(true)
     try {
-      const res = await fetch("/api/films?limit=120", {
+      const res = await fetch(buildApiUrl("/api/films?limit=120"), {
         headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
       })
       if (!res.ok) throw new Error("Erreur chargement films")
