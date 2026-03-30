@@ -66,7 +66,17 @@ export const initSocket = (
       console.error(e)
     }
 
-    socket.on("send-message", async ({ conversationId, text }) => {
+    socket.on(
+      "send-message",
+      async ({
+        conversationId,
+        text,
+        replyToMessageId,
+      }: {
+        conversationId: string
+        text: string
+        replyToMessageId?: string | null
+      }) => {
       try {
         const memberCheck = await pool.query(
           `
@@ -79,16 +89,54 @@ export const initSocket = (
         if (!memberCheck.rowCount) return
         socket.join(`conversation-${conversationId}`)
 
-        const result = await pool.query(
-          `
-          INSERT INTO messages (conversation_id, sender_id, text)
-          VALUES ($1, $2, $3)
-          RETURNING *
-          `,
-          [conversationId, userId, text]
-        )
+        let replyToId: string | null = null
+        if (replyToMessageId && typeof replyToMessageId === "string") {
+          const ref = await pool.query(
+            `
+            SELECT id FROM messages
+            WHERE id = $1 AND conversation_id = $2
+            LIMIT 1
+            `,
+            [replyToMessageId, conversationId],
+          )
+          if (ref.rowCount) replyToId = replyToMessageId
+        }
 
-        const message = result.rows[0]
+        const insert = await pool.query(
+          `
+          INSERT INTO messages (conversation_id, sender_id, text, reply_to_id)
+          VALUES ($1, $2, $3, $4)
+          RETURNING id
+          `,
+          [conversationId, userId, text, replyToId],
+        )
+        const newId = insert.rows[0]?.id as string
+        if (!newId) return
+
+        const enriched = await pool.query(
+          `
+          SELECT
+            m.id,
+            m.conversation_id,
+            m.sender_id,
+            m.text,
+            m.seen,
+            m.created_at,
+            m.updated_at,
+            m.reply_to_id,
+            rm.text AS reply_to_text,
+            rm.sender_id AS reply_to_sender_id,
+            ru.username AS reply_to_sender_username
+          FROM messages m
+          LEFT JOIN messages rm ON rm.id = m.reply_to_id
+          LEFT JOIN users ru ON ru.id = rm.sender_id
+          WHERE m.id = $1
+          LIMIT 1
+          `,
+          [newId],
+        )
+        const message = enriched.rows[0]
+        if (!message) return
 
         io.to(`conversation-${conversationId}`).emit(
           "new-message",

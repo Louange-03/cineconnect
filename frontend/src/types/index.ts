@@ -18,6 +18,11 @@ export interface Message {
   seen: boolean
   createdAt: string
   fromMe?: boolean
+  // réponse à un message (API / socket en snake_case)
+  reply_to_id?: string | null
+  reply_to_text?: string | null
+  reply_to_sender_id?: string | null
+  reply_to_sender_username?: string | null
   // raw SQL properties
   conversation_id?: string
   sender_id?: string

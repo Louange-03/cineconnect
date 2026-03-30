@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Send } from "lucide-react"
+import { Reply, Send, X } from "lucide-react"
 import { CompactSearchInput } from "../components/ui/CompactSearchInput"
 import { connectSocket, disconnectSocket, socket } from "../socket"
 import axios from "axios"
@@ -65,6 +65,34 @@ function formatMessageTime(value?: string) {
     hour: "2-digit",
     minute: "2-digit",
   })
+}
+
+function truncateReplySnippet(text: string, max = 90): string {
+  const t = text.trim().replace(/\s+/g, " ")
+  if (t.length <= max) return t
+  return `${t.slice(0, max)}…`
+}
+
+function replyQuoteSummary(
+  msg: Message,
+  currentUserId: string | null,
+): { author: string; snippet: string; replyId: string } | null {
+  const replyId = msg.reply_to_id
+  if (!replyId) return null
+  const raw = msg.reply_to_text
+  if (raw == null || raw === "") {
+    return { author: "Message", snippet: "…", replyId }
+  }
+  const film = parseSharedFilmMessage(raw)
+  const snippet = film
+    ? `${film.title} (${film.year || "—"})`
+    : truncateReplySnippet(raw)
+  const sid = msg.reply_to_sender_id
+  const author =
+    sid && currentUserId && sid === currentUserId
+      ? "Toi"
+      : msg.reply_to_sender_username || "Message"
+  return { author, snippet, replyId }
 }
 
 function formatMessageDayLabel(value?: string) {
@@ -148,6 +176,7 @@ export function Discussion() {
   const [loadingFilms, setLoadingFilms] = useState(false)
   const [reactionOpenFor, setReactionOpenFor] = useState<string | null>(null)
   const [reactionsByMessage, setReactionsByMessage] = useState<MessageReactions>({})
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null)
 
   const token = getToken()
   const currentUserId = getUser()?.id ?? null
@@ -202,7 +231,13 @@ export function Discussion() {
     )
     setReactionOpenFor(null)
     setReactionsByMessage({})
+    setReplyingTo(null)
   }, [selected, token])
+
+  const scrollToMessage = (messageId: string) => {
+    const el = document.getElementById(`disc-msg-${messageId}`)
+    el?.scrollIntoView({ behavior: "smooth", block: "center" })
+  }
 
   useEffect(() => {
     socket.on("new-message", (message: Message) => {
@@ -318,9 +353,11 @@ export function Discussion() {
     socket.emit("send-message", {
       conversationId: selected.id,
       text: newMessage,
+      replyToMessageId: replyingTo?.id,
     })
 
     setNewMessage("")
+    setReplyingTo(null)
   }
 
   const handleTyping = () => {
@@ -365,8 +402,10 @@ export function Discussion() {
     socket.emit("send-message", {
       conversationId: selected.id,
       text,
+      replyToMessageId: replyingTo?.id,
     })
     setShareOpen(false)
+    setReplyingTo(null)
   }
 
   const reactToMessage = (messageId: string, emoji: string) => {
@@ -495,8 +534,9 @@ export function Discussion() {
                   idx > 0 ? messages[idx - 1].created_at || messages[idx - 1].createdAt : undefined
                 const prevDayLabel = idx > 0 ? formatMessageDayLabel(prevRawDate) : ""
                 const showDaySeparator = idx === 0 || dayLabel !== prevDayLabel
+                const quote = replyQuoteSummary(msg, currentUserId)
                 return (
-                  <div key={msg.id}>
+                  <div key={msg.id} id={`disc-msg-${msg.id}`}>
                     {showDaySeparator ? (
                       <div className="my-2 flex items-center justify-center">
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-white/70">
@@ -566,7 +606,19 @@ export function Discussion() {
                           ) : null}
                         </div>
 
-                        <div className="mt-2 flex items-center gap-2">
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReplyingTo(msg)
+                              setReactionOpenFor(null)
+                            }}
+                            className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-2 py-1 text-[11px] text-white/80 transition hover:bg-white/10"
+                            title="Répondre à ce message"
+                          >
+                            <Reply className="h-3 w-3" aria-hidden />
+                            Répondre
+                          </button>
                           <div className="relative">
                             <button
                               type="button"
@@ -633,6 +685,34 @@ export function Discussion() {
 
             {/* Input area */}
             <div className="z-10 bg-transparent p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:p-4">
+              {replyingTo ? (
+                <div className="mx-auto mb-2 flex max-w-4xl items-start gap-2 rounded-2xl border border-[#3EA6FF]/40 bg-[#0A132D]/95 px-3 py-2 shadow-lg md:rounded-xl">
+                  <div className="min-w-0 flex-1 border-l-4 border-[#3EA6FF] pl-3">
+                    <p className="text-[11px] font-semibold text-[#3EA6FF]">
+                      Réponse à{" "}
+                      {replyingTo.sender_id === currentUserId
+                        ? "toi-même"
+                        : selected?.name || "ce message"}
+                    </p>
+                    <p className="mt-0.5 line-clamp-2 text-xs text-white/75">
+                      {(() => {
+                        const s = parseSharedFilmMessage(replyingTo.text || "")
+                        return s
+                          ? `Film : ${s.title}`
+                          : truncateReplySnippet(replyingTo.text || "", 140)
+                      })()}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setReplyingTo(null)}
+                    className="shrink-0 rounded-full p-1.5 text-white/60 transition hover:bg-white/10 hover:text-white"
+                    aria-label="Annuler la réponse"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : null}
               <div className="mx-auto flex max-w-4xl items-center gap-2 rounded-2xl border border-white/10 bg-[#0A132D]/90 p-2 pr-2 shadow-[0_10px_40px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:gap-3 md:rounded-full md:pr-3">
                 <button
                   type="button"

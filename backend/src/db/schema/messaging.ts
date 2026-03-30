@@ -1,4 +1,13 @@
-import { pgTable, uuid, varchar, text, boolean, timestamp, uniqueIndex } from "drizzle-orm/pg-core"
+import {
+  pgTable,
+  uuid,
+  varchar,
+  text,
+  boolean,
+  timestamp,
+  uniqueIndex,
+  type AnyPgColumn,
+} from "drizzle-orm/pg-core"
 import { users } from "./users"
 
 export const conversations = pgTable("conversations", {
@@ -29,6 +38,7 @@ export const messages = pgTable("messages", {
   id: uuid("id").defaultRandom().primaryKey(),
   conversationId: uuid("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
   senderId: uuid("sender_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  replyToId: uuid("reply_to_id").references((): AnyPgColumn => messages.id, { onDelete: "set null" }),
   text: text("text").notNull(),
   seen: boolean("seen").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

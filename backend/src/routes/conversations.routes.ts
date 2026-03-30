@@ -121,8 +121,22 @@ router.get(
       }
 
       let query = `
-        SELECT * FROM messages
-        WHERE conversation_id = $1
+        SELECT
+          m.id,
+          m.conversation_id,
+          m.sender_id,
+          m.text,
+          m.seen,
+          m.created_at,
+          m.updated_at,
+          m.reply_to_id,
+          rm.text AS reply_to_text,
+          rm.sender_id AS reply_to_sender_id,
+          ru.username AS reply_to_sender_username
+        FROM messages m
+        LEFT JOIN messages rm ON rm.id = m.reply_to_id
+        LEFT JOIN users ru ON ru.id = rm.sender_id
+        WHERE m.conversation_id = $1
       `
       const values: unknown[] = [conversationId]
 
