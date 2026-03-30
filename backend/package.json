@@ -17,6 +17,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "seed:demo": "tsx scripts/seed_demo_films.ts",
+    "seed:tmdb": "tsx scripts/seed_tmdb.ts",
     "seed:omdb": "tsx scripts/seed_omdb.ts",
     "seed:omdb:massive": "tsx scripts/seed_omdb_massive.ts"
   },
