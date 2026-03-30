@@ -165,14 +165,6 @@ export function HeroShortsCarousel() {
           className="pointer-events-none absolute inset-x-0 top-0 z-[2] h-1/4 bg-gradient-to-b from-[#050B1C]/80 to-transparent"
           aria-hidden
         />
-        <div
-          className="pointer-events-none absolute inset-y-0 left-0 z-[2] w-[16%] bg-gradient-to-r from-[#050B1C]/96 to-transparent"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute inset-y-0 right-0 z-[2] w-[16%] bg-gradient-to-l from-[#050B1C]/96 to-transparent"
-          aria-hidden
-        />
       </div>
 
       <p className="sr-only">
