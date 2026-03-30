@@ -295,7 +295,9 @@ En local : `./scripts/trigger-coolify-deploy.ps1` (variable d’environnement `C
 
 ### 2c) Ca ne marche toujours pas (Coolify)
 
-1. **URL dans le navigateur** : ouvre l’URL du service **`web`** **sans** `:8080` (ex. `http://web-….sslip.io`, pas `…:8080`).
+0. **« 404 page not found » sur l’IP du serveur** (`http://149.x.x.x`) : c’est **normal**. Coolify (Traefik) route selon le **nom de domaine**, pas l’adresse IP seule. Tu dois ouvrir l’URL affichee dans Coolify pour le service **`web`** (souvent `http://web-xxxxx.149.x.x.x.sslip.io` **sans** `:8080` dans le navigateur). L’API a une URL separee du type `http://api-xxxxx.…sslip.io` — ne l’ouvre pas pour voir l’interface : c’est le JSON de l’API.
+
+1. **URL dans le navigateur** : ouvre uniquement l’URL du service **`web`** **sans** `:8080` (ex. `http://web-….sslip.io`, pas `…:8080`). Verifie aussi que l’IP dans l’URL sslip.io est **exactement** celle de ton VPS (une faute de frappe sur un chiffre mene vers un autre serveur ou vers une 404).
 2. **Logs Coolify** : onglet **Logs** pour `api`, puis `web`, puis `db` — erreurs `JWT_SECRET`, Postgres, ou migrations en premier.
 3. **Depuis le VPS** (SSH) : `curl -sI http://127.0.0.1` ou teste que le proxy repond ; si l’API ecoute, les logs doivent afficher `API listening on http://0.0.0.0:8080` apres redeploiement.
 4. **CORS** : ouvre les outils developpeur (F12) → onglet **Network** / **Console**. Si tu vois des erreurs du type *blocked by CORS*, verifie que **`FRONTEND_URL`** dans Coolify est exactement l’URL que tu utilises dans la barre d’adresse (meme `http` vs `https`, pas de slash final). Tu peux ajouter **`CORS_EXTRA_ORIGINS`** (origines separees par des virgules) sur le service **`api`** dans le compose / variables Coolify pour autoriser plusieurs URLs.
