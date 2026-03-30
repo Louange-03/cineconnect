@@ -189,18 +189,60 @@ html.theme-light .bg-\[\#0A132D\] {
   background-color: #f3f6fc !important;
 }
 html.theme-light .text-white,
+html.theme-light .text-white\/95,
 html.theme-light .text-white\/90,
 html.theme-light .text-white\/85,
-html.theme-light .text-white\/80,
+html.theme-light .text-white\/80 {
+  color: #0f172a !important;
+}
 html.theme-light .text-white\/75,
 html.theme-light .text-white\/70,
-html.theme-light .text-white\/60,
+html.theme-light .text-white\/65,
+html.theme-light .text-white\/60 {
+  color: #334155 !important;
+}
+html.theme-light .text-white\/55,
 html.theme-light .text-white\/50,
 html.theme-light .text-white\/45,
-html.theme-light .text-white\/40,
+html.theme-light .text-white\/40 {
+  color: #475569 !important;
+}
 html.theme-light .text-white\/30,
+html.theme-light .text-white\/25,
 html.theme-light .text-white\/20 {
-  color: #0f172a !important;
+  color: #64748b !important;
+}
+
+/* Garder du texte blanc sur les boutons d'accent en mode clair */
+html.theme-light .home-page-mockup .bg-\[\#007BFF\],
+html.theme-light .home-page-mockup .bg-\[\#0066dd\],
+html.theme-light .home-page-mockup .bg-\[\#1D6CE0\],
+html.theme-light .home-page-mockup .home-cta-primary,
+html.theme-light .films-page .bg-\[\#007BFF\],
+html.theme-light .profile-page .bg-\[\#007BFF\],
+html.theme-light .users-page .bg-\[\#007BFF\],
+html.theme-light .friends-page .bg-\[\#007BFF\],
+html.theme-light .discussions-page .bg-\[\#007BFF\] {
+  color: #fff !important;
+}
+
+html.theme-light .home-page-mockup .bg-\[\#007BFF\] *,
+html.theme-light .home-page-mockup .bg-\[\#0066dd\] *,
+html.theme-light .home-page-mockup .bg-\[\#1D6CE0\] *,
+html.theme-light .home-page-mockup .home-cta-primary *,
+html.theme-light .films-page .bg-\[\#007BFF\] *,
+html.theme-light .profile-page .bg-\[\#007BFF\] *,
+html.theme-light .users-page .bg-\[\#007BFF\] *,
+html.theme-light .friends-page .bg-\[\#007BFF\] *,
+html.theme-light .discussions-page .bg-\[\#007BFF\] * {
+  color: #fff !important;
+}
+
+/* Bleu accent lisible sur fond clair, partout */
+html.theme-light .text-\[\#3EA6FF\],
+html.theme-light .text-\[\#3EA6FF\]\/80,
+html.theme-light .text-\[\#3EA6FF\]\/70 {
+  color: #1d4ed8 !important;
 }
 html.theme-light .text-gray-400,
 html.theme-light .text-gray-500 {
@@ -442,6 +484,10 @@ html.theme-light .app-shell-home {
 html.theme-light .home-page-mockup {
   background: linear-gradient(180deg, #f6f9ff 0%, #edf3ff 45%, #e8eef8 100%) !important;
   color: #0f172a !important;
+}
+
+html.theme-light .home-page-mockup h1 .bg-clip-text.text-transparent {
+  background-image: linear-gradient(to right, #1d4ed8, #0369a1) !important;
 }
 
 html.theme-light .home-hero-overlay {
