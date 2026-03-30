@@ -742,8 +742,31 @@ html.theme-light .home-page-mockup .bg-\[\#0c1222\] {
   perspective-origin: 50% 45%;
 }
 
-.home-hero-arc-track {
+.home-hero-arc-spin-root {
+  position: relative;
+  width: 0;
+  height: 0;
   transform-style: preserve-3d;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-hero-arc-spin {
+    animation: home-arc-yaw 40s linear infinite;
+  }
+
+  .home-hero-arc-spin:hover {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes home-arc-yaw {
+  from {
+    transform: rotateX(10deg) rotateY(0deg);
+  }
+  to {
+    transform: rotateX(10deg) rotateY(-360deg);
+  }
 }
 
 .home-hero-arc-face {

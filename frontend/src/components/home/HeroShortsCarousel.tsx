@@ -7,8 +7,7 @@ import { resolvePosterUrl } from "../../lib/poster"
 import type { Film } from "../../types"
 
 const FILMS_SEARCH = { q: "", category: "", type: "all" as const, sort: "" as const }
-const ROTATE_MS = 1900
-const SLOT_OFFSETS = [-3, -2, -1, 0, 1, 2, 3] as const
+const CARD_W = 116
 
 type Slide =
   | { kind: "film"; film: Film }
@@ -43,9 +42,6 @@ export function HeroShortsCarousel() {
   const { data: allFilms } = useFilms("", "", "")
   const slides = useMemo(() => buildSlides(allFilms), [allFilms])
   const n = slides.length
-  const safeN = Math.max(n, 1)
-
-  const [index, setIndex] = useState(0)
   const [reducedMotion, setReducedMotion] = useState(false)
 
   useEffect(() => {
@@ -56,13 +52,11 @@ export function HeroShortsCarousel() {
     return () => mq.removeEventListener("change", on)
   }, [])
 
-  useEffect(() => {
-    if (reducedMotion || safeN <= 1) return
-    const id = window.setInterval(() => {
-      setIndex((cur) => (cur + 1) % safeN)
-    }, ROTATE_MS)
-    return () => window.clearInterval(id)
-  }, [reducedMotion, safeN])
+  const radiusPx = useMemo(() => {
+    const count = Math.max(n, 3)
+    return Math.round((CARD_W / 2 + 10) / Math.sin(Math.PI / count))
+  }, [n])
+  const angleStep = 360 / Math.max(n, 1)
 
   if (n === 0) {
     return (
@@ -80,12 +74,19 @@ export function HeroShortsCarousel() {
       aria-label="Affiches en carrousel courbé"
     >
       <div className="home-hero-arc-viewport relative mx-auto h-[150px] w-full max-w-[760px] sm:h-[175px] md:h-[190px]">
-        <div className="home-hero-arc-track absolute inset-0">
-          {SLOT_OFFSETS.map((offset, slotIdx) => {
-            const slideIdx = (index + offset + safeN * 100) % safeN
-            const slide = slides[slideIdx]
-            if (!slide) return null
-
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div
+            className={[
+              "home-hero-arc-spin-root",
+              reducedMotion ? "" : "home-hero-arc-spin",
+            ].join(" ")}
+            style={
+              reducedMotion
+                ? { transformStyle: "preserve-3d", transform: "rotateX(10deg) rotateY(-20deg)" }
+                : { transformStyle: "preserve-3d" }
+            }
+          >
+            {slides.map((slide, i) => {
             const posterSrc =
               slide.kind === "film" ? resolvePosterUrl(slide.film) : slide.src
             const alt = slide.kind === "film" ? slide.film.title : slide.alt
@@ -93,23 +94,16 @@ export function HeroShortsCarousel() {
               slide.kind === "film"
                 ? `cc-arc-${slide.film.id.slice(0, 10)}`
                 : slide.seed
-            const depth = Math.abs(offset)
-            const x = offset * 108
-            const rotateY = offset * -11
-            const rotateX = depth * 1.8
-            const scale = offset === 0 ? 1 : 0.92 - depth * 0.08
-            const opacity = 1 - depth * 0.15
-            const z = 20 - depth
-            const y = depth * 4
+            const transform = `rotateY(${i * angleStep}deg) translateZ(${radiusPx}px)`
 
             const inner = (
               <>
                 <SafeImage
                   src={posterSrc}
-                  alt={offset === 0 ? alt : ""}
+                  alt=""
                   fallbackSeed={seed}
                   className="h-full w-full object-cover"
-                  loading={slotIdx < 4 ? "eager" : "lazy"}
+                  loading={i <= 3 ? "eager" : "lazy"}
                 />
                 <div
                   className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pt-12 pb-3 px-3"
@@ -124,21 +118,19 @@ export function HeroShortsCarousel() {
 
             return (
               <div
-                key={`${slideKey(slide, slideIdx)}-${slotIdx}-${index}`}
+                key={`${slideKey(slide, i)}-${i}`}
                 className={[
                   "home-hero-arc-face absolute left-1/2 top-1/2 overflow-hidden rounded-2xl border border-white/25 bg-[#0c1222] shadow-[0_18px_50px_rgba(0,0,0,0.55)] ring-1 ring-white/10",
-                  reducedMotion ? "" : "transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
                 ].join(" ")}
                 style={{
-                  width: "116px",
-                  height: "174px",
+                  width: `${CARD_W}px`,
+                  height: `${Math.round(CARD_W * 1.5)}px`,
                   marginLeft: "-58px",
                   marginTop: "-87px",
-                  opacity,
-                  zIndex: z,
-                  transform: `translate3d(${x}px, ${y}px, 0) rotateY(${rotateY}deg) rotateX(${rotateX}deg) scale(${scale})`,
+                  transform,
+                  transformStyle: "preserve-3d",
+                  backfaceVisibility: "hidden",
                 }}
-                aria-hidden={depth > 2}
               >
                 {slide.kind === "film" ? (
                   <Link
@@ -146,7 +138,6 @@ export function HeroShortsCarousel() {
                     params={{ id: slide.film.id }}
                     className="absolute inset-0 block outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]"
                     aria-label={`Ouvrir ${slide.film.title}`}
-                    tabIndex={depth > 2 ? -1 : 0}
                   >
                     {inner}
                   </Link>
@@ -156,14 +147,14 @@ export function HeroShortsCarousel() {
                     search={FILMS_SEARCH}
                     className="absolute inset-0 block outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]"
                     aria-label={`Voir le catalogue — ${slide.alt}`}
-                    tabIndex={depth > 2 ? -1 : 0}
                   >
                     {inner}
                   </Link>
                 )}
               </div>
             )
-          })}
+            })}
+          </div>
         </div>
 
         <div
@@ -172,6 +163,14 @@ export function HeroShortsCarousel() {
         />
         <div
           className="pointer-events-none absolute inset-x-0 top-0 z-[2] h-1/4 bg-gradient-to-b from-[#050B1C]/80 to-transparent"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-y-0 left-0 z-[2] w-[16%] bg-gradient-to-r from-[#050B1C]/96 to-transparent"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-y-0 right-0 z-[2] w-[16%] bg-gradient-to-l from-[#050B1C]/96 to-transparent"
           aria-hidden
         />
       </div>
