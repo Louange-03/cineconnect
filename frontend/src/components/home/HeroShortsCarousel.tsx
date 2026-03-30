@@ -7,8 +7,7 @@ import { resolvePosterUrl } from "../../lib/poster"
 import type { Film } from "../../types"
 
 const FILMS_SEARCH = { q: "", category: "", type: "all" as const, sort: "" as const }
-const ROTATE_MS = 2400
-const SLOT_OFFSETS = [-2, -1, 0, 1, 2] as const
+const CARD_W = 116
 
 type Slide =
   | { kind: "film"; film: Film }
@@ -43,9 +42,7 @@ export function HeroShortsCarousel() {
   const { data: allFilms } = useFilms("", "", "")
   const slides = useMemo(() => buildSlides(allFilms), [allFilms])
   const n = slides.length
-  const safeN = Math.max(n, 1)
   const [reducedMotion, setReducedMotion] = useState(false)
-  const [index, setIndex] = useState(0)
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -55,20 +52,15 @@ export function HeroShortsCarousel() {
     return () => mq.removeEventListener("change", on)
   }, [])
 
-  useEffect(() => {
-    if (reducedMotion || safeN <= 1) return
-    const id = window.setInterval(() => {
-      setIndex((cur) => (cur + 1) % safeN)
-    }, ROTATE_MS)
-    return () => window.clearInterval(id)
-  }, [reducedMotion, safeN])
-
-  const goPrev = () => setIndex((cur) => (cur - 1 + safeN) % safeN)
-  const goNext = () => setIndex((cur) => (cur + 1) % safeN)
+  const radiusPx = useMemo(() => {
+    const count = Math.max(n, 3)
+    return Math.round((CARD_W / 2 + 10) / Math.sin(Math.PI / count))
+  }, [n])
+  const angleStep = 360 / Math.max(n, 1)
 
   if (n === 0) {
     return (
-      <div className="home-hero-flow mx-auto w-full max-w-sm py-2">
+      <div className="home-hero-arc mx-auto w-full max-w-sm py-2">
         <p className="text-center text-xs text-white/60">Chargement du catalogue…</p>
       </div>
     )
@@ -76,41 +68,42 @@ export function HeroShortsCarousel() {
 
   return (
     <div
-      className="home-hero-flow mx-auto w-full max-w-5xl select-none py-2"
+      className="home-hero-arc mx-auto w-full max-w-4xl select-none py-2"
       role="region"
       aria-roledescription="carrousel"
-      aria-label="Affiches coverflow"
+      aria-label="Affiches en carrousel courbé"
     >
-      <div className="home-hero-flow-viewport relative mx-auto h-[200px] w-full max-w-[820px] sm:h-[230px] md:h-[250px]">
-        <div className="home-hero-flow-stage absolute inset-0">
-          {SLOT_OFFSETS.map((offset, slotIndex) => {
-            const i = (index + offset + safeN * 100) % safeN
-            const slide = slides[i]
-            if (!slide) return null
-
+      <div className="home-hero-arc-viewport relative mx-auto h-[150px] w-full max-w-[760px] sm:h-[175px] md:h-[190px]">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div
+            className={[
+              "home-hero-arc-spin-root",
+              reducedMotion ? "" : "home-hero-arc-spin",
+            ].join(" ")}
+            style={
+              reducedMotion
+                ? { transformStyle: "preserve-3d", transform: "rotateX(10deg) rotateY(-20deg)" }
+                : { transformStyle: "preserve-3d" }
+            }
+          >
+            {slides.map((slide, i) => {
             const posterSrc =
               slide.kind === "film" ? resolvePosterUrl(slide.film) : slide.src
             const alt = slide.kind === "film" ? slide.film.title : slide.alt
             const seed =
               slide.kind === "film"
-                ? `cc-flow-${slide.film.id.slice(0, 10)}`
+                ? `cc-arc-${slide.film.id.slice(0, 10)}`
                 : slide.seed
-            const depth = Math.abs(offset)
-            const x = offset * 120
-            const y = depth * 6
-            const scale = offset === 0 ? 1.08 : 0.86 - depth * 0.08
-            const rotateY = offset * -17
-            const opacity = 1 - depth * 0.24
-            const zIndex = 30 - depth
+            const transform = `rotateY(${i * angleStep}deg) translateZ(${radiusPx}px)`
 
             const inner = (
               <>
                 <SafeImage
                   src={posterSrc}
-                  alt={offset === 0 ? alt : ""}
+                  alt=""
                   fallbackSeed={seed}
                   className="h-full w-full object-cover"
-                  loading={slotIndex <= 2 ? "eager" : "lazy"}
+                  loading={i <= 3 ? "eager" : "lazy"}
                 />
                 <div
                   className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pt-12 pb-3 px-3"
@@ -125,18 +118,19 @@ export function HeroShortsCarousel() {
 
             return (
               <div
-                key={`${slideKey(slide, i)}-${slotIndex}-${index}`}
-                className="home-hero-flow-card absolute left-1/2 top-1/2 overflow-hidden rounded-2xl border border-white/25 bg-[#0c1222] ring-1 ring-white/10"
+                key={`${slideKey(slide, i)}-${i}`}
+                className={[
+                  "home-hero-arc-face absolute left-1/2 top-1/2 overflow-hidden rounded-2xl border border-white/25 bg-[#0c1222] shadow-[0_18px_50px_rgba(0,0,0,0.55)] ring-1 ring-white/10",
+                ].join(" ")}
                 style={{
-                  width: "148px",
-                  height: "212px",
-                  marginLeft: "-74px",
-                  marginTop: "-106px",
-                  zIndex,
-                  opacity,
-                  transform: `translate3d(${x}px, ${y}px, 0) rotateY(${rotateY}deg) scale(${scale})`,
+                  width: `${CARD_W}px`,
+                  height: `${Math.round(CARD_W * 1.5)}px`,
+                  marginLeft: "-58px",
+                  marginTop: "-87px",
+                  transform,
+                  transformStyle: "preserve-3d",
+                  backfaceVisibility: "hidden",
                 }}
-                aria-hidden={depth > 1}
               >
                 {slide.kind === "film" ? (
                   <Link
@@ -144,7 +138,6 @@ export function HeroShortsCarousel() {
                     params={{ id: slide.film.id }}
                     className="absolute inset-0 block outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]"
                     aria-label={`Ouvrir ${slide.film.title}`}
-                    tabIndex={depth > 1 ? -1 : 0}
                   >
                     {inner}
                   </Link>
@@ -154,38 +147,28 @@ export function HeroShortsCarousel() {
                     search={FILMS_SEARCH}
                     className="absolute inset-0 block outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]"
                     aria-label={`Voir le catalogue — ${slide.alt}`}
-                    tabIndex={depth > 1 ? -1 : 0}
                   >
                     {inner}
                   </Link>
                 )}
               </div>
             )
-          })}
+            })}
+          </div>
         </div>
-      </div>
 
-      <div className="mt-3 flex items-center justify-center gap-2">
-        <button
-          type="button"
-          onClick={goPrev}
-          className="home-hero-flow-btn rounded-md px-4 py-2 text-sm font-semibold text-white/90"
-          aria-label="Précédent"
-        >
-          PREV
-        </button>
-        <button
-          type="button"
-          onClick={goNext}
-          className="home-hero-flow-btn home-hero-flow-btn--next rounded-md px-4 py-2 text-sm font-semibold text-white"
-          aria-label="Suivant"
-        >
-          NEXT
-        </button>
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-1/3 bg-gradient-to-t from-[#050B1C]/96 via-[#050B1C]/65 to-transparent"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 z-[2] h-1/4 bg-gradient-to-b from-[#050B1C]/80 to-transparent"
+          aria-hidden
+        />
       </div>
 
       <p className="sr-only">
-        Les affiches défilent avec carte centrale mise en avant.
+        Les affiches tournent en carrousel courbé de gauche à droite.
       </p>
     </div>
   )

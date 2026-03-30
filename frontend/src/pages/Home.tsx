@@ -63,11 +63,14 @@ function isMovieFilm(f: Film): boolean {
 
 function PosterRow({
   items,
+  direction,
 }: {
   items: { src: string; alt: string; seed: string }[]
+  direction: "left" | "right"
 }) {
-  const max = Math.min(items.length, 6)
+  const max = Math.min(items.length, 8)
   const shown = items.slice(0, max)
+  const loop = [...shown, ...shown]
   const onPosterMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
     const el = e.currentTarget
     const rect = el.getBoundingClientRect()
@@ -89,16 +92,21 @@ function PosterRow({
   }
 
   return (
-    <div className="hide-scrollbar overflow-x-auto pb-2 pt-1">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-6">
-      {shown.map((item, i) => (
+    <div className="home-road-row pb-2 pt-1">
+      <div
+        className={[
+          "home-road-track",
+          direction === "right" ? "home-road-track--right" : "home-road-track--left",
+        ].join(" ")}
+      >
+      {loop.map((item, i) => (
         <Link
           key={`${item.seed}-${i}`}
           to="/films"
           search={FILMS_SEARCH}
-          className="home-poster-card group relative w-full"
+          className="home-poster-card home-road-card group relative w-[130px] shrink-0 sm:w-[145px] md:w-[160px]"
           style={{
-            "--stagger": `${i * 70}ms`,
+            "--stagger": `${(i % shown.length) * 70}ms`,
             "--mx": "50%",
             "--my": "30%",
             "--rx": "0deg",
@@ -318,7 +326,7 @@ export function Home() {
               Top series
             </h3>
             {topSeriesItems.length > 0 ? (
-              <PosterRow items={topSeriesItems} />
+              <PosterRow items={topSeriesItems} direction="right" />
             ) : (
               <p className="mt-3 text-sm text-white/60">Aucune série trouvée dans la base.</p>
             )}
@@ -328,7 +336,7 @@ export function Home() {
               Top Films
             </h3>
             {topFilmsItems.length > 0 ? (
-              <PosterRow items={topFilmsItems} />
+              <PosterRow items={topFilmsItems} direction="left" />
             ) : (
               <p className="mt-3 text-sm text-white/60">Aucun film trouvé dans la base.</p>
             )}
