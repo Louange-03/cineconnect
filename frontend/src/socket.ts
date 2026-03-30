@@ -1,18 +1,26 @@
 import { io, Socket } from "socket.io-client"
 import { getToken } from "./lib/auth"
+import { readViteEnv } from "./lib/viteEnv"
 
-const SOCKET_URL =
-  (import.meta.env.VITE_SOCKET_URL as string | undefined) ||
-  (import.meta.env.VITE_API_URL as string | undefined) ||
-  "http://localhost:3001"
+/** URL explicite si API/socket sur un autre hôte. Sinon `io(opts)` = même origine (proxy nginx /socket.io/). */
+function explicitSocketBackend(): string | undefined {
+  const sock = readViteEnv("VITE_SOCKET_URL")?.trim().replace(/\/$/, "") ?? ""
+  if (sock) return sock
+  const api = readViteEnv("VITE_API_URL")?.trim().replace(/\/$/, "") ?? ""
+  if (api) return api
+  return undefined
+}
 
-export const socket: Socket = io(SOCKET_URL, {
-  withCredentials: true,
-  autoConnect: false,
-  auth: {
-    token: getToken() ?? "",
-  },
-})
+function socketOptions() {
+  return {
+    withCredentials: true,
+    autoConnect: false,
+    auth: { token: getToken() ?? "" },
+  }
+}
+
+const url = explicitSocketBackend()
+export const socket: Socket = url ? io(url, socketOptions()) : io(socketOptions())
 
 export function connectSocket() {
   socket.auth = { token: getToken() ?? "" }

@@ -30,12 +30,6 @@ function safePosterUrl(posterUrl?: string | null) {
   return p
 }
 
-function getApiBaseUrl() {
-  // Si VITE_API_URL absent, on passe par le proxy Vite (/api/...)
-  const raw = (import.meta as any).env?.VITE_API_URL || ""
-  return String(raw).replace(/\/$/, "")
-}
-
 export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: FilmCardProps) {
   const [isFavorite, setIsFavorite] = React.useState(initialIsFavorite)
   const [busy, setBusy] = React.useState(false)
