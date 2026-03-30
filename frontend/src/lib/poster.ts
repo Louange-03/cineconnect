@@ -5,7 +5,12 @@ const TMDB_CDN = "https://image.tmdb.org/t/p"
 const TMDB_SIZE = "w780"
 
 function toSafeString(value: unknown): string {
-  return typeof value === "string" ? value.trim() : ""
+  if (typeof value !== "string") return ""
+  const v = value.trim()
+  if (!v) return ""
+  const lower = v.toLowerCase()
+  if (lower === "n/a" || lower === "null" || lower === "undefined") return ""
+  return v
 }
 
 function parseMetadata(metadata?: string | null): Record<string, unknown> | null {
@@ -21,6 +26,10 @@ function parseMetadata(metadata?: string | null): Record<string, unknown> | null
 function normalizePosterUrl(input: string): string {
   const lower = input.toLowerCase()
   if (!input || lower === "n/a") return ""
+  // Avoid mixed-content blocking on HTTPS pages.
+  if (input.startsWith("http://")) {
+    input = `https://${input.slice("http://".length)}`
+  }
   if (input.startsWith("//")) return `https:${input}`
   if (input.startsWith("http://") || input.startsWith("https://")) {
     // Prefer slightly larger posters for cleaner cards.

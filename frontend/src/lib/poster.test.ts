@@ -15,6 +15,14 @@ describe("resolvePosterUrl", () => {
     expect(out).toContain("/t/p/w780/abc.jpg")
   })
 
+  it("forces https to avoid mixed-content blocks", () => {
+    const out = resolvePosterUrl({
+      posterUrl: "http://image.tmdb.org/t/p/w500/abc.jpg",
+      metadata: null,
+    })
+    expect(out.startsWith("https://")).toBe(true)
+  })
+
   it("builds URL from metadata poster path", () => {
     const out = resolvePosterUrl({
       posterUrl: null,
