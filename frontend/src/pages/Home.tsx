@@ -302,15 +302,17 @@ export function Home() {
 
           <div className="relative flex min-h-[280px] items-center justify-center md:min-h-[420px] md:justify-end md:items-center">
             <div className="home-monsters-float relative w-full max-w-[min(100%,300px)] sm:max-w-[340px] md:max-w-[min(100%,380px)]">
-              <div className="overflow-hidden rounded-2xl border border-white/15 bg-[#0c1222] shadow-[0_28px_80px_rgba(0,0,0,0.55)] ring-1 ring-white/10 md:rounded-3xl">
-                <div className="aspect-[2/3] w-full">
+              <div className="home-monsters-poster overflow-hidden rounded-2xl border border-white/15 bg-[#0c1222] shadow-[0_28px_80px_rgba(0,0,0,0.55)] ring-1 ring-white/10 md:rounded-3xl">
+                <div className="home-monsters-poster-media aspect-[2/3] w-full">
                   <SafeImage
                     src={MONSTERS_FOREGROUND}
                     alt="Inception"
                     fallbackSeed="cineconnect-monsters-fg"
-                    className="h-full w-full object-cover object-top"
+                    className="home-monsters-poster-image h-full w-full object-cover object-top"
                     loading="lazy"
                   />
+                  <div className="home-monsters-poster-vignette absolute inset-0" aria-hidden />
+                  <div className="home-monsters-poster-glint absolute inset-0" aria-hidden />
                 </div>
               </div>
             </div>

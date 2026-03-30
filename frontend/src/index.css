@@ -859,6 +859,45 @@ html.theme-light .home-road-row::after {
   background-color: rgba(10, 19, 45, 0.44);
 }
 
+.home-monsters-poster {
+  position: relative;
+  transform: translateZ(0);
+  transition:
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 260ms ease;
+}
+
+.home-monsters-poster-media {
+  position: relative;
+  overflow: hidden;
+}
+
+.home-monsters-poster-image {
+  transform: scale(1.02);
+  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.home-monsters-poster-vignette {
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 42%, rgba(5, 11, 28, 0.24) 100%),
+    linear-gradient(to top, rgba(5, 11, 28, 0.36), transparent 40%);
+}
+
+.home-monsters-poster-glint {
+  pointer-events: none;
+  background: linear-gradient(
+    112deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 42%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.06) 57%,
+    transparent 100%
+  );
+  transform: translateX(-145%);
+}
+
 .home-rows-section {
   background-color: var(--cc-bg-900);
 }
@@ -1099,5 +1138,53 @@ html.theme-light .home-road-row::after {
 
   .home-monsters-float {
     animation: home-float-soft 5s ease-in-out infinite;
+  }
+
+  .home-monsters-poster-image {
+    animation: home-monsters-kenburn 8.8s ease-in-out infinite alternate;
+  }
+
+  .home-monsters-poster-glint {
+    animation: home-monsters-glint 4.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    animation-delay: 0.8s;
+  }
+
+  .home-monsters-poster:hover {
+    transform: translateY(-4px) scale(1.01);
+    border-color: rgba(62, 166, 255, 0.45);
+    box-shadow:
+      0 34px 90px rgba(0, 0, 0, 0.62),
+      0 0 0 1px rgba(62, 166, 255, 0.16) inset;
+  }
+
+  .home-monsters-poster:hover .home-monsters-poster-image {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes home-monsters-kenburn {
+  from {
+    transform: scale(1.02) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.09) translate3d(0, -8px, 0);
+  }
+}
+
+@keyframes home-monsters-glint {
+  0% {
+    transform: translateX(-145%);
+    opacity: 0;
+  }
+  26% {
+    opacity: 0.92;
+  }
+  52% {
+    transform: translateX(150%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(150%);
+    opacity: 0;
   }
 }
