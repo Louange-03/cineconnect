@@ -255,12 +255,12 @@ Sans domaines sur **`web`** et **`api`**, Coolify ne cree pas les variables magi
 - Type de ressource: **Docker Compose** (pas une seule app « Dockerfile »).
 - Base Directory: `/`
 - Docker Compose Location: **`/docker-compose.yaml`** (recommande). Alternative: `/docker-compose.coolify.yml` (alias vers le meme stack).
-- **Domaines Coolify** (voir [doc Coolify — Docker Compose](https://coolify.io/docs/knowledge-base/docker/compose)) : le champ domaine doit indiquer le **port d’ecoute dans le conteneur** pour que Traefik genere `loadbalancer.server.port`. Sinon tu obtiens souvent une **404** Traefik.
+- **Domaines Coolify** (voir [doc Coolify — Docker Compose](https://coolify.io/docs/knowledge-base/docker/compose)) : le champ domaine doit finir par **`:8080`** pour indiquer le port **dans le conteneur** (nginx `web` et Node `api` ecoutent tous deux sur **8080**). Sinon Traefik devine souvent le mauvais port → **404** ou **502**.
 
-  - service **`web`** (nginx sur le **port 80** dans `docker-compose.yaml`) : mets **`https://web-xxxxx….sslip.io`** ou **`http://…`** **sans** `:8080` a la fin dans Coolify. Apres une mise a jour du depot, si tu avais encore `…:8080` pour `web`, **supprime le :8080** pour ce service, **Save**, **Deploy**.
-  - service **`api`** (Node sur le **port 8080**) : mets **`https://api-xxxxx….sslip.io:8080`** (le **`:8080` est obligatoire** ici pour le label Traefik).
+  - **`web`** : `http://` ou `https://web-xxxxx….sslip.io:8080`
+  - **`api`** : `http://` ou `https://api-xxxxx….sslip.io:8080`
 
-  **Dans le navigateur**, pour le site : `http(s)://web-….sslip.io` **sans** `:8080` (port 80 / 443 du proxy).
+  **Ne mets pas** seulement **`:80`** pour `web` (comportement imprevisible selon les versions Coolify). **Dans le navigateur**, ouvre toujours `http(s)://web-….sslip.io` **sans** `:8080` (le proxy ecoute en 80/443).
 
 - Ne publie pas `db` publiquement (pas de domaine, pas de `ports:` sur `db`).
 
@@ -270,7 +270,7 @@ Le compose s’appuie sur les [variables magiques](https://coolify.io/docs/knowl
 
 | Besoin | Remplissage automatique (Coolify) | Surcharge manuelle dans l’UI |
 |--------|-----------------------------------|------------------------------|
-| URL du frontend (CORS) | `SERVICE_URL_WEB` (web en :80) ou anciennement `SERVICE_URL_WEB_8080` | `FRONTEND_URL` |
+| URL du frontend (CORS) | `SERVICE_URL_WEB_8080` | `FRONTEND_URL` |
 | Build Vite (API / Socket) | `SERVICE_URL_API_8080` | `VITE_API_URL`, `VITE_SOCKET_URL` |
 | Mot de passe Postgres | `SERVICE_PASSWORD_POSTGRES` ou `SERVICE_PASSWORD_DB` | `POSTGRES_PASSWORD` |
 | Secret JWT | `SERVICE_BASE64_64_API` | `JWT_SECRET` |
@@ -293,9 +293,11 @@ En local : `./scripts/trigger-coolify-deploy.ps1` (variable d’environnement `C
 
 0. **« 404 page not found » sur l’IP du serveur** (`http://149.x.x.x`) : c’est **normal**. Coolify (Traefik) route selon le **nom de domaine**, pas l’adresse IP seule.
 
-0b. **404 sur `http://web-….sslip.io` (bon hostname)** : le plus souvent, le domaine du service **`web`** dans Coolify pointe encore vers le **port 8080** alors que l’image **nginx** ecoute sur le **port 80**. Mets le domaine **`web`** sous la forme **`http://` ou `https://web-….sslip.io` sans `:8080`**, enregistre et redeploie. Verifie que l’**api** garde bien **`:8080`** dans son URL Coolify.
+0b. **502 Bad Gateway** : le proxy joint le conteneur mais le **port** ne correspond pas. Verifie dans Coolify que **`web`** et **`api`** ont bien **`:8080`** a la fin du champ domaine (pas **`:80`** seul pour `web`). Redeploie apres `git pull`.
 
-1. **URL dans le navigateur** : ouvre uniquement l’URL du service **`web`** **sans** `:8080` (ex. `http://web-….sslip.io`). Verifie que l’IP dans l’URL sslip.io est **exactement** celle de ton VPS.
+0c. **Faute de frappe dans le sous-domaine** : copie-colle l’URL depuis Coolify. Un caractere en trop (ex. `vsrmb` au lieu de `vsmb`) change le nom d’hôte → souvent **502** ou mauvaise route.
+
+1. **URL dans le navigateur** : ouvre l’URL du service **`web`** **sans** `:8080` (ex. `http://web-….sslip.io`). Verifie l’orthographe **caractere par caractere** avec la ligne **Domains for web** dans Coolify.
 2. **Logs Coolify** : onglet **Logs** pour `api`, puis `web`, puis `db` — erreurs `JWT_SECRET`, Postgres, ou migrations en premier.
 3. **Depuis le VPS** (SSH) : `curl -sI http://127.0.0.1` ou teste que le proxy repond ; si l’API ecoute, les logs doivent afficher `API listening on http://0.0.0.0:8080` apres redeploiement.
 4. **CORS** : ouvre les outils developpeur (F12) → onglet **Network** / **Console**. Si tu vois des erreurs du type *blocked by CORS*, verifie que **`FRONTEND_URL`** dans Coolify est exactement l’URL que tu utilises dans la barre d’adresse (meme `http` vs `https`, pas de slash final). Tu peux ajouter **`CORS_EXTRA_ORIGINS`** (origines separees par des virgules) sur le service **`api`** dans le compose / variables Coolify pour autoriser plusieurs URLs.
@@ -315,7 +317,7 @@ Puis redeployer dans Coolify.
 Si tu as choisi **Build Pack: Dockerfile** (au lieu de **Docker Compose**), verifie ces points — ce sont les causes les plus frequentes de conteneur qui quitte tout de suite ou qui ne repond pas :
 
 1. **Port du conteneur**  
-   L’API (`backend/Dockerfile`) ecoute sur **8080**. Le frontend par defaut (`frontend/Dockerfile`, derniere etape) aussi **8080** ; sur **Coolify** le compose utilise la cible Docker **`coolify`** (nginx sur **80**). Dans l’UI Coolify, le suffixe **`:8080`** dans le champ domaine doit correspondre au port **reel** du conteneur (obligatoire pour l’**api** ; **pas** pour **web** en nginx :80).
+   L’API ecoute sur **8080**. Sur **Coolify**, le service **`web`** utilise la cible Docker **`coolify`** (**nginx** sur **8080** dans le conteneur). Dans l’UI Coolify, mets **`:8080`** sur les domaines **web** et **api**.
 
 2. **Il n’y a pas de `Dockerfile` a la racine du depot**  
    Les fichiers sont dans `backend/Dockerfile` et `frontend/Dockerfile`.  

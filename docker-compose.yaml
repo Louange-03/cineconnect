@@ -5,9 +5,9 @@
 #   JWT_SECRET (32+ caracteres), POSTGRES_PASSWORD
 # puis (si pas encore de domaines) FRONTEND_URL, VITE_API_URL, VITE_SOCKET_URL pour CORS + build Vite.
 #
-# AVEC domaines Coolify :
-#   - service `web` (nginx:80) : https://web-….sslip.io  SANS :8080 dans le champ Coolify
-#   - service `api` (Node:8080) : https://api-….sslip.io:8080  (le :8080 est obligatoire pour le label Traefik)
+# AVEC domaines Coolify (meme regle pour web et api : …:8080 dans le champ → label Traefik correct) :
+#   - `https://web-….sslip.io:8080` et `https://api-….sslip.io:8080`
+# Dans le navigateur : ouvrir `https://web-….sslip.io` sans :8080 (proxy ecoute en 443/80).
 #
 # Deploiement Git: .github/workflows/deploy-coolify.yml + secret COOLIFY_WEBHOOK_URL
 
@@ -40,7 +40,7 @@ services:
       PORT: 8080
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-cineconnect}:${POSTGRES_PASSWORD:-${SERVICE_PASSWORD_POSTGRES:-${SERVICE_PASSWORD_DB}}}@db:5432/${POSTGRES_DB:-cineconnect}
-      FRONTEND_URL: ${FRONTEND_URL:-${SERVICE_URL_WEB:-${SERVICE_URL_WEB_8080}}}
+      FRONTEND_URL: ${FRONTEND_URL:-${SERVICE_URL_WEB_8080:-${SERVICE_URL_WEB}}}
       JWT_SECRET: ${JWT_SECRET:-${SERVICE_BASE64_64_API}}
       OMDB_API_KEY: ${OMDB_API_KEY:-}
       MAIL_PROVIDER: ${MAIL_PROVIDER:-auto}
@@ -82,12 +82,12 @@ services:
       api:
         condition: service_healthy
     expose:
-      - "80"
+      - "8080"
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "wget -qO- http://127.0.0.1/ >/dev/null || exit 1",
+          "wget -qO- http://127.0.0.1:8080/ >/dev/null || exit 1",
         ]
       interval: 15s
       timeout: 5s

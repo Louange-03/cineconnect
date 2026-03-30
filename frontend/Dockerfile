@@ -1,6 +1,6 @@
 # Etapes finales :
 #   - Par defaut (derniere etape) : Node + serve sur 8080 — local, Cloud Run, docker-compose.yml
-#   - target: coolify : nginx sur 80 — docker-compose.yaml / Coolify (domaine web sans :8080 dans l’UI)
+#   - target: coolify : nginx sur 8080 — docker-compose.yaml / Coolify (domaine web …:8080 comme l’API)
 #
 # Build Coolify : docker compose -f docker-compose.yaml build web  (compose definit target: coolify)
 
@@ -27,7 +27,7 @@ FROM nginx:alpine AS coolify
 COPY nginx-docker.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 
-EXPOSE 80
+EXPOSE 8080
 
 FROM node:20-alpine
 
