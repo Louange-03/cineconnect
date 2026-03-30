@@ -1,6 +1,7 @@
 import React from "react"
 import type { Film } from "../../types"
 import { Link } from "@tanstack/react-router"
+import { resolvePosterUrl } from "../../lib/poster"
 
 export function FilmList({ films }: { films: Film[] }) {
   if (!films?.length) {
@@ -21,10 +22,7 @@ export function FilmList({ films }: { films: Film[] }) {
           className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10 hover:shadow-lg"
         >
           <img
-            src={
-              film.posterUrl ||
-              "https://via.placeholder.com/160x240/0b1020/ffffff?text=No+Image"
-            }
+            src={resolvePosterUrl(film)}
             alt={film.title}
             className="h-20 w-14 rounded-xl border border-white/10 object-cover"
           />

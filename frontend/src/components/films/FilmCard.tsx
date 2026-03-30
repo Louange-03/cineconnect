@@ -6,6 +6,7 @@ import { getToken } from "../../lib/auth"
 import { connectSocket, socket } from "../../socket"
 import { CompactSearchInput } from "../ui/CompactSearchInput"
 import { buildApiUrl } from "../../lib/apiUrl"
+import { FALLBACK_POSTER, resolvePosterUrl } from "../../lib/poster"
 
 interface FilmCardProps {
   film: Film
@@ -19,15 +20,6 @@ type Friend = {
   id: string
   username: string
   email?: string
-}
-
-const FALLBACK_POSTER = "https://via.placeholder.com/600x900/0b1020/ffffff?text=No+Image"
-
-function safePosterUrl(posterUrl?: string | null) {
-  const p = (posterUrl ?? "").trim()
-  if (!p) return FALLBACK_POSTER
-  if (p.toLowerCase() === "n/a") return FALLBACK_POSTER
-  return p
 }
 
 export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: FilmCardProps) {
@@ -156,7 +148,7 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
       return
     }
     const filmUrl = `${window.location.origin}/film/${film.id}`
-    const posterUrl = safePosterUrl(film.posterUrl)
+    const posterUrl = resolvePosterUrl(film)
     const text =
       `Je te partage ce film: ${film.title} (${film.year || "—"})\n` +
       `POSTER:${posterUrl}\n` +
@@ -197,7 +189,7 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
     }
   }
 
-  const poster = safePosterUrl(film.posterUrl)
+  const poster = resolvePosterUrl(film)
   const categories = film.categories?.slice(0, 2) ?? []
   const yearLabel =
     film.year === null || film.year === undefined || String(film.year).trim() === "" ? "—" : String(film.year)

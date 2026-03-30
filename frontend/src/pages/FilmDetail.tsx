@@ -9,6 +9,7 @@ import { Reveal } from "../components/ui/Reveal"
 import { getToken, getUser } from "../lib/auth"
 import { buildApiUrl } from "../lib/apiUrl"
 import type { Review } from "../types"
+import { FALLBACK_POSTER, resolvePosterUrl } from "../lib/poster"
 
 /** small JSON fetch wrapper that throws useful errors */
 async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
@@ -37,15 +38,6 @@ async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> 
   }
 
   return JSON.parse(text) as T
-}
-
-const FALLBACK_POSTER = "https://via.placeholder.com/900x1350/0b1020/ffffff?text=No+Image"
-
-function safePosterUrl(posterUrl?: string | null) {
-  const p = (posterUrl ?? "").trim()
-  if (!p) return FALLBACK_POSTER
-  if (p.toLowerCase() === "n/a") return FALLBACK_POSTER
-  return p
 }
 
 function MiniToast({ message }: { message: string }) {
@@ -84,7 +76,7 @@ export function FilmDetail() {
 
   const { data: reviews, isLoading: loadingReviews } = useReviews(resolvedFilmId)
 
-  const poster = useMemo(() => safePosterUrl(film?.posterUrl), [film?.posterUrl])
+  const poster = useMemo(() => resolvePosterUrl(film), [film])
 
   const yearLabel =
     film?.year === null || film?.year === undefined || String(film?.year ?? "").trim() === ""

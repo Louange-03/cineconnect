@@ -1,23 +1,14 @@
 import React from "react"
 import { Link } from "@tanstack/react-router"
 import type { Film } from "../../types"
+import { FALLBACK_POSTER, resolvePosterUrl } from "../../lib/poster"
 
 interface HeroFeatureProps {
   film: Film
 }
 
-const FALLBACK_HERO =
-  "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2025&auto=format&fit=crop"
-
-function safePosterUrl(posterUrl?: string | null) {
-  const p = (posterUrl ?? "").trim()
-  if (!p) return FALLBACK_HERO
-  if (p.toLowerCase() === "n/a") return FALLBACK_HERO
-  return p
-}
-
 export function HeroFeature({ film }: HeroFeatureProps) {
-  const poster = safePosterUrl(film.posterUrl)
+  const poster = resolvePosterUrl(film)
   const categories = film.categories?.slice(0, 3) ?? []
 
   const yearLabel =
@@ -41,7 +32,7 @@ export function HeroFeature({ film }: HeroFeatureProps) {
           className="h-full w-full object-cover opacity-90 motion-safe:animate-fade-in motion-safe:scale-[1.02]"
           loading="eager"
           onError={(e) => {
-            ; (e.currentTarget as HTMLImageElement).src = FALLBACK_HERO
+            ; (e.currentTarget as HTMLImageElement).src = FALLBACK_POSTER
           }}
         />
 

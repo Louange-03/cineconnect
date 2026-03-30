@@ -8,6 +8,7 @@ import {
 } from "../components/home/homeAssets"
 import { HeroAnimatedCarousel } from "../components/home/HeroAnimatedCarousel"
 import { useFilms } from "../hooks/useFilms"
+import { resolvePosterUrl } from "../lib/poster"
 import type { Film } from "../types"
 
 const FEATURE_PILLS = ["Tout", "Animé", "Comédie", "Action", "Horreur"] as const
@@ -101,21 +102,19 @@ export function Home() {
   const { data: allFilms } = useFilms("", "", "")
 
   const rowsFromDb = React.useMemo(() => {
-    const withPoster = (allFilms ?? []).filter(
-      (f) => typeof f.posterUrl === "string" && f.posterUrl.trim() !== ""
-    )
-    const strictSeries = withPoster.filter(isSeriesFilm)
-    const strictFilms = withPoster.filter(
+    const base = allFilms ?? []
+    const strictSeries = base.filter(isSeriesFilm)
+    const strictFilms = base.filter(
       (f) => isMovieFilm(f) || (!isSeriesFilm(f) && !isAnimatedFilm(f))
     )
 
     const topSeries = strictSeries.slice(0, 6).map((f) => ({
-      src: f.posterUrl!,
+      src: resolvePosterUrl(f),
       alt: f.title,
       seed: `db-series-${f.id}`,
     }))
     const topFilms = strictFilms.slice(0, 6).map((f) => ({
-      src: f.posterUrl!,
+      src: resolvePosterUrl(f),
       alt: f.title,
       seed: `db-films-${f.id}`,
     }))

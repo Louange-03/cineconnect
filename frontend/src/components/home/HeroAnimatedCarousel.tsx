@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router"
 import { SafeImage } from "./SafeImage"
 import { useFilms } from "../../hooks/useFilms"
 import { isSeriesFilmListed } from "../../lib/filmKind"
+import { resolvePosterUrl } from "../../lib/poster"
 import type { Film } from "../../types"
 
 function normalizeCat(v: string) {
@@ -83,10 +84,7 @@ export function HeroAnimatedCarousel() {
   /** Sélection "premium": films live-action (pas séries, pas animés), triés qualité/popularité. */
   const curatedFilms = useMemo(() => {
     const raw = allFilms ?? []
-    const withPoster = raw.filter(
-      (f) => typeof f.posterUrl === "string" && f.posterUrl.trim() !== ""
-    )
-    const moviesOnly = withPoster.filter((f) => {
+    const moviesOnly = raw.filter((f) => {
       const t = readMediaType(f)
       return t ? t === "movie" || t === "film" : true
     })
@@ -173,7 +171,7 @@ export function HeroAnimatedCarousel() {
               ].join(" ")}
             >
               <SafeImage
-                src={item.film.posterUrl!}
+                src={resolvePosterUrl(item.film)}
                 alt={item.film.title}
                 fallbackSeed={`cc-hero-${item.film.id.slice(0, 8)}`}
                 className="aspect-[2/3] w-full object-cover"
