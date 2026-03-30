@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react"
+import React, { useMemo } from "react"
+import { useNavigate, useSearch } from "@tanstack/react-router"
 import { useFilms } from "../hooks/useFilms"
 import { useCategories } from "../hooks/useCategories"
 import { SearchBar } from "../components/films/SearchBar"
@@ -6,18 +7,45 @@ import { CategoryPills } from "../components/films/CategoryPills"
 import { FilmCard } from "../components/films/FilmCard"
 import type { Film } from "../types"
 
+function normalizeToken(v: string) {
+  return v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+}
+
+/** Détecte série via catégories (seed OMDb ajoute « Série »). */
+function isSeriesFilm(film: Film): boolean {
+  return (film.categories ?? []).some((c) => {
+    const n = normalizeToken(c)
+    return n.includes("serie") || n.includes("series")
+  })
+}
+
 export function Films() {
-  const [query, setQuery] = useState("")
-  const [category, setCategory] = useState("")
-  const hasSearchQuery = query.trim() !== ""
+  const { q, category, type } = useSearch({ from: "/films" })
+  const navigate = useNavigate({ from: "/films" })
+
+  const patchSearch = (
+    patch: Partial<{
+      q: string
+      category: string
+      type: "movie" | "series" | "all"
+      sort: "" | "viewed" | "popular" | "recent"
+    }>,
+  ) => {
+    navigate({
+      search: (prev) => ({ ...prev, ...patch }),
+      replace: true,
+    })
+  }
+
+  const hasSearchQuery = q.trim() !== ""
   const effectiveCategory = hasSearchQuery ? "" : category
 
   const { data: categories = [], isLoading: loadingCategories } = useCategories()
-  const { data: films, isLoading, error } = useFilms(query, effectiveCategory, "")
+  const { data: films, isLoading, error } = useFilms(q, effectiveCategory, "")
 
   const filteredCategories = useMemo(() => {
     const byName = new Map(
-      categories.map((c) => [c.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""), c] as const)
+      categories.map((c) => [normalizeToken(c.name), c] as const),
     )
 
     const preferredGroups = [
@@ -49,48 +77,50 @@ export function Films() {
 
   const list = useMemo<Film[]>(() => {
     const base = Array.isArray(films) ? (films as Film[]) : []
-    if (!category || hasSearchQuery) return base
 
-    const normalize = (v: string) =>
-      v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    const selected = normalize(category)
+    let afterCategory: Film[]
+    if (!category || hasSearchQuery) {
+      afterCategory = base
+    } else {
+      const selected = normalizeToken(category)
+      afterCategory = base.filter((film) =>
+        (film.categories ?? []).some((c) => normalizeToken(c) === selected),
+      )
+    }
 
-    // Filtrage strict côté UI pour garantir que seule la catégorie choisie s'affiche.
-    return base.filter((film) =>
-      (film.categories ?? []).some((c) => normalize(c) === selected)
-    )
-  }, [films, category, hasSearchQuery])
+    if (type === "series") return afterCategory.filter(isSeriesFilm)
+    if (type === "movie") return afterCategory.filter((f) => !isSeriesFilm(f))
+    return afterCategory
+  }, [films, category, hasSearchQuery, type])
 
   const isBusy = isLoading || loadingCategories
 
   const hasNoResults =
-    !isBusy && !error && list.length === 0 && (query.trim() !== "" || category !== "")
+    !isBusy && !error && list.length === 0 && (hasSearchQuery || category !== "")
 
   const isCatalogEmpty =
-    !isBusy && !error && list.length === 0 && query.trim() === "" && category === ""
+    !isBusy && !error && list.length === 0 && !hasSearchQuery && category === ""
 
-  const titleLabel = query || category ? "Recherche" : "Catalogue"
-  const subtitleLabel = query
-    ? `Résultats pour “${query.trim()}”`
+  const titleLabel = q || category ? "Recherche" : "Catalogue"
+  const subtitleLabel = q
+    ? `Résultats pour “${q.trim()}”`
     : category
       ? `Catégorie : ${category}`
       : "Explore tous les films & séries disponibles"
 
   return (
     <main className="films-page min-h-screen bg-[#050B1C] text-white pb-24">
-      {/* PAGE HEADER + STICKY FILTERS */}
       <section className="mx-auto max-w-7xl px-6 md:px-12 pt-20">
         <div className="mb-6 flex flex-col gap-2">
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">{titleLabel}</h1>
           <p className="text-white/60">{subtitleLabel}</p>
         </div>
 
-        {/* Sticky group: Search + Category pills */}
         <div className="sticky top-4 z-30 space-y-3">
           <div className="films-search-shell rounded-lg border border-white/10 bg-[#0A132D]/70 px-2 py-1.5 shadow-md backdrop-blur-md md:px-3 md:py-2">
             <SearchBar
-              value={query}
-              onChange={setQuery}
+              value={q}
+              onChange={(v) => patchSearch({ q: v })}
               placeholder="Rechercher un film, une série ou un réalisateur…"
             />
           </div>
@@ -100,7 +130,7 @@ export function Films() {
               <CategoryPills
                 categories={filteredCategories}
                 selectedCategory={category}
-                onCategoryChange={setCategory}
+                onCategoryChange={(c) => patchSearch({ category: c })}
               />
             </div>
           )}
@@ -114,7 +144,6 @@ export function Films() {
         )}
       </section>
 
-      {/* LOADING */}
       {isBusy && (
         <div className="flex h-[45vh] items-center justify-center">
           <div
@@ -125,7 +154,6 @@ export function Films() {
         </div>
       )}
 
-      {/* ERROR */}
       {!isBusy && error && (
         <div className="mx-auto mt-10 max-w-7xl px-6 md:px-12">
           <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-red-300">
@@ -134,10 +162,8 @@ export function Films() {
         </div>
       )}
 
-      {/* CONTENT */}
       {!isBusy && !error && (
         <>
-          {/* EMPTY CATALOG */}
           {isCatalogEmpty && (
             <section className="mx-auto mt-14 max-w-2xl px-6 text-center">
               <div className="mb-6 mx-auto flex h-24 w-24 items-center justify-center rounded-3xl border border-white/10 bg-white/5 shadow-[0_0_30px_rgba(255,255,255,0.05)]">
@@ -153,21 +179,19 @@ export function Films() {
             </section>
           )}
 
-          {/* NO RESULTS */}
           {hasNoResults && (
             <section className="mx-auto mt-10 max-w-2xl px-6 text-center">
               <div className="films-empty-shell rounded-2xl border border-white/10 bg-white/5 p-8">
                 <p className="text-lg text-white/70">
                   Aucun film trouvé pour{" "}
-                  <span className="font-bold text-[#3EA6FF]">“{query.trim() || category}”</span>
+                  <span className="font-bold text-[#3EA6FF]">“{q.trim() || category}”</span>
                 </p>
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setQuery("")
-                    setCategory("")
-                  }}
+                  onClick={() =>
+                    patchSearch({ q: "", category: "", type: "movie", sort: "" })
+                  }
                   className="mt-8 rounded-full border border-white/10 bg-white/5 px-8 py-3 font-bold text-white transition-all hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]"
                 >
                   Réinitialiser
@@ -176,12 +200,11 @@ export function Films() {
             </section>
           )}
 
-          {/* GRID */}
           {!hasNoResults && !isCatalogEmpty && list.length > 0 && (
             <section className="mx-auto max-w-7xl px-6 md:px-12 mt-10 pb-24">
               <div className="mb-5 flex items-end justify-between gap-4">
                 <h3 className="text-xl md:text-2xl font-semibold">
-                  {query || category ? "Résultats" : "Tout le catalogue"}
+                  {q || category ? "Résultats" : "Tout le catalogue"}
                 </h3>
                 <span className="text-sm font-medium text-white/50">
                   {list.length} titre{list.length > 1 ? "s" : ""}

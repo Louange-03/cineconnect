@@ -28,6 +28,7 @@ services:
       NODE_ENV: development
       DATABASE_URL: postgresql://cineconnect:cineconnect@db:5432/cineconnect
       FRONTEND_URL: http://localhost:5173
+      SEED_DEMO_IF_EMPTY: "true"
     depends_on:
       db:
         condition: service_healthy

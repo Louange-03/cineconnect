@@ -53,6 +53,8 @@ services:
       PASSWORD_RESET_DEV_RETURN_LINK: ${PASSWORD_RESET_DEV_RETURN_LINK:-false}
       # Origines CORS supplementaires (virgule), si FRONTEND_URL ne correspond pas au navigateur (http vs https, autre host).
       CORS_EXTRA_ORIGINS: ${CORS_EXTRA_ORIGINS:-}
+      # Quelques films de démo si la table `films` est vide (aucune clé API). Désactive avec SEED_DEMO_IF_EMPTY=false.
+      SEED_DEMO_IF_EMPTY: ${SEED_DEMO_IF_EMPTY:-true}
     depends_on:
       db:
         condition: service_healthy

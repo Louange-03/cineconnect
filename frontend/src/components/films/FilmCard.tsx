@@ -96,7 +96,7 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
 
       await axios({
         method,
-        url: `${api}/api/users/me/favorites/${targetFilmId}`,
+        url: buildApiUrl(`/api/users/me/favorites/${targetFilmId}`),
         headers: { Authorization: `Bearer ${token}` },
       })
 

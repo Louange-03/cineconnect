@@ -11,7 +11,7 @@ const ioFn = vi.hoisted(() =>
 )
 
 vi.mock("socket.io-client", () => ({
-  io: (...args: any[]) => ioFn(...args),
+  io: (...args: unknown[]) => (ioFn as (...a: unknown[]) => unknown)(...args),
 }))
 
 const getTokenMock = vi.hoisted(() => vi.fn(() => "jwt-1" as string | null))
@@ -62,7 +62,7 @@ describe("lib/socket", () => {
     vi.stubEnv("VITE_API_URL", "")
     await import("../socket")
     expect(ioFn).toHaveBeenCalledTimes(1)
-    const args = ioFn.mock.calls[0]
+    const args = ioFn.mock.calls[0] as unknown as unknown[]
     const opts = args.length === 2 ? args[1] : args[0]
     expect(opts).toEqual(
       expect.objectContaining({
@@ -82,9 +82,9 @@ describe("lib/socket", () => {
     vi.stubEnv("VITE_SOCKET_URL", "")
     vi.stubEnv("VITE_API_URL", "")
     await import("../socket")
-    const args = ioFn.mock.calls[0]
-    const opts = args.length === 2 ? args[1] : args[0]
-    expect(opts).toEqual(expect.objectContaining({ auth: { token: "" } }))
+    const args2 = ioFn.mock.calls[0] as unknown as unknown[]
+    const opts2 = args2.length === 2 ? args2[1] : args2[0]
+    expect(opts2).toEqual(expect.objectContaining({ auth: { token: "" } }))
   })
 
   it("connectSocket met à jour le token et connecte si besoin", async () => {
