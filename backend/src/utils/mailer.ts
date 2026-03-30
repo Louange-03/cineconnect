@@ -235,3 +235,106 @@ export async function sendPasswordResetEmail(params: { to: string; resetUrl: str
     throw new Error(`Échec envoi email (SMTP): ${msg}`)
   }
 }
+
+export async function sendNewMessageEmail(params: {
+  to: string
+  recipientName?: string | null
+  senderName: string
+  previewText: string
+  conversationUrl?: string
+}): Promise<void> {
+  const { to, recipientName, senderName, previewText, conversationUrl } = params
+  const subject = process.env.NEW_MESSAGE_EMAIL_SUBJECT ?? "Nouveau message sur CineConnect"
+  const fromFallback = (process.env.MAIL_FROM ?? "").trim()
+  const provider = getMailProvider()
+  const safePreview = previewText.length > 180 ? `${previewText.slice(0, 177)}...` : previewText
+  const helloName = (recipientName ?? "").trim() || "Bonjour"
+
+  if (!safePreview.trim()) return
+
+  const text = [
+    `${helloName},`,
+    "",
+    `${senderName} vous a envoyé un nouveau message sur CineConnect.`,
+    "",
+    `Aperçu : ${safePreview}`,
+    conversationUrl ? `Ouvrir la discussion : ${conversationUrl}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
+
+  const html = `
+    <div style="font-family: Arial, Helvetica, sans-serif; color: #111827; line-height: 1.5;">
+      <h2 style="margin: 0 0 12px;">Nouveau message</h2>
+      <p style="margin: 0 0 12px;">${helloName},</p>
+      <p style="margin: 0 0 12px;">
+        <strong>${senderName}</strong> vous a envoye un nouveau message sur CineConnect.
+      </p>
+      <p style="margin: 0 0 12px; padding: 10px 12px; border-radius: 8px; background: #f3f4f6;">
+        ${safePreview.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
+      </p>
+      ${
+        conversationUrl
+          ? `<p style="margin: 0 0 12px;"><a href="${conversationUrl}" style="color:#1d4ed8;">Ouvrir la discussion</a></p>`
+          : ""
+      }
+    </div>
+  `
+
+  const mailgun = getMailgunConfig()
+  if (provider !== "smtp" && mailgun) {
+    const { apiKey, domain } = mailgun
+    const baseUrl = (process.env.MAILGUN_BASE_URL ?? "https://api.mailgun.net").trim()
+    const from = ((process.env.MAILGUN_FROM ?? "").trim() || fromFallback)
+    if (!from) throw new Error("MAILGUN_FROM (ou MAIL_FROM) manquant pour l'envoi Mailgun")
+
+    const body = new URLSearchParams()
+    body.set("from", from)
+    body.set("to", to)
+    body.set("subject", subject)
+    body.set("text", text)
+    body.set("html", html)
+
+    const encoded = Buffer.from(`api:${apiKey}`).toString("base64")
+    const response = await fetch(`${baseUrl}/v3/${domain}/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${encoded}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: body.toString(),
+    })
+    if (!response.ok) {
+      const details = await response.text().catch(() => "")
+      throw new Error(`Échec envoi email (Mailgun): ${response.status} ${details}`.trim())
+    }
+    return
+  }
+
+  const smtp = isSmtpConfigured()
+  if (!smtp) {
+    console.log(`[mail][new-message] transport mail non configuré. to=${to}, sender=${senderName}`)
+    return
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: smtp.host,
+    port: smtp.port,
+    secure: smtp.port === 465,
+    requireTLS: smtp.port === 587,
+    auth: { user: smtp.user, pass: smtp.pass },
+  })
+
+  try {
+    await transporter.sendMail({
+      from: smtp.from,
+      to,
+      subject,
+      text,
+      html,
+    })
+  } catch (e) {
+    const msg = (e as Error)?.message ?? String(e)
+    throw new Error(`Échec envoi email (SMTP): ${msg}`)
+  }
+}

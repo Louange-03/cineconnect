@@ -2,6 +2,7 @@ import { Server } from "socket.io"
 import { Server as HttpServer } from "http"
 import jwt from "jsonwebtoken"
 import { pool } from "./db/client.js"
+import { sendNewMessageEmail } from "./utils/mailer"
 
 const onlineUsers = new Map<string, Set<string>>()
 
@@ -91,6 +92,43 @@ export const initSocket = (
           "new-message",
           message
         )
+
+        const receivers = await pool.query(
+          `
+          SELECT u.id, u.email, u.username
+          FROM conversation_members cm
+          INNER JOIN users u ON u.id = cm.user_id
+          WHERE cm.conversation_id = $1
+            AND cm.user_id <> $2
+          `,
+          [conversationId, userId]
+        )
+
+        const senderResult = await pool.query(
+          `SELECT username FROM users WHERE id = $1 LIMIT 1`,
+          [userId]
+        )
+        const senderName = senderResult.rows[0]?.username || "Un ami"
+
+        const appUrl = (process.env.FRONTEND_URL ?? "").trim()
+        const conversationUrl = appUrl ? `${appUrl.replace(/\/+$/, "")}/discussion` : undefined
+        const previewText = String(text ?? "").trim()
+
+        for (const r of receivers.rows as Array<{ id: string; email: string; username: string }>) {
+          const isRecipientOnline = onlineUsers.has(r.id) && (onlineUsers.get(r.id)?.size ?? 0) > 0
+          if (isRecipientOnline) continue
+          if (!r.email) continue
+
+          void sendNewMessageEmail({
+            to: r.email,
+            recipientName: r.username,
+            senderName,
+            previewText,
+            conversationUrl,
+          }).catch((err) => {
+            console.error("[mail][new-message] send failed:", err)
+          })
+        }
       } catch (e) {
         console.error(e)
       }
