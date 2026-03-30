@@ -3,6 +3,7 @@ import { Server as HttpServer } from "http"
 import jwt from "jsonwebtoken"
 import { pool } from "./db/client.js"
 import { sendNewMessageEmail } from "./utils/mailer"
+import { sendWebPushNotification } from "./utils/push"
 
 const onlineUsers = new Map<string, Set<string>>()
 
@@ -117,6 +118,30 @@ export const initSocket = (
         for (const r of receivers.rows as Array<{ id: string; email: string; username: string }>) {
           const isRecipientOnline = onlineUsers.has(r.id) && (onlineUsers.get(r.id)?.size ?? 0) > 0
           if (isRecipientOnline) continue
+
+          const pushSubs = await pool.query(
+            `
+            SELECT endpoint, p256dh, auth
+            FROM push_subscriptions
+            WHERE user_id = $1
+            `,
+            [r.id],
+          )
+          for (const sub of pushSubs.rows as Array<{ endpoint: string; p256dh: string; auth: string }>) {
+            void sendWebPushNotification(sub, {
+              title: `Nouveau message de ${senderName}`,
+              body: previewText,
+              url: "/discussion",
+            }).catch(async (err: unknown) => {
+              const statusCode = Number((err as { statusCode?: number })?.statusCode ?? 0)
+              if (statusCode === 404 || statusCode === 410) {
+                await pool.query(`DELETE FROM push_subscriptions WHERE endpoint = $1`, [sub.endpoint])
+              } else {
+                console.error("[push] send failed:", err)
+              }
+            })
+          }
+
           if (!r.email) continue
 
           void sendNewMessageEmail({

@@ -4,6 +4,7 @@ import { initSocket } from "./socket"
 import { pool } from "./db/client"
 import { ensurePasswordResetSchema } from "./db/ensurePasswordResetSchema.js"
 import { getMailTransportStatus } from "./utils/mailer"
+import { ensurePushSchema } from "./db/ensurePushSchema.js"
 
 const app = createApp()
 const port = Number(process.env.PORT ?? 3007)
@@ -26,6 +27,7 @@ async function start() {
   }
 
   await ensurePasswordResetSchema()
+  await ensurePushSchema()
 
   const httpServer = createServer(app)
   initSocket(httpServer, resolveAllowedFrontendOrigins())

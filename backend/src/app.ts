@@ -9,6 +9,7 @@ import { reviewsRoutes } from "./routes/reviews.routes"
 import friendsRoutes from "./routes/friends.routes"
 import messagesRoutes from "./routes/messages.routes"
 import conversationsRoutes from "./routes/conversations.routes"
+import { pushRoutes } from "./routes/push.routes"
 import { openApiDocument } from "./swagger"
 
 const DEFAULT_FRONTEND_ORIGIN = "http://localhost:5173"
@@ -74,6 +75,7 @@ export function createApp(): express.Express {
   app.use("/api/friends", friendsRoutes)
   app.use("/api/messages", messagesRoutes)
   app.use("/api/conversations", conversationsRoutes)
+  app.use("/api/push", pushRoutes)
 
   return app
 }

@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { RouterProvider } from "@tanstack/react-router"
 import { router } from "./router"
 import { initTheme } from "./lib/theme"
+import { bootstrapPushNotifications } from "./lib/pushNotifications"
 import "./index.css"
 
 const queryClient = new QueryClient({
@@ -18,6 +19,7 @@ const queryClient = new QueryClient({
 const Devtools = import.meta.env.DEV ? React.lazy(() => import("./devtools")) : null
 
 initTheme()
+bootstrapPushNotifications()
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
