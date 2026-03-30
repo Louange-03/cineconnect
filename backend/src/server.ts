@@ -1,5 +1,5 @@
 import { createServer } from "http"
-import { createApp } from "./app"
+import { createApp, resolveAllowedFrontendOrigins } from "./app"
 import { initSocket } from "./socket"
 import { pool } from "./db/client"
 import { ensurePasswordResetSchema } from "./db/ensurePasswordResetSchema.js"
@@ -28,7 +28,7 @@ async function start() {
   await ensurePasswordResetSchema()
 
   const httpServer = createServer(app)
-  initSocket(httpServer, FRONTEND_ORIGIN as string)
+  initSocket(httpServer, resolveAllowedFrontendOrigins())
 
   httpServer.listen(port, () => {
     console.log(`API listening on http://localhost:${port}`)

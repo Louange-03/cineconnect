@@ -257,12 +257,14 @@ Sans domaines sur **`web`** et **`api`**, Coolify ne cree pas les variables magi
 - Docker Compose Location: **`/docker-compose.yaml`** (recommande). Alternative: `/docker-compose.coolify.yml` (alias vers le meme stack).
 - **Domaines et port interne 8080** (recommande pour l’automatisation, voir [doc Coolify — Docker Compose](https://coolify.io/docs/knowledge-base/docker/compose)) : les services `web` et `api` ecoutent sur **8080** dans le conteneur. Lorsque tu associes un domaine a chaque service, indique ce port dans l’URL Coolify — le proxy continue d’exposer le site en 80/443 publics.
 
-  Exemples (remplace par ton domaine reel) :
+  Exemples dans **l’interface Coolify** (remplace par ton domaine reel) :
 
   - service **`web`** : `https://app.ton-domaine.com:8080`
   - service **`api`** : `https://api.ton-domaine.com:8080`
 
-  Sans ce **`:8080`**, Coolify route souvent vers le port 80 interne → rien ne repond ou conteneur « unhealthy ».
+  Le **`:8080` dans ce champ** indique a Coolify le port **interne du conteneur**, pas le port dans ton navigateur.
+
+  **Dans le navigateur**, ouvre le site **sans** `:8080` : par ex. `http://web-xxxxx.149.x.x.sslip.io` (port 80 implicite) ou `https://…` si tu as active le SSL. Si tu tapes `…sslip.io:8080`, le navigateur essaie le port **8080 sur le serveur**, souvent **non expose** → page inaccessible.
 
 - Ne publie pas `db` publiquement (pas de domaine, pas de `ports:` sur `db`).
 

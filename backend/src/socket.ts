@@ -5,7 +5,10 @@ import { pool } from "./db/client.js"
 
 const onlineUsers = new Map<string, Set<string>>()
 
-export const initSocket = (httpServer: HttpServer, frontendOrigin: string) => {
+export const initSocket = (
+  httpServer: HttpServer,
+  frontendOrigin: string | string[],
+) => {
   const io = new Server(httpServer, {
     cors: {
       origin: frontendOrigin,

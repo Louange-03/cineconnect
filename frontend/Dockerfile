@@ -12,10 +12,10 @@ COPY . .
 ARG VITE_API_URL
 ARG VITE_SOCKET_URL
 
-ENV VITE_API_URL=${VITE_API_URL}
-ENV VITE_SOCKET_URL=${VITE_SOCKET_URL}
-
-RUN pnpm build
+# Coolify met parfois :8080 dans l’URL (port conteneur) ; le navigateur doit appeler le proxy (:80 / :443).
+RUN export VITE_API_URL=$(printf '%s' "${VITE_API_URL}" | sed -E 's/:8080\/?$//') && \
+    export VITE_SOCKET_URL=$(printf '%s' "${VITE_SOCKET_URL}" | sed -E 's/:8080\/?$//') && \
+    pnpm build
 
 FROM node:20-alpine
 

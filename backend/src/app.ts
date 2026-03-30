@@ -23,13 +23,26 @@ export function resolveFrontendOrigin(): string {
 }
 
 /**
+ * Coolify indique souvent le port conteneur 8080 dans l’URL (ex. …sslip.io:8080) ;
+ * le navigateur accede au site via le proxy en :80 / :443 sans ce suffixe.
+ * On autorise les deux formes pour CORS (sauf localhost ou 127.0.0.1).
+ */
+export function resolveAllowedFrontendOrigins(): string[] {
+  const o = resolveFrontendOrigin()
+  if (o.includes("localhost") || o.includes("127.0.0.1")) return [o]
+  const without8080 = o.replace(/:8080\/?$/, "")
+  return without8080 !== o ? [o, without8080] : [o]
+}
+
+/**
  * Application HTTP (sans écoute de port) — utilisée par le serveur et les tests.
  */
 export function createApp(): express.Express {
   const app = express()
 
-  const FRONTEND_ORIGIN = resolveFrontendOrigin()
-  app.use(cors({ origin: FRONTEND_ORIGIN, credentials: true }))
+  app.use(
+    cors({ origin: resolveAllowedFrontendOrigins(), credentials: true }),
+  )
   app.use(express.json())
 
   app.get("/health", (_req, res) => res.json({ ok: true }))
