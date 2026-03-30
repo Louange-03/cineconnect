@@ -386,9 +386,15 @@ export function Discussion() {
   )
 
   return (
-    <div className="discussions-page flex h-[calc(100vh-5rem)] mt-20 bg-[#050B1C] text-white overflow-hidden">
+    <div className="discussions-page mt-20 flex h-[calc(100vh-5rem)] overflow-hidden bg-[#050B1C] text-white">
       {/* Sidebar */}
-      <div className="w-full max-w-[320px] md:max-w-[380px] flex flex-col border-r border-white/10 bg-[#0A132D]/60 backdrop-blur-xl">
+      <div
+        className={[
+          "w-full md:flex md:max-w-[380px] md:flex-col md:border-r md:border-white/10",
+          "bg-[#0A132D]/60 backdrop-blur-xl",
+          selected ? "hidden md:flex" : "flex flex-col",
+        ].join(" ")}
+      >
         <div className="p-6 border-b border-white/10 bg-white/5">
           <h2 className="text-2xl font-semibold tracking-tight text-white">Messages</h2>
           <p className="text-sm text-gray-400 mt-1">Vos conversations récentes</p>
@@ -442,7 +448,7 @@ export function Discussion() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col bg-[#050B1C] relative">
+      <div className={["relative flex-1 flex-col bg-[#050B1C]", selected ? "flex" : "hidden md:flex"].join(" ")}>
         {/* Background gradient & texture overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#1D6CE0]/5 via-transparent to-[#3EA6FF]/5 pointer-events-none" />
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay pointer-events-none" />
@@ -450,7 +456,15 @@ export function Discussion() {
         {selected ? (
           <>
             {/* Chat Header */}
-            <div className="p-6 border-b border-white/10 bg-[#0A132D]/80 backdrop-blur-md flex items-center gap-4 z-10">
+            <div className="z-10 flex items-center gap-3 border-b border-white/10 bg-[#0A132D]/80 p-4 backdrop-blur-md md:gap-4 md:p-6">
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/80 transition hover:bg-white/10 md:hidden"
+                aria-label="Retour aux conversations"
+              >
+                ←
+              </button>
               <Avatar name={selected.name} src={selected.avatar_url} selected size="md" />
               <div>
                 <h3 className="text-xl font-bold text-white tracking-wide">{selected.name || "Inconnu"}</h3>
@@ -462,7 +476,7 @@ export function Discussion() {
             </div>
 
             {/* Messages body */}
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 z-10 hide-scrollbar scroll-smooth">
+            <div className="z-10 flex-1 space-y-4 overflow-y-auto p-3 scroll-smooth hide-scrollbar md:p-6">
               {messages.map((msg, idx) => {
                 const isMine = msg.sender_id === currentUserId;
                 const sharedFilm = parseSharedFilmMessage(msg.text || "")
@@ -487,7 +501,7 @@ export function Discussion() {
                       className={`flex ${isMine ? "justify-end" : "justify-start"} motion-safe:animate-fade-in`}
                     >
                       <div
-                        className={`max-w-[70%] p-4 rounded-3xl ${isMine
+                        className={`max-w-[85%] p-4 rounded-3xl md:max-w-[70%] ${isMine
                           ? "bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] text-white rounded-br-sm shadow-[0_5px_20px_rgba(29,108,224,0.3)]"
                           : "bg-[#0A132D] border border-white/10 text-white/90 rounded-bl-sm shadow-xl"
                           }`}
@@ -611,12 +625,12 @@ export function Discussion() {
             </div>
 
             {/* Input area */}
-            <div className="p-4 bg-transparent z-10 mb-2">
-              <div className="mx-auto max-w-4xl bg-[#0A132D]/90 backdrop-blur-2xl border border-white/10 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex items-center p-2 pr-3 gap-3">
+            <div className="z-10 mb-2 bg-transparent p-2 md:p-4">
+              <div className="mx-auto flex max-w-4xl items-center gap-2 rounded-2xl border border-white/10 bg-[#0A132D]/90 p-2 pr-2 shadow-[0_10px_40px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:gap-3 md:rounded-full md:pr-3">
                 <button
                   type="button"
                   onClick={openShareFilms}
-                  className="ml-1 flex h-10 items-center justify-center rounded-full border border-white/10 bg-white/5 px-3 text-xs font-semibold text-white/85 transition hover:bg-white/10"
+                  className="ml-1 flex h-9 items-center justify-center rounded-full border border-white/10 bg-white/5 px-2 text-[11px] font-semibold text-white/85 transition hover:bg-white/10 md:h-10 md:px-3 md:text-xs"
                   title="Partager un film"
                 >
                   Partager
