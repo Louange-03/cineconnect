@@ -736,37 +736,19 @@ html.theme-light .home-page-mockup .bg-\[\#0c1222\] {
   overflow-x: clip;
 }
 
-/* Accueil — globe 3D (cylindre / équateur d’un globe) */
-.home-hero-globe-viewport {
-  perspective: 1100px;
+/* Accueil — carrousel courbé (style bande en arc) */
+.home-hero-arc-viewport {
+  perspective: 1200px;
   perspective-origin: 50% 45%;
 }
 
-.home-hero-globe-spin-root {
-  position: relative;
-  width: 0;
-  height: 0;
+.home-hero-arc-track {
   transform-style: preserve-3d;
-  will-change: transform;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .home-hero-globe-spin {
-    animation: home-globe-yaw 42s linear infinite;
-  }
-
-  .home-hero-globe-spin:hover {
-    animation-play-state: paused;
-  }
-}
-
-@keyframes home-globe-yaw {
-  from {
-    transform: rotateX(11deg) rotateY(0deg);
-  }
-  to {
-    transform: rotateX(11deg) rotateY(-360deg);
-  }
+.home-hero-arc-face {
+  transform-origin: center center;
+  will-change: transform, opacity;
 }
 
 /* Accueil — overlays section hero / Monsters (thème sombre) */

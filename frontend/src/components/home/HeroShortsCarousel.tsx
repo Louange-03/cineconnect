@@ -7,9 +7,8 @@ import { resolvePosterUrl } from "../../lib/poster"
 import type { Film } from "../../types"
 
 const FILMS_SEARCH = { q: "", category: "", type: "all" as const, sort: "" as const }
-
-/** Largeur « logique » d’une affiche pour calculer le rayon du cylindre (px). */
-const CARD_W = 150
+const ROTATE_MS = 1900
+const SLOT_OFFSETS = [-3, -2, -1, 0, 1, 2, 3] as const
 
 type Slide =
   | { kind: "film"; film: Film }
@@ -40,18 +39,13 @@ function slideKey(s: Slide, i: number): string {
   return `s-${s.seed}-${i}`
 }
 
-/** Rayon translateZ pour répartir les affiches sur un cercle sans trop se chevaucher. */
-function cylinderRadiusPx(n: number, cardWidth: number): number {
-  const count = Math.max(n, 3)
-  const half = cardWidth / 2
-  return Math.round((half + 8) / Math.sin(Math.PI / count))
-}
-
 export function HeroShortsCarousel() {
   const { data: allFilms } = useFilms("", "", "")
   const slides = useMemo(() => buildSlides(allFilms), [allFilms])
   const n = slides.length
+  const safeN = Math.max(n, 1)
 
+  const [index, setIndex] = useState(0)
   const [reducedMotion, setReducedMotion] = useState(false)
 
   useEffect(() => {
@@ -62,12 +56,17 @@ export function HeroShortsCarousel() {
     return () => mq.removeEventListener("change", on)
   }, [])
 
-  const radiusPx = useMemo(() => cylinderRadiusPx(n, CARD_W), [n])
-  const angleStep = 360 / Math.max(n, 1)
+  useEffect(() => {
+    if (reducedMotion || safeN <= 1) return
+    const id = window.setInterval(() => {
+      setIndex((cur) => (cur + 1) % safeN)
+    }, ROTATE_MS)
+    return () => window.clearInterval(id)
+  }, [reducedMotion, safeN])
 
   if (n === 0) {
     return (
-      <div className="home-hero-globe mx-auto w-full max-w-sm py-2">
+      <div className="home-hero-arc mx-auto w-full max-w-sm py-2">
         <p className="text-center text-xs text-white/60">Chargement du catalogue…</p>
       </div>
     )
@@ -75,45 +74,42 @@ export function HeroShortsCarousel() {
 
   return (
     <div
-      className="home-hero-globe mx-auto w-full max-w-lg select-none py-3"
+      className="home-hero-arc mx-auto w-full max-w-4xl select-none py-2"
       role="region"
       aria-roledescription="carrousel"
-      aria-label="Affiches sur un tour panoramique 3D"
+      aria-label="Affiches en carrousel courbé"
     >
-      <div className="home-hero-globe-viewport relative mx-auto h-[min(52vw,280px)] max-h-[320px] w-full max-w-[400px] sm:h-[300px] sm:max-h-none">
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div
-            className={[
-              "home-hero-globe-spin-root",
-              reducedMotion ? "" : "home-hero-globe-spin",
-            ].join(" ")}
-            style={
-              reducedMotion
-                ? { transformStyle: "preserve-3d", transform: "rotateX(11deg) rotateY(-22deg)" }
-                : { transformStyle: "preserve-3d" }
-            }
-          >
-            {slides.map((slide, i) => {
+      <div className="home-hero-arc-viewport relative mx-auto h-[150px] w-full max-w-[760px] sm:h-[175px] md:h-[190px]">
+        <div className="home-hero-arc-track absolute inset-0">
+          {SLOT_OFFSETS.map((offset, slotIdx) => {
+            const slideIdx = (index + offset + safeN * 100) % safeN
+            const slide = slides[slideIdx]
+            if (!slide) return null
+
             const posterSrc =
               slide.kind === "film" ? resolvePosterUrl(slide.film) : slide.src
             const alt = slide.kind === "film" ? slide.film.title : slide.alt
             const seed =
               slide.kind === "film"
-                ? `cc-globe-${slide.film.id.slice(0, 10)}`
+                ? `cc-arc-${slide.film.id.slice(0, 10)}`
                 : slide.seed
-
-            const transform = reducedMotion
-              ? `rotateX(6deg) rotateY(${i * angleStep}deg) translateZ(${radiusPx}px) scale(0.92)`
-              : `rotateX(6deg) rotateY(${i * angleStep}deg) translateZ(${radiusPx}px)`
+            const depth = Math.abs(offset)
+            const x = offset * 108
+            const rotateY = offset * -11
+            const rotateX = depth * 1.8
+            const scale = offset === 0 ? 1 : 0.92 - depth * 0.08
+            const opacity = 1 - depth * 0.15
+            const z = 20 - depth
+            const y = depth * 4
 
             const inner = (
               <>
                 <SafeImage
                   src={posterSrc}
-                  alt=""
+                  alt={offset === 0 ? alt : ""}
                   fallbackSeed={seed}
                   className="h-full w-full object-cover"
-                  loading={i <= 3 ? "eager" : "lazy"}
+                  loading={slotIdx < 4 ? "eager" : "lazy"}
                 />
                 <div
                   className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pt-12 pb-3 px-3"
@@ -128,19 +124,21 @@ export function HeroShortsCarousel() {
 
             return (
               <div
-                key={slideKey(slide, i)}
-                className="home-hero-globe-face absolute overflow-hidden rounded-2xl border border-white/25 bg-[#0c1222] shadow-[0_18px_50px_rgba(0,0,0,0.55)] ring-1 ring-white/10"
+                key={`${slideKey(slide, slideIdx)}-${slotIdx}-${index}`}
+                className={[
+                  "home-hero-arc-face absolute left-1/2 top-1/2 overflow-hidden rounded-2xl border border-white/25 bg-[#0c1222] shadow-[0_18px_50px_rgba(0,0,0,0.55)] ring-1 ring-white/10",
+                  reducedMotion ? "" : "transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                ].join(" ")}
                 style={{
-                  left: "50%",
-                  top: "50%",
-                  width: CARD_W,
-                  height: Math.round(CARD_W * 1.5),
-                  marginLeft: -CARD_W / 2,
-                  marginTop: Math.round((-CARD_W * 1.5) / 2),
-                  transform,
-                  transformStyle: "preserve-3d",
-                  backfaceVisibility: "hidden",
+                  width: "116px",
+                  height: "174px",
+                  marginLeft: "-58px",
+                  marginTop: "-87px",
+                  opacity,
+                  zIndex: z,
+                  transform: `translate3d(${x}px, ${y}px, 0) rotateY(${rotateY}deg) rotateX(${rotateX}deg) scale(${scale})`,
                 }}
+                aria-hidden={depth > 2}
               >
                 {slide.kind === "film" ? (
                   <Link
@@ -148,6 +146,7 @@ export function HeroShortsCarousel() {
                     params={{ id: slide.film.id }}
                     className="absolute inset-0 block outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]"
                     aria-label={`Ouvrir ${slide.film.title}`}
+                    tabIndex={depth > 2 ? -1 : 0}
                   >
                     {inner}
                   </Link>
@@ -157,29 +156,28 @@ export function HeroShortsCarousel() {
                     search={FILMS_SEARCH}
                     className="absolute inset-0 block outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]"
                     aria-label={`Voir le catalogue — ${slide.alt}`}
+                    tabIndex={depth > 2 ? -1 : 0}
                   >
                     {inner}
                   </Link>
                 )}
               </div>
             )
-            })}
-          </div>
+          })}
         </div>
 
-        {/* Masque pour immerger le globe dans le hero */}
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-1/4 bg-gradient-to-t from-[#050B1C]/90 to-transparent"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-1/3 bg-gradient-to-t from-[#050B1C]/96 via-[#050B1C]/65 to-transparent"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 z-[2] h-1/5 bg-gradient-to-b from-[#050B1C]/80 to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 z-[2] h-1/4 bg-gradient-to-b from-[#050B1C]/80 to-transparent"
           aria-hidden
         />
       </div>
 
       <p className="sr-only">
-        Les affiches défilent en rotation continue. Survolez pour mettre en pause.
+        Les affiches tournent en carrousel courbé de gauche à droite.
       </p>
     </div>
   )
