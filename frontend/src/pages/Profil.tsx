@@ -234,7 +234,7 @@ export function Profil() {
                 </div>
                 <Link
                   to="/films"
-                  search={{ q: "", category: "", type: "movie", sort: "" }}
+                  search={{ q: "", category: "", type: "all", sort: "" }}
                   className="inline-flex items-center gap-2 rounded-full bg-[#1D6CE0] px-6 py-2.5 font-bold text-white shadow-lg transition-all hover:bg-[#3EA6FF] hover:-translate-y-0.5 mt-2"
                 >
                   Explorer le catalogue

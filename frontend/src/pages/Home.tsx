@@ -12,7 +12,7 @@ import type { Film } from "../types"
 
 const FEATURE_PILLS = ["Tout", "Animé", "Comédie", "Action", "Horreur"] as const
 
-const FILMS_SEARCH = { q: "", category: "", type: "movie" as const, sort: "" as const }
+const FILMS_SEARCH = { q: "", category: "", type: "all" as const, sort: "" as const }
 
 function normalizeCat(v: string) {
   return v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")

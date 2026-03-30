@@ -342,7 +342,7 @@ export function Discussion() {
 
     setLoadingFilms(true)
     try {
-      const res = await fetch(buildApiUrl("/api/films?limit=120"), {
+      const res = await fetch(buildApiUrl("/api/films?limit=2000"), {
         headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
       })
       if (!res.ok) throw new Error("Erreur chargement films")

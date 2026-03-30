@@ -49,6 +49,7 @@ describe("useFilms", () => {
     expect(url).toContain("q=x")
     expect(url).toContain("category=c")
     expect(url).toContain("year=2021")
+    expect(url).toContain("limit=2000")
   })
 
   it("films non tableau → []", async () => {

@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query"
 import { buildApiUrl } from "../lib/apiUrl"
+import { FILMS_PAGE_LIMIT } from "./useFilms"
 import type { Film } from "../types"
 
 async function fetchFilms(query: string, category: string, year: string): Promise<Film[]> {
   const params = new URLSearchParams()
+  params.set("limit", FILMS_PAGE_LIMIT)
   if (query) params.append("q", query)
   if (category) params.append("category", category)
   if (year) params.append("year", year)
@@ -25,7 +27,7 @@ async function fetchFilms(query: string, category: string, year: string): Promis
 
 export function useFilms(query: string, category = "", year = "") {
   return useQuery<Film[], Error>({
-    queryKey: ["films", query, category, year],
+    queryKey: ["films", query, category, year, FILMS_PAGE_LIMIT],
     queryFn: () => fetchFilms(query, category, year),
   })
 }

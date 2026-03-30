@@ -1,7 +1,7 @@
 import { Router } from "express"
 import { db } from "../db"
 import { films, filmCategories, categories } from "../db/schema"
-import { eq, ilike, inArray, and, type SQL } from "drizzle-orm"
+import { eq, ilike, inArray, and, asc, type SQL } from "drizzle-orm"
 import { getFilmById, searchOmdb, importFilmFromOmdb } from "../controllers/films.controller"
 import { authMiddleware } from "../middlewares/auth"
 import type { InferSelectModel } from "drizzle-orm"
@@ -21,11 +21,15 @@ function toNumberQuery(value: unknown, fallback: number): number {
   return Number.isFinite(n) ? n : fallback
 }
 
+const DEFAULT_FILMS_LIMIT = 2000
+const MAX_FILMS_LIMIT = 10000
+
 filmsRoutes.get("/", async (req, res) => {
   try {
     const q = toStringQuery(req.query.q).trim()
     const category = toStringQuery(req.query.category).trim()
-    const limit = toNumberQuery(req.query.limit, 300)
+    const rawLimit = toNumberQuery(req.query.limit, DEFAULT_FILMS_LIMIT)
+    const limit = Math.min(Math.max(rawLimit, 1), MAX_FILMS_LIMIT)
 
     const whereParts: SQL[] = []
 
@@ -59,11 +63,16 @@ filmsRoutes.get("/", async (req, res) => {
       whereParts.push(inArray(films.id, filmIds))
     }
 
-    let resultFilms;
+    let resultFilms
     if (whereParts.length > 0) {
-      resultFilms = await db.select().from(films).where(and(...whereParts)).limit(limit);
+      resultFilms = await db
+        .select()
+        .from(films)
+        .where(and(...whereParts))
+        .orderBy(asc(films.title))
+        .limit(limit)
     } else {
-      resultFilms = await db.select().from(films).limit(limit);
+      resultFilms = await db.select().from(films).orderBy(asc(films.title)).limit(limit)
     }
 
     // Now manually attach categories (since SQLite/PG array_agg can be tricky to type cleanly with simple select)

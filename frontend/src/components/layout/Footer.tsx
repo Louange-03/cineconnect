@@ -39,7 +39,7 @@ export function Footer() {
             <h4 className="mb-5 text-xl font-bold tracking-tight text-white">Plateforme</h4>
             <ul className="space-y-3 text-base font-semibold text-white/85">
               <li><Link to="/" className="transition hover:text-[#3EA6FF]">Accueil</Link></li>
-              <li><Link to="/films" search={{ q: "", category: "", type: "movie", sort: "" }} className="transition hover:text-[#3EA6FF]">Catalogue films</Link></li>
+              <li><Link to="/films" search={{ q: "", category: "", type: "all", sort: "" }} className="transition hover:text-[#3EA6FF]">Catalogue films</Link></li>
               <li><Link to="/discussion" className="transition hover:text-[#3EA6FF]">Discussions</Link></li>
               <li><Link to="/profil" className="transition hover:text-[#3EA6FF]">Mon profil</Link></li>
             </ul>
@@ -48,10 +48,10 @@ export function Footer() {
           <div>
             <h4 className="mb-5 text-xl font-bold tracking-tight text-white">Catégories</h4>
             <ul className="space-y-3 text-base font-semibold text-white/85">
-              <li><Link to="/films" search={{ q: "", category: "Action", type: "movie", sort: "" }} className="transition hover:text-[#3EA6FF]">Action & aventure</Link></li>
-              <li><Link to="/films" search={{ q: "", category: "Drame", type: "movie", sort: "" }} className="transition hover:text-[#3EA6FF]">Drame</Link></li>
-              <li><Link to="/films" search={{ q: "", category: "Science-Fiction", type: "movie", sort: "" }} className="transition hover:text-[#3EA6FF]">Science-fiction</Link></li>
-              <li><Link to="/films" search={{ q: "", category: "Comédie", type: "movie", sort: "" }} className="transition hover:text-[#3EA6FF]">Comédie</Link></li>
+              <li><Link to="/films" search={{ q: "", category: "Action", type: "all", sort: "" }} className="transition hover:text-[#3EA6FF]">Action & aventure</Link></li>
+              <li><Link to="/films" search={{ q: "", category: "Drame", type: "all", sort: "" }} className="transition hover:text-[#3EA6FF]">Drame</Link></li>
+              <li><Link to="/films" search={{ q: "", category: "Science-Fiction", type: "all", sort: "" }} className="transition hover:text-[#3EA6FF]">Science-fiction</Link></li>
+              <li><Link to="/films" search={{ q: "", category: "Comédie", type: "all", sort: "" }} className="transition hover:text-[#3EA6FF]">Comédie</Link></li>
             </ul>
           </div>
 

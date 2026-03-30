@@ -74,7 +74,7 @@ export function Navbar() {
   const nav = useMemo<NavLinkItem[]>(
     () => [
       { to: "/", label: "Accueil" },
-      { to: "/films", label: "Films", search: { q: "", category: "", type: "movie", sort: "" } },
+      { to: "/films", label: "Films", search: { q: "", category: "", type: "all", sort: "" } },
       { to: "/amis", label: "Amis", requireAuth: true },
       { to: "/discussion", label: "Discussion", requireAuth: true },
       { to: "/profil", label: "Profil", requireAuth: true },
@@ -134,7 +134,7 @@ export function Navbar() {
         <div className="relative z-20 flex items-center gap-2 md:gap-3">
           <Link
             to="/films"
-            search={{ q: "", category: "", type: "movie", sort: "" }}
+            search={{ q: "", category: "", type: "all", sort: "" }}
             className="hidden h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-300/70 transition-colors hover:bg-white/10 hover:text-white sm:flex"
             title="Rechercher"
             aria-label="Aller au catalogue"

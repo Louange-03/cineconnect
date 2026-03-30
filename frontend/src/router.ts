@@ -51,9 +51,9 @@ export const filmsRoute = createRoute({
     const q = typeof search.q === "string" ? search.q : ""
     const category = typeof search.category === "string" ? search.category : ""
 
-    const rawType = typeof search.type === "string" ? search.type : "movie"
+    const rawType = typeof search.type === "string" ? search.type : "all"
     const type: FilmsSearch["type"] =
-      rawType === "series" || rawType === "all" ? rawType : "movie"
+      rawType === "movie" || rawType === "series" ? rawType : "all"
 
     const rawSort = typeof search.sort === "string" ? search.sort : ""
     const sort: FilmsSearch["sort"] =

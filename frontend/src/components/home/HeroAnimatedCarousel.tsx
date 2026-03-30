@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { Link } from "@tanstack/react-router"
 import { SafeImage } from "./SafeImage"
 import { useFilms } from "../../hooks/useFilms"
+import { isSeriesFilmListed } from "../../lib/filmKind"
 import type { Film } from "../../types"
 
 function normalizeCat(v: string) {
@@ -21,12 +22,7 @@ function isAnimatedFilm(f: Film): boolean {
 }
 
 function isSeriesFilm(f: Film): boolean {
-  const t = readMediaType(f)
-  if (t.includes("series") || t.includes("serie")) return true
-  return (f.categories ?? []).some((c) => {
-    const n = normalizeCat(c)
-    return n.includes("series") || n.includes("serie") || n.includes("tv")
-  })
+  return isSeriesFilmListed(f)
 }
 
 function readMeta(f: Film): Record<string, unknown> {

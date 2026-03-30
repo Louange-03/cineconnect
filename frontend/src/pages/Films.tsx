@@ -6,18 +6,7 @@ import { SearchBar } from "../components/films/SearchBar"
 import { CategoryPills } from "../components/films/CategoryPills"
 import { FilmCard } from "../components/films/FilmCard"
 import type { Film } from "../types"
-
-function normalizeToken(v: string) {
-  return v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-}
-
-/** Détecte série via catégories (seed OMDb ajoute « Série »). */
-function isSeriesFilm(film: Film): boolean {
-  return (film.categories ?? []).some((c) => {
-    const n = normalizeToken(c)
-    return n.includes("serie") || n.includes("series")
-  })
-}
+import { isSeriesFilmListed, normalizeFilmToken } from "../lib/filmKind"
 
 export function Films() {
   const { q, category, type } = useSearch({ from: "/films" })
@@ -82,14 +71,14 @@ export function Films() {
     if (!category || hasSearchQuery) {
       afterCategory = base
     } else {
-      const selected = normalizeToken(category)
+      const selected = normalizeFilmToken(category)
       afterCategory = base.filter((film) =>
-        (film.categories ?? []).some((c) => normalizeToken(c) === selected),
+        (film.categories ?? []).some((c) => normalizeFilmToken(c) === selected),
       )
     }
 
-    if (type === "series") return afterCategory.filter(isSeriesFilm)
-    if (type === "movie") return afterCategory.filter((f) => !isSeriesFilm(f))
+    if (type === "series") return afterCategory.filter(isSeriesFilmListed)
+    if (type === "movie") return afterCategory.filter((f) => !isSeriesFilmListed(f))
     return afterCategory
   }, [films, category, hasSearchQuery, type])
 
@@ -190,7 +179,7 @@ export function Films() {
                 <button
                   type="button"
                   onClick={() =>
-                    patchSearch({ q: "", category: "", type: "movie", sort: "" })
+                    patchSearch({ q: "", category: "", type: "all", sort: "" })
                   }
                   className="mt-8 rounded-full border border-white/10 bg-white/5 px-8 py-3 font-bold text-white transition-all hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B1C]"
                 >
