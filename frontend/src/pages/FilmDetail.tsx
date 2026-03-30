@@ -354,7 +354,7 @@ export function FilmDetail() {
         />
 
         {/* CONTENT WRAPPER */}
-        <div className="relative z-10 mx-auto max-w-7xl px-6 pt-10 md:px-12">
+        <div className="relative z-10 mx-auto max-w-7xl px-4 pt-8 sm:px-6 md:px-12">
           {/* Back */}
           <div className="mb-6">
             <button
@@ -376,8 +376,8 @@ export function FilmDetail() {
 
           {/* MAIN CARD */}
           <Reveal>
-            <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#0A132D]/65 shadow-2xl backdrop-blur-xl">
-              <div className="grid gap-0 md:grid-cols-[380px_1fr]">
+            <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0A132D]/65 shadow-2xl backdrop-blur-xl md:rounded-[2rem]">
+              <div className="grid gap-0 md:grid-cols-[320px_1fr] lg:grid-cols-[380px_1fr]">
               {/* Poster */}
               <div className="p-4 md:p-6">
                 <div className="aspect-[2/3] overflow-hidden rounded-2xl bg-black/20 shadow-[0_10px_30px_rgba(0,0,0,0.75)]">
@@ -386,7 +386,7 @@ export function FilmDetail() {
               </div>
 
               {/* Info */}
-              <div className="flex flex-col justify-center p-6 md:p-10 md:pl-2">
+              <div className="flex flex-col justify-center p-5 sm:p-6 md:p-10 md:pl-2">
                 <div className="flex flex-wrap items-center gap-3 text-sm text-white/70">
                   {yearLabel && (
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold backdrop-blur-md">
@@ -408,7 +408,7 @@ export function FilmDetail() {
                   ) : null}
                 </div>
 
-                <h1 className="mt-4 text-4xl font-semibold tracking-tight text-white md:text-6xl">
+                <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-6xl">
                   {film.title}
                 </h1>
 
@@ -420,12 +420,12 @@ export function FilmDetail() {
                 </div>
 
                 {/* Actions */}
-                <div className="mt-8 flex flex-wrap gap-4">
+                <div className="mt-8 flex flex-wrap gap-3 sm:gap-4">
                   <button
                     type="button"
                     onClick={onWatchlist}
                     disabled={favoriteBusy}
-                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] px-8 py-4 font-bold text-white transition transform hover:-translate-y-1 hover:brightness-110 shadow-[0_0_20px_rgba(29,108,224,0.35)] disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] px-5 py-3 text-sm font-bold text-white transition transform hover:-translate-y-1 hover:brightness-110 shadow-[0_0_20px_rgba(29,108,224,0.35)] disabled:opacity-60 disabled:cursor-not-allowed sm:px-8 sm:py-4 sm:text-base"
                   >
                     {isFavorite ? "Retirer de ma liste" : "Ajouter à ma liste"}
                   </button>
@@ -433,7 +433,7 @@ export function FilmDetail() {
                   <button
                     type="button"
                     onClick={onShare}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-8 py-4 font-bold text-white/90 hover:bg-white/10"
+                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/90 hover:bg-white/10 sm:px-8 sm:py-4 sm:text-base"
                   >
                     Partager
                   </button>
@@ -444,7 +444,7 @@ export function FilmDetail() {
           </Reveal>
 
           {/* REVIEWS */}
-          <div className="mt-14 grid gap-10 lg:grid-cols-[1fr_400px] pb-24">
+          <div className="mt-14 grid gap-10 pb-24 lg:grid-cols-[1fr_400px]">
             <Reveal as="section">
               <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
                 <h2 className="text-2xl md:text-3xl font-semibold text-white">Avis</h2>
@@ -496,7 +496,7 @@ export function FilmDetail() {
               </div>
             </Reveal>
 
-            <Reveal as="aside" className="sticky top-24 h-fit rounded-3xl border border-white/10 bg-[#0A132D]/70 p-8 shadow-xl backdrop-blur-xl">
+            <Reveal as="aside" className="h-fit rounded-3xl border border-white/10 bg-[#0A132D]/70 p-6 shadow-xl backdrop-blur-xl lg:sticky lg:top-24 lg:p-8">
               <h3 className="mb-2 text-2xl font-semibold text-white">Donnez votre avis</h3>
               <p className="mb-8 text-white/60">Partagez votre critique avec la communauté CinéConnect.</p>
               <ReviewForm filmId={resolvedFilmId} />

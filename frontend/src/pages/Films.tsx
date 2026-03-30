@@ -99,13 +99,13 @@ export function Films() {
 
   return (
     <main className="films-page min-h-screen bg-[#050B1C] text-white pb-24">
-      <section className="mx-auto max-w-7xl px-6 md:px-12 pt-20">
+      <section className="mx-auto max-w-7xl px-4 pt-16 sm:px-6 md:px-12 md:pt-20">
         <div className="mb-6 flex flex-col gap-2">
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">{titleLabel}</h1>
           <p className="text-white/60">{subtitleLabel}</p>
         </div>
 
-        <div className="sticky top-4 z-30 space-y-3">
+        <div className="sticky top-24 z-30 space-y-3">
           <div className="films-search-shell rounded-lg border border-white/10 bg-[#0A132D]/70 px-2 py-1.5 shadow-md backdrop-blur-md md:px-3 md:py-2">
             <SearchBar
               value={q}
@@ -144,7 +144,7 @@ export function Films() {
       )}
 
       {!isBusy && error && (
-        <div className="mx-auto mt-10 max-w-7xl px-6 md:px-12">
+        <div className="mx-auto mt-10 max-w-7xl px-4 sm:px-6 md:px-12">
           <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-red-300">
             {error.message}
           </div>
@@ -190,7 +190,7 @@ export function Films() {
           )}
 
           {!hasNoResults && !isCatalogEmpty && list.length > 0 && (
-            <section className="mx-auto max-w-7xl px-6 md:px-12 mt-10 pb-24">
+            <section className="mx-auto mt-10 max-w-7xl px-4 pb-24 sm:px-6 md:px-12">
               <div className="mb-5 flex items-end justify-between gap-4">
                 <h3 className="text-xl md:text-2xl font-semibold">
                   {q || category ? "Résultats" : "Tout le catalogue"}

@@ -92,7 +92,7 @@ export function Navbar() {
 
   return (
     <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-[#050B1C]/90 backdrop-blur-xl">
-      <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between px-4 md:px-10">
+      <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between gap-2 px-3 sm:px-4 md:px-10">
         <Link to="/" className="group relative z-20 flex items-center gap-2.5 md:gap-3">
           <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#007BFF] shadow-[0_0_18px_rgba(0,123,255,0.28)] transition-transform duration-300 group-hover:scale-105 md:h-10 md:w-10">
             <svg
@@ -112,7 +112,7 @@ export function Navbar() {
             </svg>
           </div>
 
-          <span className="text-xl font-bold tracking-tight text-white md:text-2xl">
+          <span className="text-lg font-bold tracking-tight text-white sm:text-xl md:text-2xl">
             <span className="text-white">Ciné</span>
             <span className="text-[#3EA6FF]">Connect</span>
           </span>
@@ -180,7 +180,7 @@ export function Navbar() {
           ) : (
             <button
               onClick={handleLogout}
-              className="rounded-full bg-white/10 px-6 py-2.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+              className="hidden rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 sm:inline-flex md:px-6 md:py-2.5 md:text-sm"
             >
               Déconnexion
             </button>

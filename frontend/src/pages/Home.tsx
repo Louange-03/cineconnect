@@ -71,16 +71,13 @@ function PosterRow({
 
   return (
     <div className="hide-scrollbar overflow-x-auto pb-2 pt-1">
-      <div
-        className="grid min-w-[860px] gap-3 md:min-w-0 md:gap-4"
-        style={{ gridTemplateColumns: `repeat(${Math.max(shown.length, 1)}, minmax(0, 1fr))` }}
-      >
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-6">
       {shown.map((item, i) => (
         <Link
           key={`${item.seed}-${i}`}
           to="/films"
           search={FILMS_SEARCH}
-          className="home-poster-card group relative w-full min-w-[132px] md:min-w-0"
+          className="home-poster-card group relative w-full"
         >
           <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/10 bg-[#0c1222] shadow-lg ring-0 transition duration-300 group-hover:-translate-y-1 group-hover:border-[#007BFF]/40 group-hover:shadow-[0_12px_40px_rgba(0,123,255,0.2)]">
             <SafeImage
