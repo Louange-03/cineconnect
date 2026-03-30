@@ -6,7 +6,7 @@ import {
   MONSTERS_BACKDROP,
   MONSTERS_FOREGROUND,
 } from "../components/home/homeAssets"
-import { HeroAnimatedCarousel } from "../components/home/HeroAnimatedCarousel"
+import { HeroShortsCarousel } from "../components/home/HeroShortsCarousel"
 import { useFilms } from "../hooks/useFilms"
 import { resolvePosterUrl } from "../lib/poster"
 import type { Film } from "../types"
@@ -136,7 +136,9 @@ export function Home() {
         </div>
 
         <div className="home-hero-content relative z-10 mx-auto flex max-w-5xl flex-col items-center px-4 pb-14 pt-8 text-center md:px-8 md:pb-18 md:pt-12">
-          <h1 className="max-w-4xl text-[clamp(1.75rem,5vw,3.5rem)] font-semibold leading-[1.1] tracking-tight text-white">
+          <HeroShortsCarousel />
+
+          <h1 className="mt-8 max-w-4xl text-[clamp(1.75rem,5vw,3.5rem)] font-semibold leading-[1.1] tracking-tight text-white md:mt-10">
             Découvrez notez,{" "}
             <span className="bg-gradient-to-r from-cyan-300 to-[#00b4ff] bg-clip-text text-transparent">
               échangez.
@@ -147,8 +149,6 @@ export function Home() {
             Un catalogue infini, le chat en temps réel et le partage autour de ton art
             avec une communauté qui vit le cinéma comme toi.
           </p>
-
-          <HeroAnimatedCarousel />
 
           <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
             <Link
@@ -178,7 +178,7 @@ export function Home() {
               search={FILMS_SEARCH}
               className="inline-flex items-center rounded-full border-2 border-white bg-transparent px-8 py-3.5 text-sm font-bold text-white transition hover:bg-white/10"
             >
-              Explorer le catalogue
+              Parcourir sans compte
             </Link>
           </div>
         </div>

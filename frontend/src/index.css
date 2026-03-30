@@ -731,69 +731,6 @@ html.theme-light .home-page-mockup .bg-\[\#0c1222\] {
   animation-delay: var(--stagger, 0ms);
 }
 
-/* Page d’accueil — carrousel affiches (maquette) */
-.home-carousel-3d {
-  position: relative;
-  perspective: 1200px;
-}
-
-.home-carousel-track {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 0.35rem;
-  transform-style: preserve-3d;
-  padding-bottom: 0.35rem;
-}
-
-@media (min-width: 640px) {
-  .home-carousel-track {
-    gap: 0.5rem;
-  }
-}
-
-.home-carousel-card {
-  flex: 0 0 auto;
-  transform-origin: center bottom;
-  will-change: transform;
-}
-
-.home-carousel-card--focus {
-  position: relative;
-  box-shadow:
-    0 18px 44px rgba(8, 19, 48, 0.42),
-    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
-}
-
-.home-carousel-card--focus::after {
-  content: "";
-  position: absolute;
-  inset: -8px;
-  border-radius: 0.95rem;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 60% 48% at 50% 100%,
-    rgba(198, 123, 92, 0.24),
-    rgba(198, 123, 92, 0.03) 65%,
-    transparent 80%
-  );
-  opacity: 0.85;
-}
-
-.home-carousel-3d::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(88%, 720px);
-  height: 120px;
-  bottom: -28px;
-  pointer-events: none;
-  border-radius: 9999px;
-  background: radial-gradient(ellipse at center, rgba(29, 108, 224, 0.28), transparent 72%);
-  filter: blur(16px);
-}
-
 .home-page-mockup,
 .home-mockup {
   overflow-x: clip;
@@ -901,30 +838,6 @@ html.theme-light .home-page-mockup .bg-\[\#0c1222\] {
 
   .home-page-mockup section:nth-of-type(3) .home-section-rise:last-child {
     animation-delay: 0.26s;
-  }
-
-  .home-carousel-card {
-    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  @keyframes home-carousel-focus-pulse {
-    0%,
-    100% {
-      transform: translateY(0);
-      filter: brightness(1);
-    }
-    50% {
-      transform: translateY(-4px);
-      filter: brightness(1.06);
-    }
-  }
-
-  .home-carousel-card--focus {
-    animation: home-carousel-focus-pulse 3.6s ease-in-out infinite;
-  }
-
-  .home-carousel-card:hover {
-    filter: brightness(1.12);
   }
 
   .home-poster-card {
