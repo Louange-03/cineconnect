@@ -68,6 +68,25 @@ function PosterRow({
 }) {
   const max = Math.min(items.length, 6)
   const shown = items.slice(0, max)
+  const onPosterMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const el = e.currentTarget
+    const rect = el.getBoundingClientRect()
+    const px = (e.clientX - rect.left) / Math.max(rect.width, 1)
+    const py = (e.clientY - rect.top) / Math.max(rect.height, 1)
+    const rx = (0.5 - py) * 9
+    const ry = (px - 0.5) * 10
+    el.style.setProperty("--mx", `${(px * 100).toFixed(2)}%`)
+    el.style.setProperty("--my", `${(py * 100).toFixed(2)}%`)
+    el.style.setProperty("--rx", `${rx.toFixed(2)}deg`)
+    el.style.setProperty("--ry", `${ry.toFixed(2)}deg`)
+  }
+  const onPosterLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const el = e.currentTarget
+    el.style.setProperty("--mx", "50%")
+    el.style.setProperty("--my", "30%")
+    el.style.setProperty("--rx", "0deg")
+    el.style.setProperty("--ry", "0deg")
+  }
 
   return (
     <div className="hide-scrollbar overflow-x-auto pb-2 pt-1">
@@ -78,7 +97,15 @@ function PosterRow({
           to="/films"
           search={FILMS_SEARCH}
           className="home-poster-card group relative w-full"
-          style={{ "--stagger": `${i * 70}ms` } as React.CSSProperties}
+          style={{
+            "--stagger": `${i * 70}ms`,
+            "--mx": "50%",
+            "--my": "30%",
+            "--rx": "0deg",
+            "--ry": "0deg",
+          } as React.CSSProperties}
+          onMouseMove={onPosterMove}
+          onMouseLeave={onPosterLeave}
         >
           <div className="home-poster-card__inner relative aspect-[2/3] overflow-hidden rounded-xl border border-white/10 bg-[#0c1222] shadow-lg ring-0 transition duration-300 group-hover:-translate-y-1 group-hover:border-[#007BFF]/40 group-hover:shadow-[0_12px_40px_rgba(0,123,255,0.2)]">
             <SafeImage
