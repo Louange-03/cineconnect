@@ -29,4 +29,5 @@ ENV PORT=8080
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "serve -s dist -l ${PORT}"]
+# Ecouter sur toutes les interfaces (sinon le proxy Coolify/Traefik ne joint pas le conteneur).
+CMD ["sh", "-c", "serve -s dist -l tcp://0.0.0.0:${PORT}"]

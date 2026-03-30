@@ -49,4 +49,14 @@ describe("resolveAllowedFrontendOrigins", () => {
       "http://web-abc.149.202.62.241.sslip.io",
     ])
   })
+
+  it("CORS_EXTRA_ORIGINS ajoute des origines", () => {
+    vi.stubEnv("FRONTEND_URL", "https://app.example.com")
+    vi.stubEnv("CORS_EXTRA_ORIGINS", "http://localhost:4173, https://preview.example.com")
+    expect(resolveAllowedFrontendOrigins()).toEqual([
+      "https://app.example.com",
+      "http://localhost:4173",
+      "https://preview.example.com",
+    ])
+  })
 })

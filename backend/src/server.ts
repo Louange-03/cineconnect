@@ -7,7 +7,7 @@ import { getMailTransportStatus } from "./utils/mailer"
 
 const app = createApp()
 const port = Number(process.env.PORT ?? 3007)
-const FRONTEND_ORIGIN = process.env.FRONTEND_URL || "http://localhost:5173"
+const listenHost = process.env.LISTEN_HOST ?? "0.0.0.0"
 
 async function start() {
   if (!process.env.DATABASE_URL) {
@@ -30,8 +30,8 @@ async function start() {
   const httpServer = createServer(app)
   initSocket(httpServer, resolveAllowedFrontendOrigins())
 
-  httpServer.listen(port, () => {
-    console.log(`API listening on http://localhost:${port}`)
+  httpServer.listen(port, listenHost, () => {
+    console.log(`API listening on http://${listenHost}:${port}`)
     const mail = getMailTransportStatus()
     if (mail.configured) {
       console.log(

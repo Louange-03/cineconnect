@@ -28,10 +28,20 @@ export function resolveFrontendOrigin(): string {
  * On autorise les deux formes pour CORS (sauf localhost ou 127.0.0.1).
  */
 export function resolveAllowedFrontendOrigins(): string[] {
+  const extras = (process.env.CORS_EXTRA_ORIGINS ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+
   const o = resolveFrontendOrigin()
-  if (o.includes("localhost") || o.includes("127.0.0.1")) return [o]
-  const without8080 = o.replace(/:8080\/?$/, "")
-  return without8080 !== o ? [o, without8080] : [o]
+  let core: string[]
+  if (o.includes("localhost") || o.includes("127.0.0.1")) {
+    core = [o]
+  } else {
+    const without8080 = o.replace(/:8080\/?$/, "")
+    core = without8080 !== o ? [o, without8080] : [o]
+  }
+  return [...new Set([...core, ...extras])]
 }
 
 /**
@@ -39,6 +49,10 @@ export function resolveAllowedFrontendOrigins(): string[] {
  */
 export function createApp(): express.Express {
   const app = express()
+
+  if (process.env.NODE_ENV === "production") {
+    app.set("trust proxy", 1)
+  }
 
   app.use(
     cors({ origin: resolveAllowedFrontendOrigins(), credentials: true }),

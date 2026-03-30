@@ -293,6 +293,14 @@ Au demarrage, **`api`** execute `pnpm db:migrate` puis le serveur (`backend/dock
 
 En local : `./scripts/trigger-coolify-deploy.ps1` (variable d’environnement `COOLIFY_WEBHOOK_URL` ou parametre `-WebhookUrl`).
 
+### 2c) Ca ne marche toujours pas (Coolify)
+
+1. **URL dans le navigateur** : ouvre l’URL du service **`web`** **sans** `:8080` (ex. `http://web-….sslip.io`, pas `…:8080`).
+2. **Logs Coolify** : onglet **Logs** pour `api`, puis `web`, puis `db` — erreurs `JWT_SECRET`, Postgres, ou migrations en premier.
+3. **Depuis le VPS** (SSH) : `curl -sI http://127.0.0.1` ou teste que le proxy repond ; si l’API ecoute, les logs doivent afficher `API listening on http://0.0.0.0:8080` apres redeploiement.
+4. **CORS** : ouvre les outils developpeur (F12) → onglet **Network** / **Console**. Si tu vois des erreurs du type *blocked by CORS*, verifie que **`FRONTEND_URL`** dans Coolify est exactement l’URL que tu utilises dans la barre d’adresse (meme `http` vs `https`, pas de slash final). Tu peux ajouter **`CORS_EXTRA_ORIGINS`** (origines separees par des virgules) sur le service **`api`** dans le compose / variables Coolify pour autoriser plusieurs URLs.
+5. **Pare-feu** : le serveur doit laisser passer **80** et **443** (et le port du dashboard Coolify si besoin).
+
 ### 3) DNS OVH
 
 Creer 2 enregistrements DNS vers ton serveur OVH (ou vers le reverse proxy Coolify):
