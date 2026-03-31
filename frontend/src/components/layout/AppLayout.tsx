@@ -24,7 +24,7 @@ export function AppLayout() {
       )}
 
       <Navbar />
-      <main className={["pt-20", isDiscussion ? "min-h-[calc(100dvh-5rem)]" : ""].join(" ")}>
+      <main className={["pt-16 lg:pt-20", isDiscussion ? "min-h-[calc(100dvh-4rem)] lg:min-h-[calc(100dvh-5rem)]" : ""].join(" ")}>
         <Outlet />
       </main>
       {!isDiscussion ? <Footer /> : null}

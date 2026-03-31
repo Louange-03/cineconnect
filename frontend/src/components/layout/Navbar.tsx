@@ -92,16 +92,16 @@ export function Navbar() {
 
   return (
     <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-[#050B1C]/90 backdrop-blur-xl">
-      <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between gap-2 px-3 sm:px-4 md:px-10">
+      <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 sm:px-4 lg:h-20 lg:px-10">
         <Link to="/" className="group relative z-20 flex items-center gap-2.5 md:gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#007BFF] shadow-[0_0_18px_rgba(0,123,255,0.28)] transition-transform duration-300 group-hover:scale-105 md:h-10 md:w-10">
+          <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#007BFF] shadow-[0_0_18px_rgba(0,123,255,0.28)] transition-transform duration-300 group-hover:scale-105 lg:h-10 lg:w-10">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth={2}
               stroke="white"
-              className="h-5 w-5 md:h-6 md:w-6"
+              className="h-4.5 w-4.5 lg:h-6 lg:w-6"
               aria-hidden="true"
             >
               <path
@@ -112,7 +112,7 @@ export function Navbar() {
             </svg>
           </div>
 
-          <span className="text-lg font-bold tracking-tight text-white sm:text-xl md:text-2xl">
+          <span className="hidden text-lg font-bold tracking-tight text-white min-[390px]:inline sm:text-xl lg:text-2xl">
             <span className="text-white">Ciné</span>
             <span className="text-[#3EA6FF]">Connect</span>
           </span>
@@ -120,7 +120,7 @@ export function Navbar() {
 
         {/* Desktop nav — centré (maquette) */}
         <nav
-          className="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 md:block"
+          className="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 lg:block"
           aria-label="Navigation principale"
         >
           <div className="pointer-events-auto flex items-center gap-1 lg:gap-2">
@@ -155,7 +155,7 @@ export function Navbar() {
           <button
             type="button"
             onClick={() => setTheme(toggleTheme())}
-            className="hidden h-10 w-10 items-center justify-center rounded-md border border-stone-700/50 bg-stone-900/40 text-stone-500 transition hover:border-stone-600 hover:bg-stone-800/50 hover:text-stone-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/30 md:inline-flex"
+            className="hidden h-10 w-10 items-center justify-center rounded-md border border-stone-700/50 bg-stone-900/40 text-stone-500 transition hover:border-stone-600 hover:bg-stone-800/50 hover:text-stone-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/30 lg:inline-flex"
             title={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
             aria-label={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
           >
@@ -180,7 +180,7 @@ export function Navbar() {
           ) : (
             <button
               onClick={handleLogout}
-              className="hidden rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 sm:inline-flex md:px-6 md:py-2.5 md:text-sm"
+              className="hidden rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 sm:inline-flex lg:px-6 lg:py-2.5 lg:text-sm"
             >
               Déconnexion
             </button>
@@ -189,7 +189,7 @@ export function Navbar() {
           {/* Mobile menu button */}
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-300/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 md:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-300/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 lg:hidden"
             aria-label={mobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
             onClick={() => setMobileOpen((v) => !v)}
           >
@@ -208,8 +208,8 @@ export function Navbar() {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="md:hidden">
-          <div className="mx-auto max-w-7xl px-6 pb-5 md:px-12">
+        <div className="lg:hidden">
+          <div className="mx-auto max-w-7xl px-3 pb-4 sm:px-4">
             <div className="mt-3 rounded-lg border border-stone-800/80 bg-[#1c1b18]/95 p-2 shadow-lg motion-safe:animate-fade-in">
               <div className="flex flex-col gap-1">
                 {visibleNav.map((item) => (
