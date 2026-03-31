@@ -9,8 +9,8 @@ import type { Film } from "../types"
 import { isSeriesFilmListed, normalizeFilmToken } from "../lib/filmKind"
 
 export function Films() {
-  const INITIAL_VISIBLE = 30
-  const LOAD_STEP = 30
+  const INITIAL_VISIBLE = 24
+  const LOAD_STEP = 24
   const { q, category, type } = useSearch({ from: "/films" })
   const navigate = useNavigate({ from: "/films" })
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE)

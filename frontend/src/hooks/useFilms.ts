@@ -3,11 +3,12 @@ import { buildApiUrl } from "../lib/apiUrl"
 import type { Film } from "../types"
 
 /** Aligné sur DEFAULT_FILMS_LIMIT côté API (catalogues larges + TMDB). */
-export const FILMS_PAGE_LIMIT = "10000"
+export const FILMS_PAGE_LIMIT = "1200"
+export const HOME_FILMS_LIMIT = "240"
 
-async function fetchFilms(query: string, category: string, year: string): Promise<Film[]> {
+async function fetchFilms(query: string, category: string, year: string, limit: string): Promise<Film[]> {
   const params = new URLSearchParams()
-  params.set("limit", FILMS_PAGE_LIMIT)
+  params.set("limit", limit)
   if (query) params.append("q", query)
   if (category) params.append("category", category)
   if (year) params.append("year", year)
@@ -29,10 +30,10 @@ async function fetchFilms(query: string, category: string, year: string): Promis
   return films
 }
 
-export function useFilms(query: string, category = "", year = "") {
+export function useFilms(query: string, category = "", year = "", limit = FILMS_PAGE_LIMIT) {
   return useQuery<Film[], Error>({
-    queryKey: ["films", query, category, year, FILMS_PAGE_LIMIT],
-    queryFn: () => fetchFilms(query, category, year),
+    queryKey: ["films", query, category, year, limit],
+    queryFn: () => fetchFilms(query, category, year, limit),
     staleTime: 1000 * 30,
     gcTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,

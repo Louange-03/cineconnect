@@ -1233,3 +1233,29 @@ html.theme-light .home-road-row::after {
     opacity: 0;
   }
 }
+
+/* Performance guard for lower-end phones/tablets:
+   keep UI smooth by reducing expensive continuous animations/effects. */
+@media (max-width: 768px) {
+  .home-road-track--left,
+  .home-road-track--right,
+  .home-monsters-float,
+  .home-monsters-poster-image,
+  .home-monsters-poster-glint,
+  .home-poster-card:nth-child(odd) .home-poster-card__inner {
+    animation: none !important;
+  }
+
+  .home-poster-card,
+  .home-poster-card__inner,
+  .home-monsters-poster {
+    transition-duration: 120ms !important;
+  }
+
+  .home-poster-card:hover .home-poster-card__inner,
+  .home-monsters-poster:hover {
+    box-shadow: none !important;
+    filter: none !important;
+    transform: none !important;
+  }
+}

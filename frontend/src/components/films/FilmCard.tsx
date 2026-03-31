@@ -13,7 +13,7 @@ interface FilmCardProps {
   onFavoriteChange?: (filmId: string, isFavorite: boolean) => void
 }
 
-export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: FilmCardProps) {
+function FilmCardInner({ film, initialIsFavorite = false, onFavoriteChange }: FilmCardProps) {
   const {
     isFavorite,
     busy,
@@ -234,3 +234,5 @@ export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: 
     </div>
   )
 }
+
+export const FilmCard = React.memo(FilmCardInner)

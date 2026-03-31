@@ -7,7 +7,7 @@ import {
   MONSTERS_FOREGROUND,
 } from "../components/home/homeAssets"
 import { HeroShortsCarousel } from "../components/home/HeroShortsCarousel"
-import { useFilms } from "../hooks/useFilms"
+import { HOME_FILMS_LIMIT, useFilms } from "../hooks/useFilms"
 import { resolvePosterUrl } from "../lib/poster"
 import type { Film } from "../types"
 
@@ -132,7 +132,7 @@ function PosterRow({
 
 export function Home() {
   const [pill, setPill] = React.useState<(typeof FEATURE_PILLS)[number]>("Tout")
-  const { data: allFilms } = useFilms("", "", "")
+  const { data: allFilms } = useFilms("", "", "", HOME_FILMS_LIMIT)
 
   const rowsFromDb = React.useMemo(() => {
     const base = allFilms ?? []
