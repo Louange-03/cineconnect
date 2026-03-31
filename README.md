@@ -155,3 +155,60 @@ pnpm --dir backend seed:tmdb
 
 - Local/dev: `docker-compose.yml`
 - Coolify/prod: `docker-compose.yaml`
+
+## Vérification Finale (Checklist)
+
+Après démarrage, valider rapidement ces points:
+
+- `http://localhost:5173` charge la page d'accueil
+- `http://localhost:3001/health` retourne `{"ok":true}`
+- `http://localhost:3001/api/docs` affiche Swagger
+- `http://localhost:8083` ouvre Adminer
+- la page `Films` affiche un catalogue
+- la page `Utilisateurs` liste d'autres comptes (si présents)
+
+## Commandes de Diagnostic Rapide
+
+Si quelque chose ne marche pas, exécuter:
+
+```bash
+docker context ls
+docker compose -f docker-compose.yml ps
+docker compose -f docker-compose.yml logs --tail=100 db
+docker compose -f docker-compose.yml logs --tail=100 adminer
+pnpm --dir backend typecheck
+pnpm --dir frontend typecheck
+```
+
+## Réinitialisation Propre (Local)
+
+Si l'environnement local est cassé et tu veux repartir propre:
+
+```bash
+docker compose -f docker-compose.yml down
+pnpm install
+docker context use default
+docker compose -f docker-compose.yml up -d db adminer
+pnpm --dir backend db:migrate
+pnpm dev
+```
+
+## Première Utilisation (Social + Discussion)
+
+Pour tester les fonctionnalités amis/discussion:
+
+1. Créer un premier compte.
+2. Se déconnecter puis créer un second compte.
+3. Revenir sur le premier compte.
+4. Aller dans `Utilisateurs` et envoyer une demande d'ami.
+5. Accepter depuis le second compte dans `Amis`.
+6. Ouvrir `Discussion` et envoyer des messages.
+
+## Ports Utilisés en Local
+
+- `5173`: frontend Vite
+- `3001`: backend API
+- `5437`: PostgreSQL
+- `8083`: Adminer
+
+Si un port est déjà pris, arrêter le process bloquant puis relancer les commandes.
