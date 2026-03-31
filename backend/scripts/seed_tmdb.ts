@@ -14,13 +14,14 @@ const TMDB_BASE = "https://api.themoviedb.org/3"
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w780"
 const PAGES = Math.max(1, Number(process.env.SEED_TMDB_PAGES ?? "30"))
 const LANGUAGE = (process.env.SEED_TMDB_LANGUAGE ?? "fr-FR").trim()
+const REGION = (process.env.SEED_TMDB_REGION ?? "US").trim().toUpperCase()
 const DELAY_MS = Math.max(0, Number(process.env.SEED_TMDB_DELAY_MS ?? "120"))
-const SOURCES = (process.env.SEED_TMDB_SOURCES ?? "popular,now_playing,upcoming")
+const SOURCES = (process.env.SEED_TMDB_SOURCES ?? "popular,now_playing,upcoming,discover_us")
   .split(",")
   .map((v) => v.trim())
   .filter(Boolean)
 
-const ALLOWED_SOURCES = ["popular", "now_playing", "upcoming", "top_rated"] as const
+const ALLOWED_SOURCES = ["popular", "now_playing", "upcoming", "top_rated", "discover_us"] as const
 type TmdbSource = (typeof ALLOWED_SOURCES)[number]
 
 type TmdbMovie = {
@@ -41,7 +42,10 @@ function sleep(ms: number): Promise<void> {
 }
 
 async function fetchMovies(source: TmdbSource, page: number): Promise<TmdbMovie[]> {
-  const url = `${TMDB_BASE}/movie/${source}?api_key=${TMDB_API_KEY}&language=${encodeURIComponent(LANGUAGE)}&page=${page}`
+  const url =
+    source === "discover_us"
+      ? `${TMDB_BASE}/discover/movie?api_key=${TMDB_API_KEY}&language=${encodeURIComponent(LANGUAGE)}&region=${encodeURIComponent(REGION)}&with_origin_country=US&sort_by=popularity.desc&include_adult=false&page=${page}`
+      : `${TMDB_BASE}/movie/${source}?api_key=${TMDB_API_KEY}&language=${encodeURIComponent(LANGUAGE)}&region=${encodeURIComponent(REGION)}&page=${page}`
   const res = await fetch(url)
   if (!res.ok) {
     const text = await res.text().catch(() => "")
@@ -52,7 +56,7 @@ async function fetchMovies(source: TmdbSource, page: number): Promise<TmdbMovie[
 }
 
 async function fetchMovieDetails(tmdbId: number): Promise<TmdbMovieDetails | null> {
-  const url = `${TMDB_BASE}/movie/${tmdbId}?api_key=${TMDB_API_KEY}&language=${encodeURIComponent(LANGUAGE)}`
+  const url = `${TMDB_BASE}/movie/${tmdbId}?api_key=${TMDB_API_KEY}&language=${encodeURIComponent(LANGUAGE)}&region=${encodeURIComponent(REGION)}`
   const res = await fetch(url)
   if (!res.ok) return null
   return (await res.json()) as TmdbMovieDetails
@@ -83,7 +87,7 @@ async function run(): Promise<void> {
   }
 
   console.log(
-    `[seed:tmdb] start pages=${PAGES}, lang=${LANGUAGE}, sources=${uniqueSources.join(",")}`,
+    `[seed:tmdb] start pages=${PAGES}, lang=${LANGUAGE}, region=${REGION}, sources=${uniqueSources.join(",")}`,
   )
   let imported = 0
   let scanned = 0

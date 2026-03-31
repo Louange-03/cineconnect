@@ -65,8 +65,10 @@ services:
       SEED_TMDB_ON_START: ${SEED_TMDB_ON_START:-false}
       # Nombre de pages TMDB importées quand SEED_TMDB_ON_START=true (ou en lancement manuel).
       SEED_TMDB_PAGES: ${SEED_TMDB_PAGES:-30}
-      # Sources TMDB: popular, now_playing, upcoming, top_rated
-      SEED_TMDB_SOURCES: ${SEED_TMDB_SOURCES:-popular,now_playing,upcoming}
+      # Sources TMDB: popular, now_playing, upcoming, top_rated, discover_us
+      SEED_TMDB_SOURCES: ${SEED_TMDB_SOURCES:-popular,now_playing,upcoming,discover_us}
+      # Région TMDB pour pousser plus de sorties américaines.
+      SEED_TMDB_REGION: ${SEED_TMDB_REGION:-US}
       # Langue TMDB pour titres/synopsis.
       SEED_TMDB_LANGUAGE: ${SEED_TMDB_LANGUAGE:-fr-FR}
     depends_on:
