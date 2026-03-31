@@ -18,13 +18,13 @@ async function fetchFilms(query: string, category: string, year: string): Promis
 
   if (!res.ok) throw new Error("Erreur lors du chargement des films")
 
-  const contentType = res.headers.get("content-type") || ""
   const text = await res.text()
-  if (!contentType.includes("application/json")) {
+  let data: { films?: Film[] }
+  try {
+    data = text ? (JSON.parse(text) as { films?: Film[] }) : {}
+  } catch {
     throw new Error("Réponse invalide du serveur (pas du JSON)")
   }
-
-  const data = JSON.parse(text)
   const films = Array.isArray(data.films) ? data.films : []
   return films
 }
