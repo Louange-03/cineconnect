@@ -17,24 +17,15 @@ function authHeaders() {
 }
 
 export async function fetchConversations(): Promise<Conversation[]> {
-  const res = await axios.get<Conversation[] | { conversations?: Conversation[] }>(
-    buildApiUrl("/api/conversations"),
-    { headers: authHeaders() },
-  )
-  const payload = res.data
-  if (Array.isArray(payload)) return payload
-  if (payload && Array.isArray(payload.conversations)) return payload.conversations
-  return []
+  const res = await axios.get<Conversation[]>(buildApiUrl("/api/conversations"), { headers: authHeaders() })
+  return res.data
 }
 
 export async function fetchMessages(conversationId: string): Promise<Message[]> {
-  const res = await axios.get<Message[] | { messages?: Message[] }>(buildApiUrl(`/api/conversations/${conversationId}/messages`), {
+  const res = await axios.get<Message[]>(buildApiUrl(`/api/conversations/${conversationId}/messages`), {
     headers: authHeaders(),
   })
-  const payload = res.data
-  if (Array.isArray(payload)) return payload
-  if (payload && Array.isArray(payload.messages)) return payload.messages
-  return []
+  return res.data
 }
 
 export async function fetchShareFilms(): Promise<ShareFilmItem[]> {
@@ -44,7 +35,6 @@ export async function fetchShareFilms(): Promise<ShareFilmItem[]> {
     headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
   })
   if (!res.ok) throw new Error("Erreur chargement films")
-  const data = (await res.json()) as { films?: ShareFilmItem[] } | ShareFilmItem[]
-  if (Array.isArray(data)) return data
+  const data = (await res.json()) as { films?: ShareFilmItem[] }
   return Array.isArray(data.films) ? data.films : []
 }
