@@ -41,7 +41,8 @@ describe("useCategories", () => {
     await waitFor(() => {
       expect(result.current.data?.[0]?.name).toBe("SF")
     })
-    expect(fetchMock).toHaveBeenCalledWith("/api/films/categories", expect.any(Object))
+    const url = String(fetchMock.mock.calls[0]?.[0] ?? "")
+    expect(url).toMatch(/\/api\/films\/categories$/)
   })
 
   it("categories absentes → tableau vide", async () => {

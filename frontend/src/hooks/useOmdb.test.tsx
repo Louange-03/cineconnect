@@ -99,8 +99,9 @@ describe("useOmdb hooks", () => {
       await act(async () => {
         await result.current.mutateAsync("tt9")
       })
-      expect(fetchMock).toHaveBeenCalledWith(
-        "/api/films/import",
+      const url = String(fetchMock.mock.calls[0]?.[0] ?? "")
+      expect(url).toMatch(/\/api\/films\/import$/)
+      expect(fetchMock.mock.calls[0]?.[1]).toEqual(
         expect.objectContaining({ method: "POST" }),
       )
       expect(spy).toHaveBeenCalledWith({ queryKey: ["films"] })

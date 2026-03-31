@@ -14,6 +14,7 @@ function jsonResponse(body: unknown, ok = true, status = 200) {
 describe("api (legacy apiFetch)", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn())
+    vi.stubEnv("VITE_API_URL", "")
   })
 
   afterEach(() => {

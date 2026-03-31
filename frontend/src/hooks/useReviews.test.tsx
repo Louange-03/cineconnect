@@ -58,7 +58,8 @@ describe("useReviews", () => {
     await waitFor(() => {
       expect(result.current.data?.[0]?.id).toBe("r1")
     })
-    expect(fetchMock).toHaveBeenCalledWith("/api/reviews/film/f1", expect.any(Object))
+    const url = String(fetchMock.mock.calls[0]?.[0] ?? "")
+    expect(url).toMatch(/\/api\/reviews\/film\/f1$/)
   })
 
   it("reviews absents → []", async () => {

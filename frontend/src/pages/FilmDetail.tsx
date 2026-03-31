@@ -148,7 +148,7 @@ export function FilmDetail() {
 
                   {film.categories?.length ? (
                     <div className="flex flex-wrap gap-2">
-                      {film.categories.slice(0, 4).map((c) => (
+                      {film.categories.slice(0, 4).map((c: string) => (
                         <span
                           key={c}
                           className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[12px] font-medium uppercase tracking-wider text-[#FFC107]/90"

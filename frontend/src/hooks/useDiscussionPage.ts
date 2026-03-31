@@ -165,6 +165,7 @@ export function useDiscussionPage() {
   return {
     conversations,
     selected,
+    setSelected,
     messages,
     newMessage,
     setNewMessage,

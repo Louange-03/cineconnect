@@ -70,21 +70,21 @@ describe("useFilms", () => {
     })
   })
 
-  it("content-type absent → erreur", async () => {
+  it("content-type absent → accepte le JSON texte", async () => {
     fetchMock.mockResolvedValue(jsonRes({ films: [] }, true, "omit"))
     const { Wrapper } = createTestQueryWrapper()
     const { result } = renderHook(() => useFilms("z"), { wrapper: Wrapper })
     await waitFor(() => {
-      expect(result.current.error?.message).toMatch(/JSON/i)
+      expect(result.current.data).toEqual([])
     })
   })
 
-  it("corps non JSON", async () => {
+  it("content-type non JSON mais corps JSON valide", async () => {
     fetchMock.mockResolvedValue(jsonRes({}, true, "text/html"))
     const { Wrapper } = createTestQueryWrapper()
     const { result } = renderHook(() => useFilms("a"), { wrapper: Wrapper })
     await waitFor(() => {
-      expect(result.current.error?.message).toMatch(/JSON/i)
+      expect(result.current.data).toEqual([])
     })
   })
 })

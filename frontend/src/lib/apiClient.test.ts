@@ -43,8 +43,9 @@ describe("apiClient", () => {
   it("POST envoie le corps JSON", async () => {
     const data = await apiClient.post("/api/x", { a: 1 }, { auth: false })
     expect(data).toEqual({ message: "ok", count: 1 })
-    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
-      "/api/x",
+    const url = String(vi.mocked(fetch).mock.calls[0]?.[0] ?? "")
+    expect(url).toMatch(/\/api\/x$/)
+    expect(vi.mocked(fetch).mock.calls[0]?.[1]).toEqual(
       expect.objectContaining({ method: "POST", body: JSON.stringify({ a: 1 }) }),
     )
   })
@@ -69,7 +70,8 @@ describe("apiClient", () => {
 
   it("normalise le chemin sans slash initial", async () => {
     await apiClient.get("api/no-leading", { auth: false })
-    expect(vi.mocked(fetch)).toHaveBeenCalledWith("/api/no-leading", expect.any(Object))
+    const url = String(vi.mocked(fetch).mock.calls[0]?.[0] ?? "")
+    expect(url).toMatch(/\/api\/no-leading$/)
   })
 
   it("propage le message serveur si JSON d’erreur", async () => {

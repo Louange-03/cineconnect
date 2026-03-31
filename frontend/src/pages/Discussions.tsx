@@ -48,6 +48,7 @@ function Avatar({
 export function Discussion() {
   const {
     selected,
+    setSelected,
     messages,
     newMessage,
     setNewMessage,
