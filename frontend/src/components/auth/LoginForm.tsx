@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react"
+import React from "react"
 import type { FormEvent } from "react"
-import { login } from "../../lib/auth"
+import { useLoginForm } from "../../hooks/useLoginForm"
 import { Alert, EyeButton, Input, Spinner } from "./AuthFields"
 
 interface LoginFormProps {
@@ -8,39 +8,12 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPwd, setShowPwd] = useState(false)
-
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-
-  const canSubmit = useMemo(
-    () => email.trim().length > 0 && password.trim().length > 0 && !loading,
-    [email, password, loading],
-  )
+  const { email, setEmail, password, setPassword, showPwd, toggleShowPwd, error, loading, canSubmit, submit } =
+    useLoginForm({ onSuccess })
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
-    setError(null)
-    setLoading(true)
-
-    try {
-      await login({ email, password })
-      onSuccess?.()
-    } catch (err: any) {
-      if (err?.message?.includes("Identifiants incorrects")) {
-        setError("Adresse e-mail ou mot de passe incorrect.")
-      } else if (err?.message?.includes("Données invalides")) {
-        setError("Veuillez remplir tous les champs correctement.")
-      } else if (err?.message?.includes("Erreur serveur")) {
-        setError("Erreur serveur, veuillez réessayer plus tard.")
-      } else {
-        setError(err?.message || "Erreur lors de la connexion.")
-      }
-    } finally {
-      setLoading(false)
-    }
+    await submit()
   }
 
   return (
@@ -63,7 +36,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
           type={showPwd ? "text" : "password"}
-          rightSlot={<EyeButton pressed={showPwd} onClick={() => setShowPwd((v) => !v)} />}
+          rightSlot={<EyeButton pressed={showPwd} onClick={toggleShowPwd} />}
         />
       </div>
 

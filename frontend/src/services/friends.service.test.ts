@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { getFriends } from "./Friends.service"
+import { getFriends } from "./friends.service"
 import axios from "axios"
 
 vi.mock("axios", () => ({
@@ -8,7 +8,7 @@ vi.mock("axios", () => ({
   },
 }))
 
-describe("Friends.service", () => {
+describe("friends.service", () => {
   beforeEach(() => {
     vi.mocked(axios.get).mockReset()
   })

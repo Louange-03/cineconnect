@@ -1,126 +1,8 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Reply, Send, X } from "lucide-react"
 import { CompactSearchInput } from "../components/ui/CompactSearchInput"
-import { connectSocket, disconnectSocket, socket } from "../socket"
-import axios from "axios"
-import type { Conversation, Message } from "../types"
-import { getToken, getUser } from "../lib/auth"
-import { buildApiUrl } from "../lib/apiUrl"
-
-interface UserStatusPayload {
-  userId: string
-}
-
-type ShareFilmItem = {
-  id: string
-  title: string
-  year?: string | null
-  posterUrl?: string | null
-  poster_url?: string | null
-}
-
-const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"] as const
-
-type ReactionPayload = {
-  conversationId: string
-  messageId: string
-  emoji: string
-  userId: string
-}
-
-type MessageReactions = Record<
-  string,
-  {
-    emoji: string
-    users: string[]
-  }[]
->
-
-function parseSharedFilmMessage(text: string): { title: string; year: string; url: string; posterUrl?: string } | null {
-  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean)
-  if (lines.length < 2) return null
-  const first = lines[0]
-  const url = lines[lines.length - 1]
-  if (!first.startsWith("Je te partage ce film:")) return null
-  if (!/^https?:\/\//i.test(url)) return null
-
-  const payload = first.replace("Je te partage ce film:", "").trim()
-  const match = payload.match(/^(.*)\s\((.*)\)$/)
-  if (!match) return null
-  const posterLine = lines.find((l) => l.startsWith("POSTER:"))
-  const posterUrl = posterLine?.replace("POSTER:", "").trim()
-  return {
-    title: match[1].trim(),
-    year: match[2].trim(),
-    url,
-    posterUrl: posterUrl && /^https?:\/\//i.test(posterUrl) ? posterUrl : undefined,
-  }
-}
-
-function formatMessageTime(value?: string) {
-  if (!value) return ""
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return ""
-  return d.toLocaleTimeString("fr-FR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  })
-}
-
-function truncateReplySnippet(text: string, max = 90): string {
-  const t = text.trim().replace(/\s+/g, " ")
-  if (t.length <= max) return t
-  return `${t.slice(0, max)}…`
-}
-
-function replyQuoteSummary(
-  msg: Message,
-  currentUserId: string | null,
-): { author: string; snippet: string; replyId: string } | null {
-  const replyId = msg.reply_to_id
-  if (!replyId) return null
-  const raw = msg.reply_to_text
-  if (raw == null || raw === "") {
-    return { author: "Message", snippet: "…", replyId }
-  }
-  const film = parseSharedFilmMessage(raw)
-  const snippet = film
-    ? `${film.title} (${film.year || "—"})`
-    : truncateReplySnippet(raw)
-  const sid = msg.reply_to_sender_id
-  const author =
-    sid && currentUserId && sid === currentUserId
-      ? "Toi"
-      : msg.reply_to_sender_username || "Message"
-  return { author, snippet, replyId }
-}
-
-function formatMessageDayLabel(value?: string) {
-  if (!value) return ""
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return ""
-
-  const now = new Date()
-  const sameDay =
-    d.getDate() === now.getDate() &&
-    d.getMonth() === now.getMonth() &&
-    d.getFullYear() === now.getFullYear()
-  if (sameDay) return "Aujourd'hui"
-
-  const yesterday = new Date(now)
-  yesterday.setDate(now.getDate() - 1)
-  const isYesterday =
-    d.getDate() === yesterday.getDate() &&
-    d.getMonth() === yesterday.getMonth() &&
-    d.getFullYear() === yesterday.getFullYear()
-  if (isYesterday) return "Hier"
-
-  return d.toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  })
-}
+import { useDiscussionPage } from "../hooks/useDiscussionPage"
+import { REACTION_EMOJIS, formatMessageDayLabel, formatMessageTime, parseSharedFilmMessage, replyQuoteSummary, truncateReplySnippet } from "../utils/discussion"
 
 function Avatar({
   name,
@@ -164,267 +46,35 @@ function Avatar({
 }
 
 export function Discussion() {
-  const [conversations, setConversations] = useState<Conversation[]>([])
-  const [selected, setSelected] = useState<Conversation | null>(null)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [newMessage, setNewMessage] = useState("")
-  const [search, setSearch] = useState("")
-  const [typingUsers, setTypingUsers] = useState<string[]>([])
-  const [shareOpen, setShareOpen] = useState(false)
-  const [films, setFilms] = useState<ShareFilmItem[]>([])
-  const [filmSearch, setFilmSearch] = useState("")
-  const [loadingFilms, setLoadingFilms] = useState(false)
-  const [reactionOpenFor, setReactionOpenFor] = useState<string | null>(null)
-  const [reactionsByMessage, setReactionsByMessage] = useState<MessageReactions>({})
-  const [replyingTo, setReplyingTo] = useState<Message | null>(null)
-
-  const token = getToken()
-  const currentUserId = getUser()?.id ?? null
-  const selectedConversationId = selected?.id ?? null
-
-  const handleSelectConversation = (conv: Conversation) => {
-    setSelected(conv)
-    socket.emit("join-conversation", { conversationId: conv.id })
-    setConversations((prev) =>
-      prev.map((item) =>
-        item.id === conv.id ? { ...item, unread_count: 0 } : item
-      )
-    )
-  }
-
-  useEffect(() => {
-    connectSocket()
-    return () => {
-      disconnectSocket()
-    }
-  }, [])
-
-  useEffect(() => {
-    const fetchConversations = async () => {
-      const res = await axios.get<Conversation[]>(buildApiUrl("/api/conversations"), {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      setConversations(res.data)
-    }
-
-    fetchConversations()
-  }, [token])
-
-  useEffect(() => {
-    if (!selected) return
-    socket.emit("join-conversation", { conversationId: selected.id })
-
-    const fetchMessages = async () => {
-      const res = await axios.get<Message[]>(buildApiUrl(`/api/conversations/${selected.id}/messages`), {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      setMessages(res.data)
-    }
-
-    fetchMessages()
-
-    socket.emit("mark-as-seen", { conversationId: selected.id })
-    setConversations((prev) =>
-      prev.map((conv) =>
-        conv.id === selected.id ? { ...conv, unread_count: 0 } : conv
-      )
-    )
-    setReactionOpenFor(null)
-    setReactionsByMessage({})
-    setReplyingTo(null)
-  }, [selected, token])
-
-  const scrollToMessage = (messageId: string) => {
-    const el = document.getElementById(`disc-msg-${messageId}`)
-    el?.scrollIntoView({ behavior: "smooth", block: "center" })
-  }
-
-  useEffect(() => {
-    socket.on("new-message", (message: Message) => {
-      const conversationId = message.conversation_id || message.conversationId
-      const senderId = message.sender_id || message.senderId
-      if (!conversationId) return
-
-      const isCurrentConversation = selectedConversationId === conversationId
-      const isIncoming = Boolean(senderId && senderId !== currentUserId)
-
-      setConversations((prev) => {
-        const updated = prev.map((conv) => {
-          if (conv.id !== conversationId) return conv
-          const nextUnread =
-            isIncoming && !isCurrentConversation
-              ? (conv.unread_count ?? 0) + 1
-              : 0
-          return {
-            ...conv,
-            last_message: message.text || "",
-            unread_count: nextUnread,
-          }
-        })
-        const idx = updated.findIndex((conv) => conv.id === conversationId)
-        if (idx <= 0) return updated
-        const [hit] = updated.splice(idx, 1)
-        updated.unshift(hit)
-        return updated
-      })
-
-      if (isCurrentConversation) {
-        setMessages((prev) => [...prev, message])
-        if (isIncoming) {
-          socket.emit("mark-as-seen", { conversationId })
-        }
-      }
-    })
-
-    socket.on("user-typing", (data: UserStatusPayload) => {
-      setTypingUsers((prev) =>
-        prev.includes(data.userId) ? prev : [...prev, data.userId]
-      )
-    })
-
-    socket.on("user-stop-typing", (data: UserStatusPayload) => {
-      setTypingUsers((prev) =>
-        prev.filter((id) => id !== data.userId)
-      )
-    })
-
-    socket.on("messages-seen", ({ conversationId }: { conversationId?: string }) => {
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.sender_id === currentUserId
-            ? { ...m, seen: true }
-            : m
-        )
-      )
-      if (!conversationId) return
-      setConversations((prev) =>
-        prev.map((conv) =>
-          conv.id === conversationId ? { ...conv, unread_count: 0 } : conv
-        )
-      )
-    })
-
-    socket.on("message-reaction", (payload: ReactionPayload) => {
-      setReactionsByMessage((prev) => {
-        const current = [...(prev[payload.messageId] ?? [])]
-
-        // One reaction per user per message: remove user from all buckets first.
-        for (const bucket of current) {
-          bucket.users = bucket.users.filter((id) => id !== payload.userId)
-        }
-
-        // Remove empty buckets
-        const cleaned = current.filter((b) => b.users.length > 0)
-
-        // Toggle off if same reaction already selected by user
-        const hasSame =
-          (prev[payload.messageId] ?? []).some(
-            (b) => b.emoji === payload.emoji && b.users.includes(payload.userId)
-          )
-        if (hasSame) {
-          return { ...prev, [payload.messageId]: cleaned }
-        }
-
-        const sameEmoji = cleaned.find((b) => b.emoji === payload.emoji)
-        if (sameEmoji) {
-          sameEmoji.users.push(payload.userId)
-        } else {
-          cleaned.push({ emoji: payload.emoji, users: [payload.userId] })
-        }
-
-        return { ...prev, [payload.messageId]: cleaned }
-      })
-    })
-
-    return () => {
-      socket.off("new-message")
-      socket.off("user-online")
-      socket.off("user-offline")
-      socket.off("user-typing")
-      socket.off("user-stop-typing")
-      socket.off("messages-seen")
-      socket.off("message-reaction")
-    }
-  }, [currentUserId, selectedConversationId])
-
-  const sendMessage = () => {
-    if (!selected || !newMessage.trim()) return
-
-    socket.emit("send-message", {
-      conversationId: selected.id,
-      text: newMessage,
-      replyToMessageId: replyingTo?.id,
-    })
-
-    setNewMessage("")
-    setReplyingTo(null)
-  }
-
-  const handleTyping = () => {
-    if (!selected) return
-    socket.emit("typing", { conversationId: selected.id })
-  }
-
-  const handleStopTyping = () => {
-    if (!selected) return
-    socket.emit("stop-typing", { conversationId: selected.id })
-  }
-
-  const openShareFilms = async () => {
-    if (!selected) return
-    setShareOpen(true)
-    setFilmSearch("")
-    if (films.length > 0) return
-
-    const token = getToken()
-    if (!token) return
-
-    setLoadingFilms(true)
-    try {
-      const res = await fetch(buildApiUrl("/api/films?limit=10000"), {
-        headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) throw new Error("Erreur chargement films")
-      const data = (await res.json()) as { films?: ShareFilmItem[] }
-      setFilms(Array.isArray(data.films) ? data.films : [])
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoadingFilms(false)
-    }
-  }
-
-  const shareFilmInCurrentChat = (film: ShareFilmItem) => {
-    if (!selected) return
-    const filmUrl = `${window.location.origin}/film/${film.id}`
-    const poster = film.posterUrl || film.poster_url
-    const text = `Je te partage ce film: ${film.title} (${film.year || "—"})\n${poster ? `POSTER:${poster}\n` : ""}${filmUrl}`
-    socket.emit("send-message", {
-      conversationId: selected.id,
-      text,
-      replyToMessageId: replyingTo?.id,
-    })
-    setShareOpen(false)
-    setReplyingTo(null)
-  }
-
-  const reactToMessage = (messageId: string, emoji: string) => {
-    if (!selected) return
-    socket.emit("message-reaction", {
-      conversationId: selected.id,
-      messageId,
-      emoji,
-    })
-    setReactionOpenFor(null)
-  }
-
-  const normalizedSearch = search.trim().toLowerCase()
-  const filteredConversations = conversations.filter((conv) =>
-    (conv.name || "Inconnu").toLowerCase().includes(normalizedSearch)
-  )
-  const filteredFilms = films.filter((f) =>
-    f.title.toLowerCase().includes(filmSearch.trim().toLowerCase())
-  )
+  const {
+    selected,
+    messages,
+    newMessage,
+    setNewMessage,
+    search,
+    setSearch,
+    typingUsers,
+    shareOpen,
+    setShareOpen,
+    filmSearch,
+    setFilmSearch,
+    loadingFilms,
+    reactionOpenFor,
+    setReactionOpenFor,
+    reactionsByMessage,
+    replyingTo,
+    setReplyingTo,
+    currentUserId,
+    handleSelectConversation,
+    sendMessage,
+    handleTyping,
+    handleStopTyping,
+    openShareFilms,
+    shareFilmInCurrentChat,
+    reactToMessage,
+    filteredConversations,
+    filteredFilms,
+  } = useDiscussionPage()
 
   return (
     <div className="discussions-page flex h-[calc(100dvh-5rem)] min-h-[calc(100dvh-5rem)] overflow-hidden bg-[#050B1C] text-white">

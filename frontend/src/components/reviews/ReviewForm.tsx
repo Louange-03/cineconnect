@@ -1,76 +1,22 @@
-import React, { useState, FormEvent } from "react"
-import { useQueryClient } from "@tanstack/react-query"
+import React, { FormEvent } from "react"
 import { StarRating } from "./StarRating"
-import { getToken } from "../../lib/auth"
-import { buildApiUrl } from "../../lib/apiUrl"
+import { useReviewForm } from "../../hooks/useReviewForm"
 
 interface Props {
   filmId: string
 }
 
 export function ReviewForm({ filmId }: Props) {
-  const qc = useQueryClient()
-  const [rating, setRating] = useState(0)
-  const [comment, setComment] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
+  const { rating, setRating, comment, setComment, isSubmitting, error, success, submit: submitReview } =
+    useReviewForm(filmId)
 
-  async function submit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    setError(null)
-    setSuccess(null)
-
-    if (!filmId) return
-    if (rating === 0) {
-      setError("Veuillez sélectionner une note.")
-      return
-    }
-
-    const token = getToken()
-    if (!token) {
-      setError("Vous devez être connecté pour publier un avis.")
-      return
-    }
-
-    try {
-      setIsSubmitting(true)
-
-      const res = await fetch(buildApiUrl("/api/reviews"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ filmId, rating, comment }),
-      })
-
-      const contentType = res.headers.get("content-type") || ""
-      const text = await res.text()
-      const json = contentType.includes("application/json") && text ? JSON.parse(text) : null
-
-      if (!res.ok) {
-        throw new Error(json?.message || text || "Erreur lors de la publication")
-      }
-
-      // reset
-      setRating(0)
-      setComment("")
-
-      // refresh reviews list
-      await qc.invalidateQueries({ queryKey: ["reviews", filmId] })
-      setSuccess(json?.action === "updated" ? "Avis mis à jour ✅" : "Avis publié ✅")
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erreur"
-      setError(msg)
-    } finally {
-      setIsSubmitting(false)
-    }
+    await submitReview()
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
         <h3 className="text-lg font-semibold text-white">Laisser un avis</h3>
         <p className="mt-1 text-sm text-white/60">

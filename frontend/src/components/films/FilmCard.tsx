@@ -1,12 +1,9 @@
 import React from "react"
 import type { Film } from "../../types"
 import { Link } from "@tanstack/react-router"
-import axios from "axios"
-import { getToken } from "../../lib/auth"
-import { connectSocket, socket } from "../../socket"
 import { CompactSearchInput } from "../ui/CompactSearchInput"
-import { buildApiUrl } from "../../lib/apiUrl"
 import { FALLBACK_POSTER, resolvePosterUrl } from "../../lib/poster"
+import { useFilmCard } from "../../hooks/useFilmCard"
 
 interface FilmCardProps {
   film: Film
@@ -16,183 +13,37 @@ interface FilmCardProps {
   onFavoriteChange?: (filmId: string, isFavorite: boolean) => void
 }
 
-type Friend = {
-  id: string
-  username: string
-  email?: string
-}
-
 export function FilmCard({ film, initialIsFavorite = false, onFavoriteChange }: FilmCardProps) {
-  const [isFavorite, setIsFavorite] = React.useState(initialIsFavorite)
-  const [busy, setBusy] = React.useState(false)
-  const [toast, setToast] = React.useState<string | null>(null)
-  const [shareOpen, setShareOpen] = React.useState(false)
-  const [friends, setFriends] = React.useState<Friend[]>([])
-  const [loadingFriends, setLoadingFriends] = React.useState(false)
-  const [sharingTo, setSharingTo] = React.useState<string | null>(null)
-  const [friendSearch, setFriendSearch] = React.useState("")
-
-  React.useEffect(() => {
-    setIsFavorite(initialIsFavorite)
-  }, [initialIsFavorite])
-
-  function showToast(msg: string) {
-    setToast(msg)
-    window.setTimeout(() => setToast(null), 1600)
-  }
-
-  const filteredFriends = friends.filter((f) =>
-    f.username.toLowerCase().includes(friendSearch.trim().toLowerCase())
-  )
+  const {
+    isFavorite,
+    busy,
+    toast,
+    shareOpen,
+    setShareOpen,
+    loadingFriends,
+    sharingTo,
+    friendSearch,
+    setFriendSearch,
+    filteredFriends,
+    handleFavoriteClick,
+    openShare,
+    shareToFriend,
+    poster,
+    categories,
+    yearLabel,
+  } = useFilmCard({ film, initialIsFavorite, onFavoriteChange })
 
   const handleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (busy) return
-
-    const token = getToken()
-    if (!token) {
-      showToast("Connecte-toi pour ajouter aux favoris.")
-      return
-    }
-
-    const next = !isFavorite
-    setBusy(true)
-
-    // Optimistic UI
-    setIsFavorite(next)
-    onFavoriteChange?.(film.id, next)
-
-    try {
-      let targetFilmId = film.id
-
-      // OMDb fallback rows use imdbID as id; import first so favorites can persist in DB.
-      if (/^tt\d+$/i.test(targetFilmId)) {
-        const imported = await fetch(buildApiUrl("/api/films/import"), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ imdbID: targetFilmId }),
-        })
-        if (!imported.ok) {
-          throw new Error("Impossible d'importer le film avant ajout aux favoris")
-        }
-        const importedData = await imported.json()
-        targetFilmId = importedData?.film?.id ?? targetFilmId
-      }
-
-      const method = next ? "post" : "delete"
-
-      await axios({
-        method,
-        url: buildApiUrl(`/api/users/me/favorites/${targetFilmId}`),
-        headers: { Authorization: `Bearer ${token}` },
-      })
-
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event("favorites-changed"))
-      }
-
-      showToast(next ? "Ajouté aux favoris ✅" : "Retiré des favoris ✅")
-    } catch (err) {
-      // rollback
-      setIsFavorite(!next)
-      onFavoriteChange?.(film.id, !next)
-      showToast("Erreur favoris. Réessaie.")
-      console.error(err)
-    } finally {
-      setBusy(false)
-    }
+    await handleFavoriteClick()
   }
 
   const openShareModal = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-
-    const token = getToken()
-    if (!token) {
-      showToast("Connecte-toi pour partager un film.")
-      return
-    }
-
-    setShareOpen(true)
-    setFriendSearch("")
-    setLoadingFriends(true)
-
-    try {
-      const res = await fetch(buildApiUrl("/api/friends"), {
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      if (!res.ok) throw new Error("Erreur chargement amis")
-      const data = (await res.json()) as { friends?: Friend[] }
-      setFriends(Array.isArray(data.friends) ? data.friends : [])
-    } catch (err) {
-      console.error(err)
-      showToast("Impossible de charger tes amis.")
-      setShareOpen(false)
-    } finally {
-      setLoadingFriends(false)
-    }
+    await openShare()
   }
-
-  const shareToFriend = async (friend: Friend) => {
-    const token = getToken()
-    if (!token) {
-      showToast("Connecte-toi pour partager un film.")
-      return
-    }
-    const filmUrl = `${window.location.origin}/film/${film.id}`
-    const posterUrl = resolvePosterUrl(film)
-    const text =
-      `Je te partage ce film: ${film.title} (${film.year || "—"})\n` +
-      `POSTER:${posterUrl}\n` +
-      `${filmUrl}`
-
-    setSharingTo(friend.id)
-    try {
-      const started = await fetch(buildApiUrl("/api/messages/start"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ userId: friend.id }),
-      })
-      if (!started.ok) {
-        throw new Error("Impossible d'ouvrir la conversation")
-      }
-      const payload = (await started.json()) as { conversationId?: string }
-      if (!payload.conversationId) {
-        throw new Error("Conversation introuvable")
-      }
-
-      connectSocket()
-      socket.emit("send-message", {
-        conversationId: payload.conversationId,
-        text,
-      })
-
-      setShareOpen(false)
-      showToast(`Partagé avec ${friend.username} ✅`)
-    } catch (err) {
-      console.error(err)
-      showToast("Echec du partage.")
-    } finally {
-      setSharingTo(null)
-    }
-  }
-
-  const poster = resolvePosterUrl(film)
-  const categories = film.categories?.slice(0, 2) ?? []
-  const yearLabel =
-    film.year === null || film.year === undefined || String(film.year).trim() === "" ? "—" : String(film.year)
 
   return (
     <div className="relative">

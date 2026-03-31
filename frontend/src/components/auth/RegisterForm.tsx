@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react"
+import React from "react"
 import type { FormEvent } from "react"
-import { register } from "../../lib/auth"
+import { useRegisterForm } from "../../hooks/useRegisterForm"
 import { Alert, EyeButton, Field, Input, Spinner } from "./AuthFields"
 
 interface RegisterFormProps {
@@ -8,48 +8,29 @@ interface RegisterFormProps {
 }
 
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
-  const [email, setEmail] = useState("")
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [showPwd, setShowPwd] = useState(false)
-  const [showConfirmPwd, setShowConfirmPwd] = useState(false)
-
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-
-  const passwordsMatch = password === confirmPassword && password.length >= 6
-
-  const canSubmit = useMemo(() => {
-    return (
-      email.trim().length > 0 &&
-      username.trim().length >= 3 &&
-      passwordsMatch &&
-      !loading
-    )
-  }, [email, username, passwordsMatch, loading])
+  const {
+    email,
+    setEmail,
+    username,
+    setUsername,
+    password,
+    setPassword,
+    confirmPassword,
+    setConfirmPassword,
+    showPwd,
+    toggleShowPwd,
+    showConfirmPwd,
+    toggleShowConfirmPwd,
+    passwordsMatch,
+    canSubmit,
+    loading,
+    error,
+    submit,
+  } = useRegisterForm({ onSuccess })
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
-    setError(null)
-    setLoading(true)
-
-    try {
-      await register({ email, username, password })
-      onSuccess?.()
-    } catch (err: any) {
-      if (err?.message?.includes("déjà utilisé")) {
-        setError("Email ou nom d'utilisateur déjà utilisé.")
-      } else if (err?.message?.includes("Données invalides")) {
-        setError("Veuillez remplir tous les champs correctement.")
-      } else if (err?.message?.includes("Erreur serveur")) {
-        setError("Erreur serveur, veuillez réessayer plus tard.")
-      } else {
-        setError(err?.message || "Erreur lors de l'inscription.")
-      }
-    } finally {
-      setLoading(false)
-    }
+    await submit()
   }
 
   return (
@@ -96,7 +77,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
             </svg>
           }
-          rightSlot={<EyeButton pressed={showPwd} onClick={() => setShowPwd((v) => !v)} />}
+          rightSlot={<EyeButton pressed={showPwd} onClick={toggleShowPwd} />}
           className="pr-10"
         />
         <p className="ml-0.5 mt-0.5 text-[11px] text-gray-500">Au moins 6 caractères.</p>
@@ -114,7 +95,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
             </svg>
           }
-          rightSlot={<EyeButton pressed={showConfirmPwd} onClick={() => setShowConfirmPwd((v) => !v)} />}
+          rightSlot={<EyeButton pressed={showConfirmPwd} onClick={toggleShowConfirmPwd} />}
           className="pr-10"
         />
         {confirmPassword.length > 0 ? (

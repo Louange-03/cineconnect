@@ -1,28 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react"
-import { useOmdbSearch, useImportOmdbFilm } from "../../hooks/useOmdb"
+import React from "react"
+import { useOmdbImportPanel } from "../../hooks/useOmdbImportPanel"
+import { getOmdbPosterUrl } from "../../utils/omdb"
 
 export function OmdbImportPanel({ initialQuery }: { initialQuery?: string }) {
-  const [q, setQ] = useState(initialQuery || "")
-  const [debouncedQ, setDebouncedQ] = useState(initialQuery || "")
-  const importMut = useImportOmdbFilm()
-
-  useEffect(() => {
-    if (initialQuery) {
-      setQ(initialQuery)
-      setDebouncedQ(initialQuery)
-    }
-  }, [initialQuery])
-
-  // Debounce input before calling OMDb search
-  useEffect(() => {
-    const t = window.setTimeout(() => setDebouncedQ(q), 350)
-    return () => window.clearTimeout(t)
-  }, [q])
-
-  const canSearch = useMemo(() => debouncedQ.trim().length >= 3, [debouncedQ])
-  const { data, isLoading } = useOmdbSearch(canSearch ? debouncedQ : "")
-
-  const list = useMemo(() => (data ?? []).slice(0, 8), [data])
+  const { q, setQ, canSearch, data, isLoading, list, importMutation } = useOmdbImportPanel(initialQuery)
 
   return (
     <section className="mt-10 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
@@ -97,10 +78,7 @@ export function OmdbImportPanel({ initialQuery }: { initialQuery?: string }) {
         {!isLoading && list.length > 0 && (
           <div className="grid gap-3">
             {list.map((m) => {
-              const poster =
-                m.Poster && m.Poster !== "N/A"
-                  ? m.Poster
-                  : "https://via.placeholder.com/80x120/0b1020/ffffff?text=No+Image"
+              const poster = getOmdbPosterUrl(m)
 
               return (
                 <div
@@ -122,11 +100,11 @@ export function OmdbImportPanel({ initialQuery }: { initialQuery?: string }) {
 
                   <button
                     type="button"
-                    disabled={importMut.isPending}
-                    onClick={() => importMut.mutate(m.imdbID)}
+                    disabled={importMutation.isPending}
+                    onClick={() => importMutation.mutate(m.imdbID)}
                     className="rounded-xl bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] px-4 py-2 font-semibold text-white transition hover:brightness-110 disabled:opacity-60"
                   >
-                    {importMut.isPending ? "Ajout…" : "Ajouter"}
+                    {importMutation.isPending ? "Ajout…" : "Ajouter"}
                   </button>
                 </div>
               )
@@ -148,13 +126,13 @@ export function OmdbImportPanel({ initialQuery }: { initialQuery?: string }) {
         )}
 
         {/* Feedback */}
-        {importMut.error && (
+        {importMutation.error && (
           <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-red-200">
-            {String((importMut.error as any)?.message || importMut.error)}
+            {String((importMutation.error as any)?.message || importMutation.error)}
           </div>
         )}
 
-        {importMut.isSuccess && (
+        {importMutation.isSuccess && (
           <div className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-100">
             Film importé ✅ (le catalogue s’est rafraîchi)
           </div>

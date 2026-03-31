@@ -1,155 +1,12 @@
 // frontend/src/pages/Amis.tsx
-
-import { useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { FriendCard } from "../components/friends/FriendCard"
 import { FriendRequestCard } from "../components/friends/FriendRequestCard"
-import { getToken } from "../lib/auth"
-import { buildApiUrl } from "../lib/apiUrl"
-
-
-type Friend = {
-  id: string
-  username: string
-  email?: string
-}
-
-type FriendRequest = {
-  friendshipId: string
-  fromUserId: string
-  fromUsername: string
-  email?: string
-  sentAt?: string
-  createdAt?: string
-}
-
-type FriendsResponse = {
-  friends: Friend[]
-}
-
-type RequestsResponse = {
-  requests: FriendRequest[]
-}
-
-// --- Fetch ---
-
-const API = "/api"
-
-function authHeader(): HeadersInit {
-  const token = getToken()
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  }
-}
-
-async function fetchFriends(): Promise<FriendsResponse> {
-  const res = await fetch(buildApiUrl(`${API}/friends`), { headers: authHeader() })
-  if (!res.ok) throw new Error("Erreur chargement amis")
-  return res.json() as Promise<FriendsResponse>
-}
-
-async function fetchRequests(): Promise<RequestsResponse> {
-  const res = await fetch(buildApiUrl(`${API}/friends/requests`), { headers: authHeader() })
-  if (!res.ok) throw new Error("Erreur chargement demandes")
-  return res.json() as Promise<RequestsResponse>
-}
-
-async function postAccept(userId: string): Promise<void> {
-  const res = await fetch(buildApiUrl(`${API}/friends/accept`), {
-    method: "POST",
-    headers: authHeader(),
-    body: JSON.stringify({ userId }),
-  })
-  if (!res.ok) throw new Error("Erreur acceptation")
-}
-
-async function postReject(userId: string): Promise<void> {
-  const res = await fetch(buildApiUrl(`${API}/friends/reject`), {
-    method: "POST",
-    headers: authHeader(),
-    body: JSON.stringify({ userId }),
-  })
-  if (!res.ok) throw new Error("Erreur refus")
-}
-
-async function deleteFriend(userId: string): Promise<void> {
-  const res = await fetch(buildApiUrl(`${API}/friends/${userId}`), {
-    method: "DELETE",
-    headers: authHeader(),
-  })
-  if (!res.ok) throw new Error("Erreur suppression")
-}
-
-async function startConversation(userId: string): Promise<void> {
-  const res = await fetch(buildApiUrl(`${API}/messages/start`), {
-    method: "POST",
-    headers: authHeader(),
-    body: JSON.stringify({ userId }),
-  })
-  if (!res.ok) throw new Error("Erreur création conversation")
-}
+import { useAmisPage } from "../hooks/useAmisPage"
 
 export function Amis() {
-  const queryClient = useQueryClient()
-  const [actionError, setActionError] = useState<string | null>(null)
-
-  const { data: friendsData, isError: friendsError } = useQuery({
-    queryKey: ["friends"],
-    queryFn: fetchFriends,
-  })
-
-  const { data: requestsData, isError: requestsError } = useQuery({
-    queryKey: ["friendRequests"],
-    queryFn: fetchRequests,
-  })
-
-  const friends = friendsData?.friends ?? []
-  const requests = requestsData?.requests ?? []
-
-  const invalidate = (): void => {
-    queryClient.invalidateQueries({ queryKey: ["friends"] })
-    queryClient.invalidateQueries({ queryKey: ["friendRequests"] })
-    queryClient.invalidateQueries({ queryKey: ["sentRequests"] })
-  }
-
-  const acceptMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      await postAccept(userId)
-      // Prépare la discussion juste après acceptation
-      await startConversation(userId)
-    },
-    onSuccess: () => {
-      setActionError(null)
-      invalidate()
-    },
-    onError: () => {
-      setActionError("Impossible d'accepter cette demande.")
-    },
-  })
-
-  const rejectMutation = useMutation({
-    mutationFn: postReject,
-    onSuccess: () => {
-      setActionError(null)
-      invalidate()
-    },
-    onError: () => {
-      setActionError("Impossible de refuser cette demande.")
-    },
-  })
-
-  const removeMutation = useMutation({
-    mutationFn: deleteFriend,
-    onSuccess: () => {
-      setActionError(null)
-      invalidate()
-    },
-    onError: () => {
-      setActionError("Impossible de supprimer cet ami.")
-    },
-  })
+  const { friendsError, requestsError, actionError, friends, requests, acceptMutation, rejectMutation, removeMutation, openChat } =
+    useAmisPage()
 
   return (
     <main className="friends-page min-h-screen bg-[#050B1C] px-4 pb-20 pt-24 text-white md:px-10">
@@ -217,15 +74,7 @@ export function Amis() {
               <FriendCard
                 key={f.id}
                 user={f}
-                onChat={(userId) => {
-                  startConversation(userId)
-                    .then(() => {
-                      window.location.href = "/discussion"
-                    })
-                    .catch(() => {
-                      window.location.href = "/discussion"
-                    })
-                }}
+                onChat={openChat}
                 onRemove={(userId) => removeMutation.mutate(userId)}
               />
             ))}

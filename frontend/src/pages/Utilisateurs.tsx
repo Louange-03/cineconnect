@@ -1,166 +1,21 @@
 
-import { useState } from "react"
 import { CompactSearchInput } from "../components/ui/CompactSearchInput"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { getToken } from "../lib/auth"
-import { buildApiUrl } from "../lib/apiUrl"
-
-type UserItem = {
-  id: string
-  username: string
-  email: string
-}
-
-type Friend = {
-  id: string
-  username: string
-}
-
-type FriendRequest = {
-  fromUserId: string
-  fromUsername: string
-}
-
-type SentRequest = {
-  toUserId: string
-  toUsername: string
-}
-
-type RelationStatus = "ami" | "demande_reçue" | "demande_envoyée" | "none"
-
-// --- Fetch ---
-
-const API = "/api"
-
-function authHeader(): HeadersInit {
-  const token = getToken()
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  }
-}
-
-async function fetchUsers(): Promise<UserItem[]> {
-  const res = await fetch(buildApiUrl(`${API}/users`), { headers: authHeader() })
-  if (!res.ok) throw new Error("Erreur chargement utilisateurs")
-  const data = await res.json() as { users?: UserItem[] }
-  return Array.isArray(data.users) ? data.users : []
-}
-
-async function fetchFriends(): Promise<{ friends: Friend[] }> {
-  const res = await fetch(buildApiUrl(`${API}/friends`), { headers: authHeader() })
-  if (!res.ok) throw new Error("Erreur chargement amis")
-  return res.json() as Promise<{ friends: Friend[] }>
-}
-
-async function fetchRequests(): Promise<{ requests: FriendRequest[] }> {
-  const res = await fetch(buildApiUrl(`${API}/friends/requests`), { headers: authHeader() })
-  if (!res.ok) throw new Error("Erreur chargement demandes")
-  return res.json() as Promise<{ requests: FriendRequest[] }>
-}
-
-async function fetchSent(): Promise<{ sent: SentRequest[] }> {
-  const res = await fetch(buildApiUrl(`${API}/friends/sent`), { headers: authHeader() })
-  if (!res.ok) throw new Error("Erreur chargement demandes envoyées")
-  return res.json() as Promise<{ sent: SentRequest[] }>
-}
-
-async function postFriendRequest(userId: string): Promise<void> {
-  const res = await fetch(buildApiUrl(`${API}/friends/request`), {
-    method: "POST",
-    headers: authHeader(),
-    body: JSON.stringify({ userId }),
-  })
-  if (!res.ok) throw new Error("Erreur envoi demande")
-}
-
-async function deleteFriend(userId: string): Promise<void> {
-  const res = await fetch(buildApiUrl(`${API}/friends/${userId}`), {
-    method: "DELETE",
-    headers: authHeader(),
-  })
-  if (!res.ok) throw new Error("Erreur annulation")
-}
-
-function getRelationStatus(
-  userId: string,
-  friendIds: Set<string>,
-  receivedFromIds: Set<string>,
-  sentToIds: Set<string>
-): RelationStatus {
-  if (friendIds.has(userId)) return "ami"
-  if (receivedFromIds.has(userId)) return "demande_reçue"
-  if (sentToIds.has(userId)) return "demande_envoyée"
-  return "none"
-}
+import { type RelationStatus, useUtilisateursPage } from "../hooks/useUtilisateursPage"
 
 export function Utilisateurs() {
-  const [search, setSearch] = useState("")
-  const [confirmCancel, setConfirmCancel] = useState<string | null>(null)
-  const [actionError, setActionError] = useState<string | null>(null)
-  const queryClient = useQueryClient()
-
-  const { data: users = [], isLoading, isError } = useQuery({
-    queryKey: ["users"],
-    queryFn: fetchUsers,
-    retry: 1,
-  })
-
-  const { data: friendsData } = useQuery({
-    queryKey: ["friends"],
-    queryFn: fetchFriends,
-  })
-
-  const { data: requestsData } = useQuery({
-    queryKey: ["friendRequests"],
-    queryFn: fetchRequests,
-  })
-
-  const { data: sentData } = useQuery({
-    queryKey: ["sentRequests"],
-    queryFn: fetchSent,
-  })
-
-  const friends = friendsData?.friends ?? []
-  const requests = requestsData?.requests ?? []
-  const sent = sentData?.sent ?? []
-
-  const friendIds = new Set(friends.map((f) => f.id))
-  const receivedFromIds = new Set(requests.map((r) => r.fromUserId))
-  const sentToIds = new Set(sent.map((s) => s.toUserId))
-
-  const invalidate = (): void => {
-    queryClient.invalidateQueries({ queryKey: ["friends"] })
-    queryClient.invalidateQueries({ queryKey: ["friendRequests"] })
-    queryClient.invalidateQueries({ queryKey: ["sentRequests"] })
-  }
-
-  const addMutation = useMutation({
-    mutationFn: postFriendRequest,
-    onSuccess: () => {
-      setActionError(null)
-      invalidate()
-    },
-    onError: () => {
-      setActionError("Impossible d'envoyer la demande pour le moment.")
-    },
-  })
-
-  const cancelMutation = useMutation({
-    mutationFn: deleteFriend,
-    onSuccess: () => {
-      setConfirmCancel(null)
-      setActionError(null)
-      invalidate()
-    },
-    onError: () => {
-      setActionError("Impossible d'annuler la demande.")
-    },
-  })
-
-  const filtered = users.filter((u) =>
-    (u.username ?? "").toLowerCase().includes(search.toLowerCase())
-  )
+  const {
+    search,
+    setSearch,
+    confirmCancel,
+    setConfirmCancel,
+    actionError,
+    isLoading,
+    isError,
+    filtered,
+    addMutation,
+    cancelMutation,
+    getStatus,
+  } = useUtilisateursPage()
   return (
     <main className="users-page min-h-screen bg-[#050B1C] px-3 pb-20 pt-24 text-white sm:px-4 md:px-6">
       <div className="mx-auto max-w-4xl space-y-8 md:space-y-10">
@@ -210,7 +65,7 @@ export function Utilisateurs() {
           ) : (
             <div className="grid gap-3 sm:gap-4 md:gap-5 md:grid-cols-2">
               {filtered.map((u) => {
-                const status = getRelationStatus(u.id, friendIds, receivedFromIds, sentToIds)
+                const status = getStatus(u.id)
 
                 return (
                   <div

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react"
+import React from "react"
 import { CompactSearchInput } from "../ui/CompactSearchInput"
+import { useSearchBarState } from "../../hooks/useSearchBarState"
 
 interface SearchBarProps {
   value: string
@@ -16,18 +17,7 @@ export function SearchBar({
   debounceMs = 350,
   onSubmit,
 }: SearchBarProps) {
-  const [input, setInput] = useState(value)
-
-  useEffect(() => {
-    setInput(value)
-  }, [value])
-
-  useEffect(() => {
-    const t = window.setTimeout(() => {
-      if (input !== value) onChange(input)
-    }, debounceMs)
-    return () => window.clearTimeout(t)
-  }, [input, value, onChange, debounceMs])
+  const { input, setInput } = useSearchBarState({ value, onChange, debounceMs })
 
   return (
     <form

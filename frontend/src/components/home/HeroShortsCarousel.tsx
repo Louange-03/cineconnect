@@ -1,62 +1,15 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React from "react"
 import { Link } from "@tanstack/react-router"
 import { SafeImage } from "./SafeImage"
-import { HERO_POSTERS } from "./homeAssets"
 import { useFilms } from "../../hooks/useFilms"
 import { resolvePosterUrl } from "../../lib/poster"
-import type { Film } from "../../types"
+import { getHeroSlideKey, useHeroShortsCarousel } from "../../hooks/useHeroShortsCarousel"
 
 const FILMS_SEARCH = { q: "", category: "", type: "all" as const, sort: "" as const }
-const CARD_W = 116
-
-type Slide =
-  | { kind: "film"; film: Film }
-  | { kind: "static"; src: string; alt: string; seed: string }
-
-function buildSlides(allFilms: Film[] | undefined): Slide[] {
-  const films = (allFilms ?? [])
-    .filter((f) => {
-      const u = resolvePosterUrl(f)
-      return Boolean(u && u !== "N/A")
-    })
-    .slice(0, 12)
-
-  if (films.length >= 3) {
-    return films.map((film) => ({ kind: "film" as const, film }))
-  }
-
-  return HERO_POSTERS.map((p) => ({
-    kind: "static" as const,
-    src: p.src,
-    alt: p.alt,
-    seed: p.seed,
-  }))
-}
-
-function slideKey(s: Slide, i: number): string {
-  if (s.kind === "film") return `f-${s.film.id}`
-  return `s-${s.seed}-${i}`
-}
 
 export function HeroShortsCarousel() {
   const { data: allFilms } = useFilms("", "", "")
-  const slides = useMemo(() => buildSlides(allFilms), [allFilms])
-  const n = slides.length
-  const [reducedMotion, setReducedMotion] = useState(false)
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
-    setReducedMotion(mq.matches)
-    const on = () => setReducedMotion(mq.matches)
-    mq.addEventListener("change", on)
-    return () => mq.removeEventListener("change", on)
-  }, [])
-
-  const radiusPx = useMemo(() => {
-    const count = Math.max(n, 3)
-    return Math.round((CARD_W / 2 + 10) / Math.sin(Math.PI / count))
-  }, [n])
-  const angleStep = 360 / Math.max(n, 1)
+  const { slides, n, reducedMotion, radiusPx, angleStep, cardWidth } = useHeroShortsCarousel(allFilms)
 
   if (n === 0) {
     return (
@@ -118,13 +71,13 @@ export function HeroShortsCarousel() {
 
             return (
               <div
-                key={`${slideKey(slide, i)}-${i}`}
+                key={`${getHeroSlideKey(slide, i)}-${i}`}
                 className={[
                   "home-hero-arc-face absolute left-1/2 top-1/2 overflow-hidden rounded-2xl border border-white/25 bg-[#0c1222] shadow-[0_18px_50px_rgba(0,0,0,0.55)] ring-1 ring-white/10",
                 ].join(" ")}
                 style={{
-                  width: `${CARD_W}px`,
-                  height: `${Math.round(CARD_W * 1.5)}px`,
+                  width: `${cardWidth}px`,
+                  height: `${Math.round(cardWidth * 1.5)}px`,
                   marginLeft: "-58px",
                   marginTop: "-87px",
                   transform,

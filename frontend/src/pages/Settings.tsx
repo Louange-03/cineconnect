@@ -1,38 +1,7 @@
 // frontend/src/pages/Settings.tsx
 
-import { useState } from "react"
 import { useAuth } from "../hooks/useAuth"
-
-// --- Types ---
-
-type FieldState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "success"; message: string }
-  | { status: "error"; message: string }
-
-// --- Fetch ---
-
-const API = "http://localhost:3007/api"
-
-function authHeader(): HeadersInit {
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${localStorage.getItem("cineconnect_token")}`,
-  }
-}
-
-async function patchMe(body: { email?: string; password?: string }): Promise<void> {
-  const res = await fetch(`${API}/users/me`, {
-    method: "PATCH",
-    headers: authHeader(),
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) {
-    const data = await res.json() as { message?: string }
-    throw new Error(data.message ?? "Erreur serveur")
-  }
-}
+import { type FieldState, useSettingsPage } from "../hooks/useSettingsPage"
 
 type FeedbackProps = {
   state: FieldState
@@ -48,43 +17,20 @@ function Feedback({ state }: FeedbackProps) {
 
 export function Settings() {
   const { user } = useAuth()
-
-  const [email, setEmail] = useState(user?.email ?? "")
-  const [emailState, setEmailState] = useState<FieldState>({ status: "idle" })
-
-  const [currentPassword, setCurrentPassword] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const [passwordState, setPasswordState] = useState<FieldState>({ status: "idle" })
-
-  const handleEmailSubmit = async (): Promise<void> => {
-    if (!email.trim() || email === user?.email) return
-    setEmailState({ status: "loading" })
-    try {
-      await patchMe({ email })
-      setEmailState({ status: "success", message: "Email mis à jour !" })
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Erreur"
-      setEmailState({ status: "error", message })
-    }
-  }
-
-  const handlePasswordSubmit = async (): Promise<void> => {
-    if (!currentPassword || !newPassword) return
-    if (newPassword.length < 6) {
-      setPasswordState({ status: "error", message: "Le mot de passe doit faire au moins 6 caractères" })
-      return
-    }
-    setPasswordState({ status: "loading" })
-    try {
-      await patchMe({ password: newPassword })
-      setPasswordState({ status: "success", message: "Mot de passe mis à jour !" })
-      setCurrentPassword("")
-      setNewPassword("")
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Erreur"
-      setPasswordState({ status: "error", message })
-    }
-  }
+  const {
+    email,
+    setEmail,
+    emailState,
+    setEmailState,
+    currentPassword,
+    setCurrentPassword,
+    newPassword,
+    setNewPassword,
+    passwordState,
+    setPasswordState,
+    handleEmailSubmit,
+    handlePasswordSubmit,
+  } = useSettingsPage(user?.email ?? "")
 
   return (
     <div className="max-w-lg mx-auto space-y-8 py-4">
@@ -110,7 +56,7 @@ export function Settings() {
           <Feedback state={emailState} />
           <button
             type="button"
-            onClick={handleEmailSubmit}
+            onClick={() => void handleEmailSubmit(user?.email)}
             disabled={emailState.status === "loading"}
             className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200 transition disabled:opacity-40"
           >

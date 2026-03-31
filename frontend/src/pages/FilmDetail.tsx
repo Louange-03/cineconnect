@@ -1,44 +1,10 @@
-import React, { useMemo } from "react"
+import React from "react"
 import { useNavigate, useParams } from "@tanstack/react-router"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import type { Film } from "../types"
 import { ReviewForm } from "../components/reviews/ReviewForm"
 import { ReviewCard } from "../components/reviews/ReviewCard"
 import { useReviews } from "../hooks/useReviews"
 import { Reveal } from "../components/ui/Reveal"
-import { getToken, getUser } from "../lib/auth"
-import { buildApiUrl } from "../lib/apiUrl"
-import type { Review } from "../types"
-import { FALLBACK_POSTER, resolvePosterUrl } from "../lib/poster"
-
-/** small JSON fetch wrapper that throws useful errors */
-async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
-  const res = await fetch(input, {
-    ...init,
-    headers: { Accept: "application/json", ...(init?.headers ?? {}) },
-  })
-
-  const contentType = res.headers.get("content-type") || ""
-  const text = await res.text()
-
-  if (!res.ok) {
-    try {
-      if (contentType.includes("application/json")) {
-        const json = JSON.parse(text)
-        throw new Error(json?.message ?? "Film introuvable")
-      }
-    } catch (e) {
-      if (e instanceof Error) throw e
-    }
-    throw new Error("Film introuvable")
-  }
-
-  if (!contentType.includes("application/json")) {
-    throw new Error("Réponse invalide du serveur (pas du JSON)")
-  }
-
-  return JSON.parse(text) as T
-}
+import { useFilmDetailPage } from "../hooks/useFilmDetailPage"
 
 function MiniToast({ message }: { message: string }) {
   return (
@@ -51,239 +17,25 @@ function MiniToast({ message }: { message: string }) {
 }
 
 export function FilmDetail() {
-  const qc = useQueryClient()
   const { id } = useParams({ from: "/film/$id" })
   const navigate = useNavigate()
-
-  const [toast, setToast] = React.useState<string | null>(null)
-  const [resolvedFilmId, setResolvedFilmId] = React.useState(id)
-  const [isFavorite, setIsFavorite] = React.useState(false)
-  const [favoriteBusy, setFavoriteBusy] = React.useState(false)
-  const currentUserId = getUser()?.id ?? null
-  function showToast(msg: string) {
-    setToast(msg)
-    window.setTimeout(() => setToast(null), 1600)
-  }
-
-  const { data: film, isLoading, error } = useQuery<Film | null, Error>({
-    queryKey: ["film", id],
-    queryFn: async () => {
-      const data = await fetchJson<{ film?: Film | null }>(buildApiUrl(`/api/films/${id}`))
-      return data.film ?? null
-    },
-    enabled: !!id,
-  })
+  const {
+    toast,
+    resolvedFilmId,
+    isFavorite,
+    favoriteBusy,
+    currentUserId,
+    filmQuery,
+    poster,
+    yearLabel,
+    onShare,
+    onWatchlist,
+    deleteMyReview,
+    editMyReview,
+  } = useFilmDetailPage(id)
+  const { data: film, isLoading, error } = filmQuery
 
   const { data: reviews, isLoading: loadingReviews } = useReviews(resolvedFilmId)
-
-  const poster = useMemo(() => resolvePosterUrl(film), [film])
-
-  const yearLabel =
-    film?.year === null || film?.year === undefined || String(film?.year ?? "").trim() === ""
-      ? null
-      : String(film?.year)
-
-  const onShare = async () => {
-    const url = window.location.href
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: film?.title ?? "Film", url })
-        showToast("Partagé ✅")
-      } else {
-        await navigator.clipboard.writeText(url)
-        showToast("Lien copié ✅")
-      }
-    } catch {
-      // ignore cancel/errors
-    }
-  }
-
-  const ensureFilmInDb = React.useCallback(
-    async (token: string): Promise<string> => {
-      if (!/^tt\d+$/i.test(resolvedFilmId)) return resolvedFilmId
-
-      const imported = await fetch(buildApiUrl("/api/films/import"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ imdbID: resolvedFilmId }),
-      })
-
-      const contentType = imported.headers.get("content-type") || ""
-      const text = await imported.text()
-      const json = contentType.includes("application/json") && text ? JSON.parse(text) : null
-      if (!imported.ok) {
-        throw new Error(json?.message || "Impossible d'importer le film")
-      }
-
-      const nextId = String(json?.film?.id || resolvedFilmId)
-      setResolvedFilmId(nextId)
-      return nextId
-    },
-    [resolvedFilmId]
-  )
-
-  const onWatchlist = () => {
-    void (async () => {
-      if (!resolvedFilmId || favoriteBusy) return
-      const token = getToken()
-      if (!token) {
-        showToast("Connecte-toi pour gérer ta liste.")
-        return
-      }
-
-      const next = !isFavorite
-      setFavoriteBusy(true)
-      try {
-        const targetFilmId = await ensureFilmInDb(token)
-        const res = await fetch(buildApiUrl(`/api/users/me/favorites/${targetFilmId}`), {
-          method: next ? "POST" : "DELETE",
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        const contentType = res.headers.get("content-type") || ""
-        const text = await res.text()
-        const json = contentType.includes("application/json") && text ? JSON.parse(text) : null
-        if (!res.ok) {
-          throw new Error(json?.message || "Impossible de modifier la liste")
-        }
-        setIsFavorite(next)
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new Event("favorites-changed"))
-        }
-        showToast(next ? "Ajouté à ma liste ✅" : "Retiré de ma liste ✅")
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "Erreur liste"
-        showToast(msg)
-      } finally {
-        setFavoriteBusy(false)
-      }
-    })()
-  }
-
-  const deleteMyReview = (reviewId: string) => {
-    void (async () => {
-      const token = getToken()
-      if (!token) {
-        showToast("Connecte-toi pour gerer tes avis.")
-        return
-      }
-      try {
-        const res = await fetch(buildApiUrl(`/api/reviews/${reviewId}`), {
-          method: "DELETE",
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        if (!res.ok) throw new Error("Suppression impossible")
-        await qc.invalidateQueries({ queryKey: ["reviews", resolvedFilmId] })
-        showToast("Avis supprime ✅")
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "Erreur suppression avis"
-        showToast(msg)
-      }
-    })()
-  }
-
-  const editMyReview = (review: Review) => {
-    const nextRatingRaw = window.prompt(
-      "Nouvelle note (1 a 5)",
-      String(review.rating ?? 0)
-    )
-    if (nextRatingRaw === null) return
-    const nextRating = Number(nextRatingRaw)
-    if (!Number.isFinite(nextRating) || nextRating < 1 || nextRating > 5) {
-      showToast("Note invalide (1 a 5).")
-      return
-    }
-    const nextComment = window.prompt(
-      "Modifier votre commentaire",
-      review.comment ?? ""
-    )
-    if (nextComment === null) return
-
-    void (async () => {
-      const token = getToken()
-      if (!token) {
-        showToast("Connecte-toi pour modifier ton avis.")
-        return
-      }
-      try {
-        const res = await fetch(buildApiUrl(`/api/reviews/${review.id}`), {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            rating: Math.round(nextRating),
-            comment: nextComment,
-          }),
-        })
-        if (!res.ok) throw new Error("Modification impossible")
-        await qc.invalidateQueries({ queryKey: ["reviews", resolvedFilmId] })
-        showToast("Avis modifie ✅")
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "Erreur modification avis"
-        showToast(msg)
-      }
-    })()
-  }
-
-  React.useEffect(() => {
-    setResolvedFilmId(id)
-  }, [id])
-
-  React.useEffect(() => {
-    if (!/^tt\d+$/i.test(resolvedFilmId)) return
-    const token = getToken()
-    if (!token) return
-    void ensureFilmInDb(token).catch(() => {
-      // Keep page usable even if import fails; actions will show explicit errors.
-    })
-  }, [resolvedFilmId, ensureFilmInDb])
-
-  React.useEffect(() => {
-    let cancelled = false
-
-    async function syncFavoriteState() {
-      if (!resolvedFilmId) return
-      const token = getToken()
-      if (!token) {
-        if (!cancelled) setIsFavorite(false)
-        return
-      }
-      try {
-        const res = await fetch(buildApiUrl("/api/users/me/favorites"), {
-          headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
-        })
-        if (!res.ok) return
-        const data = await res.json()
-        const list = Array.isArray(data?.favorites) ? data.favorites : []
-        const found = list.some((f: { id?: string }) => f?.id === resolvedFilmId)
-        if (!cancelled) setIsFavorite(found)
-      } catch {
-        if (!cancelled) setIsFavorite(false)
-      }
-    }
-
-    void syncFavoriteState()
-    const refresh = () => void syncFavoriteState()
-    window.addEventListener("favorites-changed", refresh)
-    window.addEventListener("focus", refresh)
-    return () => {
-      cancelled = true
-      window.removeEventListener("favorites-changed", refresh)
-      window.removeEventListener("focus", refresh)
-    }
-  }, [resolvedFilmId])
 
   if (isLoading) {
     return (

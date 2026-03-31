@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React from "react"
 import { Link, useRouterState } from "@tanstack/react-router"
-import { isAuthenticated, logout } from "../../lib/auth"
-import { getTheme, toggleTheme, type ThemeMode } from "../../lib/theme"
+import { useNavbarState } from "../../hooks/useNavbarState"
 import type { ReactNode } from "react"
 
 type NavLinkItem = {
@@ -23,6 +22,7 @@ function NavItem({ to, label, search }: NavLinkItem) {
     pathname === to || (to !== "/" && pathname.startsWith(to))
 
   return (
+
     <Link
       to={to}
       search={search}
@@ -40,55 +40,15 @@ function NavItem({ to, label, search }: NavLinkItem) {
           "pointer-events-none absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-[#007BFF] transition-opacity duration-200",
           active ? "opacity-100" : "opacity-0",
         ].join(" ")}
+        
       />
     </Link>
   )
 }
 
 export function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [isAuth, setIsAuth] = useState(isAuthenticated())
-  const [theme, setTheme] = useState<ThemeMode>(getTheme())
-
-  useEffect(() => {
-    const syncAuth = () => setIsAuth(isAuthenticated())
-    syncAuth()
-    window.addEventListener("auth-changed", syncAuth)
-    window.addEventListener("storage", syncAuth)
-    window.addEventListener("focus", syncAuth)
-    return () => {
-      window.removeEventListener("auth-changed", syncAuth)
-      window.removeEventListener("storage", syncAuth)
-      window.removeEventListener("focus", syncAuth)
-    }
-  }, [])
-
-  useEffect(() => {
-    const syncTheme = () => setTheme(getTheme())
-    window.addEventListener("theme-changed", syncTheme as EventListener)
-    return () => {
-      window.removeEventListener("theme-changed", syncTheme as EventListener)
-    }
-  }, [])
-
-  const nav = useMemo<NavLinkItem[]>(
-    () => [
-      { to: "/", label: "Accueil" },
-      { to: "/films", label: "Films", search: { q: "", category: "", type: "all", sort: "" } },
-      { to: "/amis", label: "Amis", requireAuth: true },
-      { to: "/discussion", label: "Discussion", requireAuth: true },
-      { to: "/profil", label: "Profil", requireAuth: true },
-    ],
-    [],
-  )
-
-  const visibleNav = nav.filter((n) => !n.requireAuth || isAuth)
-  const desktopNav = visibleNav.filter((n) => !n.mobileOnly)
-
-  const handleLogout = () => {
-    logout()
-    window.location.href = "/login"
-  }
+  const { mobileOpen, setMobileOpen, isAuth, theme, visibleNav, desktopNav, doLogout, toggleThemeMode } =
+    useNavbarState()
 
   return (
     <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-[#050B1C]/90 backdrop-blur-xl">
@@ -154,7 +114,7 @@ export function Navbar() {
 
           <button
             type="button"
-            onClick={() => setTheme(toggleTheme())}
+            onClick={toggleThemeMode}
             className="hidden h-10 w-10 items-center justify-center rounded-md border border-stone-700/50 bg-stone-900/40 text-stone-500 transition hover:border-stone-600 hover:bg-stone-800/50 hover:text-stone-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#007BFF]/30 lg:inline-flex"
             title={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
             aria-label={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
@@ -179,7 +139,7 @@ export function Navbar() {
             </Link>
           ) : (
             <button
-              onClick={handleLogout}
+              onClick={doLogout}
               className="hidden rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 sm:inline-flex lg:px-6 lg:py-2.5 lg:text-sm"
             >
               Déconnexion
@@ -225,9 +185,7 @@ export function Navbar() {
                 ))}
                 <button
                   type="button"
-                  onClick={() => {
-                    setTheme(toggleTheme())
-                  }}
+                  onClick={toggleThemeMode}
                   className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/90 transition hover:bg-white/10 md:hidden"
                 >
                   {theme === "dark" ? "Mode clair" : "Mode sombre"}
@@ -236,7 +194,7 @@ export function Navbar() {
                   <button
                     type="button"
                     onClick={() => {
-                      handleLogout()
+                      doLogout()
                       setMobileOpen(false)
                     }}
                     className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/90 transition hover:bg-white/10"

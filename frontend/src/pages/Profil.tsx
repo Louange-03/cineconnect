@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from "react"
+import React from "react"
 import { Link } from "@tanstack/react-router"
 import { useAuth } from "../hooks/useAuth"
 import { useLocation } from "@tanstack/react-router"
-import axios from "axios"
-import { getToken, logout } from "../lib/auth"
-import { buildApiUrl } from "../lib/apiUrl"
+import { useProfilPage } from "../hooks/useProfilPage"
 
 type FavoriteFilm = {
   id: number
@@ -47,86 +45,21 @@ function FilmCard({ film }: FilmCardProps) {
 }
 
 export function Profil() {
-  const API_BASE =
-    (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? ""
   const { user } = useAuth()
   const location = useLocation()
   const message = (location.state as any)?.message as string | undefined
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const [favoriteFilms, setFavoriteFilms] = useState<FavoriteFilm[]>([])
-  const [avatar, setAvatar] = useState<string | null>(localStorage.getItem("user_avatar"))
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null)
-
-  const showToast = (message: string, type: "success" | "error" | "info" = "success") => {
-    setToast({ message, type })
-    setTimeout(() => setToast(null), 4000)
-  }
-
-  const handleChangePassword = async () => {
-    const currentPass = prompt("Entrez votre mot de passe actuel :")
-    if (!currentPass) return
-    const newPass = prompt("Entrez votre NOUVEAU mot de passe :")
-    if (!newPass || newPass.length < 6) {
-      showToast("Le mot de passe doit faire au moins 6 caractères.", "error")
-      return
-    }
-
-    try {
-      const token = getToken()
-      await axios.put(buildApiUrl("/api/users/me/password"), { password: newPass }, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      showToast("Mot de passe modifié avec succès !", "success")
-    } catch {
-      showToast("La modification a échoué. Veuillez réessayer.", "error")
-    }
-  }
-
-  const handleDeleteAccount = async () => {
-    if (!window.confirm("C'est définitif. Êtes-vous ABSOLUMENT sûr de vouloir supprimer votre compte ?")) return
-    try {
-      const token = getToken()
-      await axios.delete(buildApiUrl("/api/users/me"), {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      logout()
-      window.location.href = "/register"
-    } catch {
-      showToast("Opération impossible à cause des données liées.", "error")
-    }
-  }
-
-  useEffect(() => {
-    const fetchFavs = async () => {
-      try {
-        const token = getToken()
-        if (!token) return
-        const res = await axios.get(buildApiUrl("/api/users/me/favorites"), {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setFavoriteFilms(res.data.favorites)
-      } catch (err) {
-        console.error("Erreur lors de la recup des favoris")
-      }
-    }
-    fetchFavs()
-    const onFavoritesChanged = () => fetchFavs()
-    window.addEventListener("favorites-changed", onFavoritesChanged)
-    return () => window.removeEventListener("favorites-changed", onFavoritesChanged)
-  }, [])
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const result = reader.result as string
-        setAvatar(result)
-        localStorage.setItem("user_avatar", result)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
+  const {
+    isSettingsOpen,
+    setIsSettingsOpen,
+    favoriteFilms,
+    avatar,
+    toast,
+    showToast,
+    handleChangePassword,
+    handleDeleteAccount,
+    handleAvatarChange,
+    logoutAndGoLogin,
+  } = useProfilPage()
 
   if (!user) {
     return (
@@ -308,7 +241,7 @@ export function Profil() {
                       <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                     </svg>
                   </button>
-                  <button type="button" onClick={() => { logout(); window.location.href = "/login" }} className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 transition-colors border border-white/10 rounded-xl p-4 text-left font-medium text-white/90 group">
+                  <button type="button" onClick={logoutAndGoLogin} className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 transition-colors border border-white/10 rounded-xl p-4 text-left font-medium text-white/90 group">
                     Changer de compte (Déconnexion)
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#3EA6FF]" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
