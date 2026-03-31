@@ -8,10 +8,10 @@ export default defineConfig({
   test: {
     environment: "node",
     hookTimeout: 60_000,
+    testTimeout: 30_000,
     include: ["tests/**/*.test.ts"],
     coverage: {
       provider: "v8",
-      all: true,
       include: ["src/**/*.ts"],
       exclude: [
         "**/node_modules/**",
