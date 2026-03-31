@@ -17,6 +17,7 @@ Puis ouvrir :
 - Frontend : `http://localhost:5173`
 - API : `http://localhost:3001`
 - Swagger : `http://localhost:3001/api/docs`
+- Adminer (visualiser la DB) : `http://localhost:8083`
 
 ---
 
@@ -105,6 +106,18 @@ docker compose up -d db
 ```
 
 Optionnel : Adminer est disponible sur `http://localhost:8083`.
+Tu peux aussi lancer DB + Adminer avec :
+
+```powershell
+./scripts/docker-local-up.ps1
+```
+
+Connexion Adminer :
+- `System` : `PostgreSQL`
+- `Server` : `db` (depuis Docker) ou `localhost` (depuis host)
+- `Username` : `cineconnect`
+- `Password` : `cineconnect`
+- `Database` : `cineconnect`
 
 ### Étape 2 : exécuter les migrations
 
@@ -132,6 +145,12 @@ Accès :
 docker compose up --build
 ```
 
+Version détachée (recommandée) :
+
+```bash
+docker compose up -d --build
+```
+
 Services exposés :
 - Web : `http://localhost:5173`
 - API : `http://localhost:3001`
@@ -153,6 +172,13 @@ Depuis la racine :
 - `pnpm dev` : lance backend + frontend.
 - `pnpm test` : tests backend puis frontend.
 - `pnpm test:coverage` : couverture backend + frontend.
+- `docker compose up -d db` : démarre seulement la base.
+- `docker compose up -d db adminer` : base + outil visuel DB.
+- `docker compose stop db adminer` : stoppe DB + Adminer.
+- `docker compose down` : stoppe toute la stack Docker.
+- `./scripts/docker-local-up.ps1` : helper PowerShell DB/Adminer.
+- `./scripts/docker-local-down.ps1` : helper PowerShell stop DB/Adminer.
+- `./scripts/docker-local-down.ps1 -All` : stop complet.
 
 Checks par package :
 
@@ -180,6 +206,9 @@ Le repo contient :
 ## Dépannage rapide
 
 - **Erreur DB au démarrage** : vérifier `DATABASE_URL`, puis relancer `pnpm --dir backend db:migrate`.
+- **`docker compose up -d:db` ne marche pas** : la bonne commande est `docker compose up -d db` (sans `:`).
+- **Tu vois des chiffres qui défilent dans les logs DB** : c’est normal (logs PostgreSQL). Ce n’est pas une erreur de code.
+- **Impossible de stopper la DB** : lancer `docker compose stop db` ou `./scripts/docker-local-down.ps1`.
 - **Erreur CORS** : vérifier `FRONTEND_URL` (backend) + URL utilisée dans le navigateur.
 - **Frontend ne joint pas l’API** : vérifier `VITE_API_URL` et `VITE_SOCKET_URL` dans `frontend/.env`.
 - **Port déjà utilisé** : arrêter le process concerné ou changer le port dans `.env`.

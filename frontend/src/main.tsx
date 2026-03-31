@@ -29,7 +29,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       <RouterProvider router={router} />
       {Devtools ? (
         <React.Suspense fallback={null}>
-          <Devtools queryClient={queryClient} />
+          <Devtools />
         </React.Suspense>
       ) : null}
     </QueryClientProvider>
