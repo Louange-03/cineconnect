@@ -5,6 +5,7 @@ import { RouterProvider } from "@tanstack/react-router"
 import { router } from "./router"
 import { initTheme } from "./lib/theme"
 import { bootstrapPushNotifications } from "./lib/pushNotifications"
+import { readViteEnv } from "./lib/viteEnv"
 import "./index.css"
 
 const queryClient = new QueryClient({
@@ -16,7 +17,8 @@ const queryClient = new QueryClient({
   },
 })
 
-const Devtools = import.meta.env.DEV ? React.lazy(() => import("./devtools")) : null
+const enableDevtools = import.meta.env.DEV || readViteEnv("VITE_ENABLE_DEVTOOLS") === "true"
+const Devtools = enableDevtools ? React.lazy(() => import("./devtools")) : null
 
 initTheme()
 bootstrapPushNotifications()
