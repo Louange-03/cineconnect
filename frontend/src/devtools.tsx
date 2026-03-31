@@ -1,6 +1,9 @@
 import { TanStackDevtools } from "@tanstack/react-devtools"
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools"
-import { TanStackRouterDevtools, TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
+import {
+  TanStackRouterDevtoolsInProd,
+  TanStackRouterDevtoolsPanelInProd,
+} from "@tanstack/react-router-devtools"
 import type { QueryClient } from "@tanstack/react-query"
 
 type Props = {
@@ -10,7 +13,7 @@ type Props = {
 export default function Devtools({ queryClient }: Props) {
   return (
     <>
-      <TanStackRouterDevtools
+      <TanStackRouterDevtoolsInProd
         position="bottom-right"
         toggleButtonProps={{
           style: {
@@ -32,7 +35,7 @@ export default function Devtools({ queryClient }: Props) {
         plugins={[
           {
             name: "TanStack Router",
-            render: <TanStackRouterDevtoolsPanel />,
+            render: <TanStackRouterDevtoolsPanelInProd />,
           },
           {
             name: "TanStack Query",
