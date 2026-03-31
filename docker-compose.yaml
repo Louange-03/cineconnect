@@ -60,10 +60,13 @@ services:
       SEED_OMDB_ON_START: ${SEED_OMDB_ON_START:-true}
       # Ne pas relancer OMDb si le catalogue compte déjà au moins ce nombre de films (évite 100+ requêtes à chaque redémarrage).
       SEED_OMDB_SKIP_IF_COUNT: ${SEED_OMDB_SKIP_IF_COUNT:-100}
-      # Import TMDB au démarrage si TMDB_API_KEY est défini. Désactive avec SEED_TMDB_ON_START=false.
-      SEED_TMDB_ON_START: ${SEED_TMDB_ON_START:-true}
-      # Nombre de pages TMDB populaires importées au démarrage.
-      SEED_TMDB_PAGES: ${SEED_TMDB_PAGES:-20}
+      # Import TMDB au démarrage: désactivé par défaut en prod (évite un bootstrap trop long et healthcheck KO).
+      # Lance `pnpm seed:tmdb` manuellement après déploiement si besoin d'un import massif.
+      SEED_TMDB_ON_START: ${SEED_TMDB_ON_START:-false}
+      # Nombre de pages TMDB importées quand SEED_TMDB_ON_START=true (ou en lancement manuel).
+      SEED_TMDB_PAGES: ${SEED_TMDB_PAGES:-30}
+      # Sources TMDB: popular, now_playing, upcoming, top_rated
+      SEED_TMDB_SOURCES: ${SEED_TMDB_SOURCES:-popular,now_playing,upcoming}
       # Langue TMDB pour titres/synopsis.
       SEED_TMDB_LANGUAGE: ${SEED_TMDB_LANGUAGE:-fr-FR}
     depends_on:
