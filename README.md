@@ -2,58 +2,18 @@
 
 Plateforme web full stack pour découvrir des films, les noter, gérer des amis et discuter en temps réel.
 
-## TL;DR (pour le jury)
+## Lancement Local (Exact)
 
-Après un `git clone`, les commandes minimales pour lancer le projet en local sont :
+Cette section est la référence unique.  
+Si tu suis exactement ces commandes, le projet démarre complet en local.
 
-```bash
-pnpm install
-docker compose up -d db
-pnpm --dir backend db:migrate
-pnpm dev
-```
-
-Puis ouvrir :
-- Frontend : `http://localhost:5173`
-- API : `http://localhost:3001`
-- Swagger : `http://localhost:3001/api/docs`
-- Adminer (visualiser la DB) : `http://localhost:8083`
-
----
-
-## Fonctionnalités
-
-- Authentification JWT (inscription, connexion, session).
-- Catalogue films (listing, détails, recherche, catégories).
-- Avis/notes (CRUD).
-- Social (amis).
-- Messagerie temps réel (Socket.io), réactions, réponses à message.
-- Documentation API (Swagger/OpenAPI).
-
-## Stack
-
-- Frontend : React, TypeScript, Vite, TanStack Router, TanStack Query, Tailwind CSS.
-- Backend : Node.js, Express, TypeScript, Drizzle ORM, PostgreSQL, Socket.io.
-- Outils : pnpm workspace, Vitest, Supertest, Docker Compose.
-
-## Structure du monorepo
-
-```text
-/
-├─ frontend/    # App React
-├─ backend/     # API Express + DB + Socket + Swagger
-├─ shared/      # Types/artefacts partagés
-├─ docs/        # Docs/rapport
-└─ scripts/     # Scripts utilitaires
-```
-
-## Prérequis
+### 1) Prérequis
 
 - Node.js 20+
-- pnpm 10+ (compatible avec lockfile courant)
-- Docker Desktop (recommandé pour PostgreSQL local)
+- pnpm 10+
+- Docker Desktop démarré
 
-Vérification rapide :
+Vérifier:
 
 ```bash
 node -v
@@ -61,7 +21,7 @@ pnpm -v
 docker --version
 ```
 
-## Installation
+### 2) Clone + install
 
 ```bash
 git clone https://github.com/Louange-03/cineconnect.git
@@ -69,176 +29,129 @@ cd cineconnect
 pnpm install
 ```
 
-## Configuration `.env`
+### 3) Fichiers `.env` exacts
 
-### 1) Backend
-
-Copier `backend/.env.example` vers `backend/.env` puis adapter les valeurs.
-
-Exemple minimal pour local :
+`backend/.env` (minimum local):
 
 ```env
 PORT=3001
 DATABASE_URL=postgresql://cineconnect:cineconnect@localhost:5437/cineconnect
 JWT_SECRET=change_this_secret_min_32_chars
 FRONTEND_URL=http://localhost:5173
-
 OMDB_API_KEY=
 TMDB_API_KEY=
 MAIL_PROVIDER=log
 ```
 
-### 2) Frontend
-
-Créer `frontend/.env` avec :
+`frontend/.env`:
 
 ```env
 VITE_API_URL=http://localhost:3001
 VITE_SOCKET_URL=http://localhost:3001
+VITE_ENABLE_DEVTOOLS=false
 ```
 
-## Lancer le projet en local (méthode recommandée)
+### 4) Démarrer DB + Adminer (commande exacte)
 
-### Étape 1 : démarrer PostgreSQL
+Important: ce repo contient `docker-compose.yml` (local) et `docker-compose.yaml` (prod/Coolify).  
+En local, utilise toujours `-f docker-compose.yml`.
 
 ```bash
-docker compose up -d db
+docker context use default
+docker compose -f docker-compose.yml up -d db adminer
+docker compose -f docker-compose.yml ps
 ```
 
-Optionnel : Adminer est disponible sur `http://localhost:8083`.
-Pour lancer explicitement Adminer :
+Tu dois voir `cineconnect-db` et `cineconnect-adminer` en `Up`.
 
-```bash
-docker compose up -d adminer
-```
-
-Ou DB + Adminer ensemble :
-
-```bash
-docker compose up -d db adminer
-```
-
-> Astuce : le repo contient `docker-compose.yml` (local) **et** `docker-compose.yaml` (Coolify prod).  
-> En local, utilise de préférence `docker compose -f docker-compose.yml ...` pour éviter toute ambiguïté.
-Tu peux aussi lancer DB + Adminer avec :
-
-```powershell
-./scripts/docker-local-up.ps1
-```
-
-Connexion Adminer :
-- `System` : `PostgreSQL`
-- `Server` : `db` (depuis Docker) ou `localhost` (depuis host)
-- `Username` : `cineconnect`
-- `Password` : `cineconnect`
-- `Database` : `cineconnect`
-- Si `8083` est déjà pris, définir `ADMINER_PORT=8084` puis relancer `docker compose up -d adminer` et ouvrir `http://localhost:8084`.
-
-### Étape 2 : exécuter les migrations
+### 5) Migrations DB (obligatoire)
 
 ```bash
 pnpm --dir backend db:migrate
 ```
 
-> Important : cette étape est obligatoire après clone pour que le schéma soit à jour.
-
-### Étape 3 : démarrer frontend + backend
+### 6) Démarrer l’application
 
 ```bash
 pnpm dev
 ```
 
-Accès :
-- Frontend : `http://localhost:5173`
-- API : `http://localhost:3001`
-- Swagger UI : `http://localhost:3001/api/docs`
-- OpenAPI JSON : `http://localhost:3001/api/docs-json`
+### 7) URLs à ouvrir
 
-## Lancer avec Docker Compose complet (option)
+- Frontend: `http://localhost:5173`
+- API: `http://localhost:3001`
+- Swagger: `http://localhost:3001/api/docs`
+- Adminer: `http://localhost:8083`
 
-```bash
-docker compose up --build
-```
+Connexion Adminer:
 
-Version détachée (recommandée) :
+- System: `PostgreSQL`
+- Server: `db` (ou `localhost`)
+- Username: `cineconnect`
+- Password: `cineconnect`
+- Database: `cineconnect`
 
-```bash
-docker compose up -d --build
-```
+## Commandes Utiles (Exactes)
 
-Services exposés :
-- Web : `http://localhost:5173`
-- API : `http://localhost:3001`
-- DB : `localhost:5437`
-- Adminer : `http://localhost:8083`
-
-## Seed (facultatif)
-
-Pour injecter un catalogue de démonstration :
+### Arrêter / redémarrer Docker local
 
 ```bash
-docker compose --profile seed up seed
+docker compose -f docker-compose.yml stop db adminer
+docker compose -f docker-compose.yml up -d db adminer
+docker compose -f docker-compose.yml down
 ```
 
-## Commandes utiles
+### Scripts PowerShell (optionnel)
 
-Depuis la racine :
+```powershell
+./scripts/docker-local-up.ps1
+./scripts/docker-local-down.ps1
+./scripts/docker-local-down.ps1 -All
+```
 
-- `pnpm dev` : lance backend + frontend.
-- `pnpm test` : tests backend puis frontend.
-- `pnpm test:coverage` : couverture backend + frontend.
-- `docker compose up -d db` : démarre seulement la base.
-- `docker compose up -d db adminer` : base + outil visuel DB.
-- `docker compose stop db adminer` : stoppe DB + Adminer.
-- `docker compose down` : stoppe toute la stack Docker.
-- `./scripts/docker-local-up.ps1` : helper PowerShell DB/Adminer.
-- `./scripts/docker-local-down.ps1` : helper PowerShell stop DB/Adminer.
-- `./scripts/docker-local-down.ps1 -All` : stop complet.
+### Tests et qualité
 
-Checks par package :
+```bash
+pnpm --dir backend typecheck
+pnpm --dir frontend typecheck
+pnpm --dir backend test
+pnpm --dir frontend test
+pnpm --dir frontend build
+pnpm test
+```
 
-- `pnpm --dir backend typecheck`
-- `pnpm --dir backend test`
-- `pnpm --dir frontend typecheck`
-- `pnpm --dir frontend test`
-- `pnpm --dir frontend build`
+## Seed Catalogue (Optionnel)
 
-## Déploiement (résumé)
+Importer plus de films:
 
-### Coolify / OVH
+```bash
+pnpm --dir backend seed:tmdb
+```
 
-- Fichier principal : `docker-compose.yaml`
-- En Coolify, configurer les domaines `web` et `api` avec `:8080` côté service.
-- Variables minimales recommandées : `JWT_SECRET`, `POSTGRES_PASSWORD`, `FRONTEND_URL`, `VITE_API_URL`, `VITE_SOCKET_URL`.
+## Dépannage Rapide
 
-### Cloud Run
+- `open //./pipe/dockerDesktopLinuxEngine...`: Docker Desktop non prêt ou mauvais contexte.
+  - Exécuter:
+    ```bash
+    docker context use default
+    docker version
+    ```
+- Adminer inaccessible:
+  - Vérifier:
+    ```bash
+    docker compose -f docker-compose.yml ps
+    ```
+  - Puis ouvrir `http://localhost:8083` (pas `8003`).
+- Erreur CORS en local:
+  - Vérifier `frontend/.env` et `backend/.env` (URLs localhost ci-dessus).
+- Après `git pull`:
+  - relancer:
+    ```bash
+    pnpm install
+    pnpm --dir backend db:migrate
+    ```
 
-Le repo contient :
-- `cloudbuild.backend.yaml`
-- `cloudbuild.frontend.yaml`
-- `scripts/deploy-cloudrun.ps1`
+## Notes Déploiement
 
-## Dépannage rapide
-
-- **Erreur DB au démarrage** : vérifier `DATABASE_URL`, puis relancer `pnpm --dir backend db:migrate`.
-- **`docker compose up -d:db` ne marche pas** : la bonne commande est `docker compose up -d db` (sans `:`).
-- **Tu vois des chiffres qui défilent dans les logs DB** : c’est normal (logs PostgreSQL). Ce n’est pas une erreur de code.
-- **Impossible de stopper la DB** : lancer `docker compose stop db` ou `./scripts/docker-local-down.ps1`.
-- **Adminer ne s’ouvre pas** :
-  1) `docker compose ps` (vérifier que `cineconnect-adminer` est `Up`)  
-  2) `docker compose up -d adminer`  
-  3) tester `http://localhost:8083` (ou `ADMINER_PORT` si changé)
-  4) si message `open //./pipe/dockerDesktopLinuxEngine`, démarrer Docker Desktop puis relancer la commande
-- **Erreur CORS** : vérifier `FRONTEND_URL` (backend) + URL utilisée dans le navigateur.
-- **Frontend ne joint pas l’API** : vérifier `VITE_API_URL` et `VITE_SOCKET_URL` dans `frontend/.env`.
-- **Port déjà utilisé** : arrêter le process concerné ou changer le port dans `.env`.
-- **Après pull de nouvelles features** : refaire `pnpm install` puis `pnpm --dir backend db:migrate`.
-
-## Sécurité
-
-- Ne jamais commiter de secrets réels dans `backend/.env`.
-- Utiliser des clés API de test en local.
-
-## Licence
-
-Projet académique Web2 HETIC.
+- Local/dev: `docker-compose.yml`
+- Coolify/prod: `docker-compose.yaml`
