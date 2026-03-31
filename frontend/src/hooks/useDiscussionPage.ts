@@ -43,14 +43,18 @@ export function useDiscussionPage() {
 
   useEffect(() => {
     connectSocket()
-    void fetchConversations().then(setConversations)
+    void fetchConversations()
+      .then((rows) => setConversations(Array.isArray(rows) ? rows : []))
+      .catch(() => setConversations([]))
     return () => disconnectSocket()
   }, [])
 
   useEffect(() => {
     if (!selected) return
     socket.emit("join-conversation", { conversationId: selected.id })
-    void fetchMessages(selected.id).then(setMessages)
+    void fetchMessages(selected.id)
+      .then((rows) => setMessages(Array.isArray(rows) ? rows : []))
+      .catch(() => setMessages([]))
     socket.emit("mark-as-seen", { conversationId: selected.id })
     setConversations((prev) => prev.map((conv) => (conv.id === selected.id ? { ...conv, unread_count: 0 } : conv)))
     setReactionOpenFor(null)
@@ -159,8 +163,12 @@ export function useDiscussionPage() {
     setReactionOpenFor(null)
   }
 
-  const filteredConversations = conversations.filter((conv) => (conv.name || "Inconnu").toLowerCase().includes(search.trim().toLowerCase()))
-  const filteredFilms = films.filter((f) => f.title.toLowerCase().includes(filmSearch.trim().toLowerCase()))
+  const safeConversations = Array.isArray(conversations) ? conversations : []
+  const safeFilms = Array.isArray(films) ? films : []
+  const filteredConversations = safeConversations.filter((conv) =>
+    (conv.name || "Inconnu").toLowerCase().includes(search.trim().toLowerCase()),
+  )
+  const filteredFilms = safeFilms.filter((f) => f.title.toLowerCase().includes(filmSearch.trim().toLowerCase()))
 
   return {
     conversations,
