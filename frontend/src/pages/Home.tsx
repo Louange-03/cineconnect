@@ -140,8 +140,9 @@ export function Home() {
     const strictFilms = base.filter(
       (f) => isMovieFilm(f) || (!isSeriesFilm(f) && !isAnimatedFilm(f))
     )
+    const seriesSource = strictSeries.length > 0 ? strictSeries : strictFilms
 
-    const topSeries = strictSeries.slice(0, 6).map((f) => ({
+    const topSeries = seriesSource.slice(0, 6).map((f) => ({
       src: resolvePosterUrl(f),
       alt: f.title,
       seed: `db-series-${f.id}`,
