@@ -187,11 +187,11 @@ export function Home() {
             avec une communauté qui vit le cinéma comme toi.
           </p>
 
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
+          <div className="mt-12 flex w-full flex-wrap items-center justify-center gap-3 sm:gap-4">
             <Link
               to="/films"
               search={FILMS_SEARCH}
-              className="home-cta-primary inline-flex items-center gap-2 rounded-full bg-[#007BFF] px-8 py-3.5 text-sm font-bold text-white shadow-[0_8px_32px_rgba(0,123,255,0.45)] transition hover:bg-[#0066dd]"
+              className="home-cta-primary inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#007BFF] px-6 py-3.5 text-sm font-bold text-white shadow-[0_8px_32px_rgba(0,123,255,0.45)] transition hover:bg-[#0066dd] sm:w-auto sm:px-8"
             >
               Explorer le catalogue
               <svg
@@ -213,7 +213,7 @@ export function Home() {
             <Link
               to="/films"
               search={FILMS_SEARCH}
-              className="inline-flex items-center rounded-full border-2 border-white bg-transparent px-8 py-3.5 text-sm font-bold text-white transition hover:bg-white/10"
+              className="inline-flex w-full items-center justify-center rounded-full border-2 border-white bg-transparent px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/10 sm:w-auto sm:px-8"
             >
               Parcourir sans compte
             </Link>

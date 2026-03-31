@@ -87,10 +87,10 @@ export function Profil() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#050B1C] to-transparent"></div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 -mt-32 relative z-10 space-y-8">
+      <div className="relative z-10 mx-auto -mt-24 max-w-5xl space-y-8 px-4 sm:-mt-28 sm:px-6 md:-mt-32">
         {/* User Profile Header section */}
-        <div className="rounded-3xl border border-white/10 bg-[#0A132D]/80 backdrop-blur-xl p-8 shadow-2xl flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
-          <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+        <div className="flex flex-col items-center justify-between gap-6 rounded-3xl border border-white/10 bg-[#0A132D]/80 p-4 shadow-2xl backdrop-blur-xl sm:p-6 md:flex-row md:items-end md:p-8">
+          <div className="flex flex-col items-center gap-4 text-center sm:gap-6 md:flex-row md:text-left">
             <div className="relative group h-32 w-32 shrink-0 rounded-full border-4 border-[#050B1C] bg-gradient-to-br from-[#1D6CE0] to-[#3EA6FF] flex items-center justify-center text-5xl font-semibold text-white shadow-xl overflow-hidden">
               {avatar ? (
                 <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
@@ -107,7 +107,7 @@ export function Profil() {
               </label>
             </div>
             <div className="space-y-1 mb-2">
-              <h1 className="text-4xl font-semibold tracking-tight text-white shadow-sm">
+              <h1 className="text-3xl font-semibold tracking-tight text-white shadow-sm sm:text-4xl">
                 {user.username}
               </h1>
               <p className="text-lg text-[#3EA6FF] font-medium">{user.email}</p>
@@ -153,7 +153,7 @@ export function Profil() {
             <h2 className="text-3xl font-bold tracking-tight text-white">Films favoris</h2>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 md:p-10 shadow-xl backdrop-blur-sm min-h-[300px]">
+          <div className="min-h-[300px] rounded-3xl border border-white/10 bg-white/5 p-4 shadow-xl backdrop-blur-sm sm:p-6 md:p-10">
             {favoriteFilms.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center space-y-5 text-white/50 pt-8 pb-12">
                 <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center border border-white/10 shadow-lg">
@@ -177,7 +177,7 @@ export function Profil() {
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              <div className="grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 md:gap-6">
                 {favoriteFilms.map((film) => (
                   <FilmCard key={film.id} film={film} />
                 ))}
@@ -256,7 +256,7 @@ export function Profil() {
                 </div>
               </div>
             </div>
-            <div className="p-4 md:p-6 border-t border-white/10 bg-white/5 flex gap-3 justify-end shrink-0">
+            <div className="flex shrink-0 flex-col justify-end gap-3 border-t border-white/10 bg-white/5 p-4 sm:flex-row md:p-6">
               <button type="button" onClick={() => setIsSettingsOpen(false)} className="rounded-full bg-white/10 hover:bg-white/20 transition-colors px-6 py-2.5 font-bold text-white shadow-sm">
                 Fermer
               </button>
@@ -289,7 +289,7 @@ export function Profil() {
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
                   </svg>
                 )}
-                <span className="max-w-[300px] leading-snug">{toast.message}</span>
+                <span className="max-w-[70vw] leading-snug sm:max-w-[300px]">{toast.message}</span>
               </div>
             )}
           </div>

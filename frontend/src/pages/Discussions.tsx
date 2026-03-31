@@ -77,7 +77,7 @@ export function Discussion() {
   } = useDiscussionPage()
 
   return (
-    <div className="discussions-page flex h-[calc(100dvh-5rem)] min-h-[calc(100dvh-5rem)] overflow-hidden bg-[#050B1C] text-white">
+    <div className="discussions-page flex h-[calc(100dvh-4rem)] min-h-[calc(100dvh-4rem)] overflow-hidden bg-[#050B1C] text-white lg:h-[calc(100dvh-5rem)] lg:min-h-[calc(100dvh-5rem)]">
       {/* Sidebar */}
       <div
         className={[
@@ -198,7 +198,7 @@ export function Discussion() {
                       className={`flex ${isMine ? "justify-end" : "justify-start"} motion-safe:animate-fade-in`}
                     >
                       <div
-                        className={`max-w-[85%] p-4 rounded-3xl md:max-w-[70%] ${isMine
+                        className={`max-w-[92%] p-3 rounded-3xl sm:max-w-[88%] sm:p-4 md:max-w-[70%] ${isMine
                           ? "bg-gradient-to-r from-[#1D6CE0] to-[#3EA6FF] text-white rounded-br-sm shadow-[0_5px_20px_rgba(29,108,224,0.3)]"
                           : "bg-[#0A132D] border border-white/10 text-white/90 rounded-bl-sm shadow-xl"
                           }`}
@@ -363,11 +363,11 @@ export function Discussion() {
                   </button>
                 </div>
               ) : null}
-              <div className="mx-auto flex max-w-4xl items-center gap-2 rounded-2xl border border-white/10 bg-[#0A132D]/90 p-2 pr-2 shadow-[0_10px_40px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:gap-3 md:rounded-full md:pr-3">
+              <div className="mx-auto flex max-w-4xl items-center gap-1.5 rounded-2xl border border-white/10 bg-[#0A132D]/90 p-1.5 pr-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:gap-2 sm:p-2 sm:pr-2 md:gap-3 md:rounded-full md:pr-3">
                 <button
                   type="button"
                   onClick={openShareFilms}
-                  className="ml-1 flex h-9 items-center justify-center rounded-full border border-white/10 bg-white/5 px-2 text-[11px] font-semibold text-white/85 transition hover:bg-white/10 md:h-10 md:px-3 md:text-xs"
+                  className="ml-0.5 flex h-9 items-center justify-center rounded-full border border-white/10 bg-white/5 px-2 text-[10px] font-semibold text-white/85 transition hover:bg-white/10 sm:ml-1 sm:text-[11px] md:h-10 md:px-3 md:text-xs"
                   title="Partager un film"
                 >
                   Partager
@@ -381,10 +381,10 @@ export function Discussion() {
                     }}
                     onBlur={handleStopTyping}
                     onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                    className="w-full border-none bg-transparent py-2.5 pl-4 pr-12 text-sm text-white placeholder-white/40 transition-all focus:outline-none focus:ring-0 md:py-3 md:pl-6 md:text-base"
+                    className="w-full border-none bg-transparent py-2 pl-2.5 pr-10 text-sm text-white placeholder-white/40 transition-all focus:outline-none focus:ring-0 sm:py-2.5 sm:pl-4 sm:pr-12 md:py-3 md:pl-6 md:text-base"
                     placeholder="Écrivez votre message..."
                   />
-                  <button className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-white/40 hover:text-[#3EA6FF] transition-colors">
+                  <button className="absolute right-1.5 top-1/2 -translate-y-1/2 p-2 text-white/40 transition-colors hover:text-[#3EA6FF] sm:right-3">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm3.675 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75z" />
                     </svg>
