@@ -106,6 +106,20 @@ docker compose up -d db
 ```
 
 Optionnel : Adminer est disponible sur `http://localhost:8083`.
+Pour lancer explicitement Adminer :
+
+```bash
+docker compose up -d adminer
+```
+
+Ou DB + Adminer ensemble :
+
+```bash
+docker compose up -d db adminer
+```
+
+> Astuce : le repo contient `docker-compose.yml` (local) **et** `docker-compose.yaml` (Coolify prod).  
+> En local, utilise de préférence `docker compose -f docker-compose.yml ...` pour éviter toute ambiguïté.
 Tu peux aussi lancer DB + Adminer avec :
 
 ```powershell
@@ -118,6 +132,7 @@ Connexion Adminer :
 - `Username` : `cineconnect`
 - `Password` : `cineconnect`
 - `Database` : `cineconnect`
+- Si `8083` est déjà pris, définir `ADMINER_PORT=8084` puis relancer `docker compose up -d adminer` et ouvrir `http://localhost:8084`.
 
 ### Étape 2 : exécuter les migrations
 
@@ -209,6 +224,11 @@ Le repo contient :
 - **`docker compose up -d:db` ne marche pas** : la bonne commande est `docker compose up -d db` (sans `:`).
 - **Tu vois des chiffres qui défilent dans les logs DB** : c’est normal (logs PostgreSQL). Ce n’est pas une erreur de code.
 - **Impossible de stopper la DB** : lancer `docker compose stop db` ou `./scripts/docker-local-down.ps1`.
+- **Adminer ne s’ouvre pas** :
+  1) `docker compose ps` (vérifier que `cineconnect-adminer` est `Up`)  
+  2) `docker compose up -d adminer`  
+  3) tester `http://localhost:8083` (ou `ADMINER_PORT` si changé)
+  4) si message `open //./pipe/dockerDesktopLinuxEngine`, démarrer Docker Desktop puis relancer la commande
 - **Erreur CORS** : vérifier `FRONTEND_URL` (backend) + URL utilisée dans le navigateur.
 - **Frontend ne joint pas l’API** : vérifier `VITE_API_URL` et `VITE_SOCKET_URL` dans `frontend/.env`.
 - **Port déjà utilisé** : arrêter le process concerné ou changer le port dans `.env`.

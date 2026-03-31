@@ -10,12 +10,12 @@
     "allowJs": true,
     "checkJs": false,
     "noEmit": true,
-  "jsx": "react-jsx",
-  "types": ["node", "react", "react-dom"]
+    "jsx": "react-jsx",
+    "types": ["node", "react", "react-dom"]
   },
+  "files": [],
   "references": [
     { "path": "./backend" },
     { "path": "./frontend" }
-  ],
-  "include": ["backend", "frontend"]
+  ]
 }

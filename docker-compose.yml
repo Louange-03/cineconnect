@@ -39,8 +39,11 @@ services:
   adminer:
     image: adminer
     container_name: cineconnect-adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: db
     ports:
-      - "8083:8080"
+      - "${ADMINER_PORT:-8083}:8080"
+    restart: unless-stopped
     depends_on:
       - db
 

@@ -50,6 +50,13 @@ body {
   overflow-x: hidden;
 }
 
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
 *,
 *::before,
 *::after {
@@ -113,6 +120,7 @@ h6 {
   letter-spacing: 0.01em;
   line-height: 1.2;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
 /* Barre recherche « billet de ciné » — coquille + perforations */
@@ -797,6 +805,34 @@ html.theme-light .home-road-row::after {
 .home-page-mockup,
 .home-mockup {
   overflow-x: clip;
+}
+
+@media (max-width: 768px) {
+  .home-page-mockup,
+  .home-mockup,
+  .films-page,
+  .users-page,
+  .friends-page,
+  .discussions-page,
+  .profile-page {
+    overflow-x: hidden;
+  }
+
+  .home-road-track {
+    gap: 0.6rem;
+  }
+
+  .home-road-row::before,
+  .home-road-row::after {
+    width: 20px;
+  }
+}
+
+@media (max-width: 390px) {
+  .container-page {
+    padding-left: 0.8rem;
+    padding-right: 0.8rem;
+  }
 }
 
 /* Accueil — carrousel courbé (style bande en arc) */

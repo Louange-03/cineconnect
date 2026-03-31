@@ -11,7 +11,7 @@ export function AppLayout() {
   return (
     <div
       className={[
-        "min-h-screen text-white antialiased",
+        "min-h-screen min-h-[100dvh] text-white antialiased",
         isHome ? "app-shell-home bg-[#050B1C]" : "bg-[#050B1C] cine-bg",
       ].join(" ")}
     >
