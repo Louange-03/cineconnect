@@ -33,7 +33,8 @@ export function useFilms(query: string, category = "", year = "") {
   return useQuery<Film[], Error>({
     queryKey: ["films", query, category, year, FILMS_PAGE_LIMIT],
     queryFn: () => fetchFilms(query, category, year),
-    staleTime: 0,
+    staleTime: 1000 * 30,
     gcTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
   })
 }

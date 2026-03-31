@@ -1,4 +1,4 @@
-import React, { useMemo } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { useNavigate, useSearch } from "@tanstack/react-router"
 import { useFilms } from "../hooks/useFilms"
 import { useCategories } from "../hooks/useCategories"
@@ -9,8 +9,11 @@ import type { Film } from "../types"
 import { isSeriesFilmListed, normalizeFilmToken } from "../lib/filmKind"
 
 export function Films() {
+  const INITIAL_VISIBLE = 30
+  const LOAD_STEP = 30
   const { q, category, type } = useSearch({ from: "/films" })
   const navigate = useNavigate({ from: "/films" })
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE)
 
   const patchSearch = (
     patch: Partial<{
@@ -81,6 +84,17 @@ export function Films() {
     if (type === "movie") return afterCategory.filter((f) => !isSeriesFilmListed(f))
     return afterCategory
   }, [films, category, hasSearchQuery, type])
+
+  useEffect(() => {
+    // Reset visible window when filters/search change.
+    setVisibleCount(INITIAL_VISIBLE)
+  }, [q, category, type])
+
+  const visibleList = useMemo(
+    () => list.slice(0, Math.min(visibleCount, list.length)),
+    [list, visibleCount],
+  )
+  const hasMore = visibleCount < list.length
 
   const isBusy = isLoading || loadingCategories
 
@@ -196,21 +210,32 @@ export function Films() {
                   {q || category ? "Résultats" : "Tout le catalogue"}
                 </h3>
                 <span className="text-sm font-medium text-white/50">
-                  {list.length} titre{list.length > 1 ? "s" : ""}
+                  {visibleList.length}/{list.length} titre{list.length > 1 ? "s" : ""}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:gap-6">
-                {list.map((film, idx) => (
+                {visibleList.map((film, idx) => (
                   <div
                     key={film.id}
                     className="cine-card-enter"
-                    style={{ ["--stagger" as any]: `${Math.min(idx * 22, 260)}ms` }}
+                    style={{ ["--stagger" as any]: `${Math.min(idx * 12, 180)}ms` }}
                   >
                     <FilmCard film={film} />
                   </div>
                 ))}
               </div>
+              {hasMore ? (
+                <div className="mt-8 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((prev) => prev + LOAD_STEP)}
+                    className="rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10"
+                  >
+                    Charger plus
+                  </button>
+                </div>
+              ) : null}
             </section>
           )}
         </>
