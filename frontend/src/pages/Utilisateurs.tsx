@@ -3,6 +3,7 @@ import { useState } from "react"
 import { CompactSearchInput } from "../components/ui/CompactSearchInput"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getToken } from "../lib/auth"
+import { buildApiUrl } from "../lib/apiUrl"
 
 type UserItem = {
   id: string
@@ -40,32 +41,32 @@ function authHeader(): HeadersInit {
 }
 
 async function fetchUsers(): Promise<UserItem[]> {
-  const res = await fetch(`${API}/users`, { headers: authHeader() })
+  const res = await fetch(buildApiUrl(`${API}/users`), { headers: authHeader() })
   if (!res.ok) throw new Error("Erreur chargement utilisateurs")
-  const data = await res.json() as { users: UserItem[] }
-  return data.users
+  const data = await res.json() as { users?: UserItem[] }
+  return Array.isArray(data.users) ? data.users : []
 }
 
 async function fetchFriends(): Promise<{ friends: Friend[] }> {
-  const res = await fetch(`${API}/friends`, { headers: authHeader() })
+  const res = await fetch(buildApiUrl(`${API}/friends`), { headers: authHeader() })
   if (!res.ok) throw new Error("Erreur chargement amis")
   return res.json() as Promise<{ friends: Friend[] }>
 }
 
 async function fetchRequests(): Promise<{ requests: FriendRequest[] }> {
-  const res = await fetch(`${API}/friends/requests`, { headers: authHeader() })
+  const res = await fetch(buildApiUrl(`${API}/friends/requests`), { headers: authHeader() })
   if (!res.ok) throw new Error("Erreur chargement demandes")
   return res.json() as Promise<{ requests: FriendRequest[] }>
 }
 
 async function fetchSent(): Promise<{ sent: SentRequest[] }> {
-  const res = await fetch(`${API}/friends/sent`, { headers: authHeader() })
+  const res = await fetch(buildApiUrl(`${API}/friends/sent`), { headers: authHeader() })
   if (!res.ok) throw new Error("Erreur chargement demandes envoyées")
   return res.json() as Promise<{ sent: SentRequest[] }>
 }
 
 async function postFriendRequest(userId: string): Promise<void> {
-  const res = await fetch(`${API}/friends/request`, {
+  const res = await fetch(buildApiUrl(`${API}/friends/request`), {
     method: "POST",
     headers: authHeader(),
     body: JSON.stringify({ userId }),
@@ -74,7 +75,7 @@ async function postFriendRequest(userId: string): Promise<void> {
 }
 
 async function deleteFriend(userId: string): Promise<void> {
-  const res = await fetch(`${API}/friends/${userId}`, {
+  const res = await fetch(buildApiUrl(`${API}/friends/${userId}`), {
     method: "DELETE",
     headers: authHeader(),
   })
@@ -96,11 +97,13 @@ function getRelationStatus(
 export function Utilisateurs() {
   const [search, setSearch] = useState("")
   const [confirmCancel, setConfirmCancel] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
-  const { data: users = [], isLoading } = useQuery({
+  const { data: users = [], isLoading, isError } = useQuery({
     queryKey: ["users"],
     queryFn: fetchUsers,
+    retry: 1,
   })
 
   const { data: friendsData } = useQuery({
@@ -134,19 +137,29 @@ export function Utilisateurs() {
 
   const addMutation = useMutation({
     mutationFn: postFriendRequest,
-    onSuccess: invalidate,
+    onSuccess: () => {
+      setActionError(null)
+      invalidate()
+    },
+    onError: () => {
+      setActionError("Impossible d'envoyer la demande pour le moment.")
+    },
   })
 
   const cancelMutation = useMutation({
     mutationFn: deleteFriend,
     onSuccess: () => {
       setConfirmCancel(null)
+      setActionError(null)
       invalidate()
+    },
+    onError: () => {
+      setActionError("Impossible d'annuler la demande.")
     },
   })
 
   const filtered = users.filter((u) =>
-    u.username.toLowerCase().includes(search.toLowerCase())
+    (u.username ?? "").toLowerCase().includes(search.toLowerCase())
   )
   return (
     <main className="users-page min-h-screen bg-[#050B1C] px-3 pb-20 pt-24 text-white sm:px-4 md:px-6">
@@ -167,6 +180,16 @@ export function Utilisateurs() {
             inputType="search"
           />
         </div>
+        {isError ? (
+          <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            Erreur de chargement des utilisateurs. Vérifie la connexion puis recharge la page.
+          </p>
+        ) : null}
+        {actionError ? (
+          <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {actionError}
+          </p>
+        ) : null}
 
         <div className="mt-8 min-h-[400px] border border-white/10 bg-[#0A132D]/25 p-3 sm:p-4 md:p-8">
           {isLoading ? (
@@ -196,11 +219,11 @@ export function Utilisateurs() {
                   >
                     <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#1D6CE0] to-[#3EA6FF] text-lg font-semibold text-white shadow-inner">
-                        {u.username.charAt(0).toUpperCase()}
+                        {(u.username ?? "U").charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0 overflow-hidden">
-                        <p className="truncate text-base font-bold tracking-wide text-white sm:text-lg">{u.username}</p>
-                        <p className="truncate text-sm font-medium text-gray-400">{u.email}</p>
+                        <p className="truncate text-base font-bold tracking-wide text-white sm:text-lg">{u.username ?? "Utilisateur"}</p>
+                        <p className="truncate text-sm font-medium text-gray-400">{u.email ?? "—"}</p>
                       </div>
                     </div>
 

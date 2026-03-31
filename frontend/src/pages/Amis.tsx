@@ -1,10 +1,12 @@
 // frontend/src/pages/Amis.tsx
 
+import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { FriendCard } from "../components/friends/FriendCard"
 import { FriendRequestCard } from "../components/friends/FriendRequestCard"
 import { getToken } from "../lib/auth"
+import { buildApiUrl } from "../lib/apiUrl"
 
 
 type Friend = {
@@ -43,19 +45,19 @@ function authHeader(): HeadersInit {
 }
 
 async function fetchFriends(): Promise<FriendsResponse> {
-  const res = await fetch(`${API}/friends`, { headers: authHeader() })
+  const res = await fetch(buildApiUrl(`${API}/friends`), { headers: authHeader() })
   if (!res.ok) throw new Error("Erreur chargement amis")
   return res.json() as Promise<FriendsResponse>
 }
 
 async function fetchRequests(): Promise<RequestsResponse> {
-  const res = await fetch(`${API}/friends/requests`, { headers: authHeader() })
+  const res = await fetch(buildApiUrl(`${API}/friends/requests`), { headers: authHeader() })
   if (!res.ok) throw new Error("Erreur chargement demandes")
   return res.json() as Promise<RequestsResponse>
 }
 
 async function postAccept(userId: string): Promise<void> {
-  const res = await fetch(`${API}/friends/accept`, {
+  const res = await fetch(buildApiUrl(`${API}/friends/accept`), {
     method: "POST",
     headers: authHeader(),
     body: JSON.stringify({ userId }),
@@ -64,7 +66,7 @@ async function postAccept(userId: string): Promise<void> {
 }
 
 async function postReject(userId: string): Promise<void> {
-  const res = await fetch(`${API}/friends/reject`, {
+  const res = await fetch(buildApiUrl(`${API}/friends/reject`), {
     method: "POST",
     headers: authHeader(),
     body: JSON.stringify({ userId }),
@@ -73,7 +75,7 @@ async function postReject(userId: string): Promise<void> {
 }
 
 async function deleteFriend(userId: string): Promise<void> {
-  const res = await fetch(`${API}/friends/${userId}`, {
+  const res = await fetch(buildApiUrl(`${API}/friends/${userId}`), {
     method: "DELETE",
     headers: authHeader(),
   })
@@ -81,7 +83,7 @@ async function deleteFriend(userId: string): Promise<void> {
 }
 
 async function startConversation(userId: string): Promise<void> {
-  const res = await fetch(`${API}/messages/start`, {
+  const res = await fetch(buildApiUrl(`${API}/messages/start`), {
     method: "POST",
     headers: authHeader(),
     body: JSON.stringify({ userId }),
@@ -91,13 +93,14 @@ async function startConversation(userId: string): Promise<void> {
 
 export function Amis() {
   const queryClient = useQueryClient()
+  const [actionError, setActionError] = useState<string | null>(null)
 
-  const { data: friendsData } = useQuery({
+  const { data: friendsData, isError: friendsError } = useQuery({
     queryKey: ["friends"],
     queryFn: fetchFriends,
   })
 
-  const { data: requestsData } = useQuery({
+  const { data: requestsData, isError: requestsError } = useQuery({
     queryKey: ["friendRequests"],
     queryFn: fetchRequests,
   })
@@ -117,22 +120,50 @@ export function Amis() {
       // Prépare la discussion juste après acceptation
       await startConversation(userId)
     },
-    onSuccess: invalidate,
+    onSuccess: () => {
+      setActionError(null)
+      invalidate()
+    },
+    onError: () => {
+      setActionError("Impossible d'accepter cette demande.")
+    },
   })
 
   const rejectMutation = useMutation({
     mutationFn: postReject,
-    onSuccess: invalidate,
+    onSuccess: () => {
+      setActionError(null)
+      invalidate()
+    },
+    onError: () => {
+      setActionError("Impossible de refuser cette demande.")
+    },
   })
 
   const removeMutation = useMutation({
     mutationFn: deleteFriend,
-    onSuccess: invalidate,
+    onSuccess: () => {
+      setActionError(null)
+      invalidate()
+    },
+    onError: () => {
+      setActionError("Impossible de supprimer cet ami.")
+    },
   })
 
   return (
     <main className="friends-page min-h-screen bg-[#050B1C] px-4 pb-20 pt-24 text-white md:px-10">
       <div className="mx-auto max-w-6xl space-y-8">
+      {(friendsError || requestsError) ? (
+        <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          Erreur de chargement de la liste d'amis. Vérifie la connexion puis recharge la page.
+        </p>
+      ) : null}
+      {actionError ? (
+        <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          {actionError}
+        </p>
+      ) : null}
       <header className="friends-hero border-b border-white/10 pb-8">
         <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#3EA6FF]/80">Réseau</p>
         <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
