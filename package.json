@@ -20,8 +20,11 @@
     "dev": "concurrently -n BACK,FRONT -c auto \"pnpm --dir backend dev\" \"pnpm --dir frontend dev\"",
     "dev:backend": "pnpm --dir backend dev",
     "dev:frontend": "pnpm --dir frontend dev",
+    "typecheck": "pnpm --dir backend typecheck && pnpm --dir frontend typecheck",
+    "lint": "pnpm --dir backend lint && pnpm --dir frontend lint",
     "test": "pnpm --dir backend test && pnpm --dir frontend test",
-    "test:coverage": "pnpm --dir backend test:coverage && pnpm --dir frontend test:coverage"
+    "test:coverage": "pnpm --dir backend test:coverage && pnpm --dir frontend test:coverage",
+    "verify": "pnpm typecheck && pnpm lint && pnpm test"
   },
   "devDependencies": {
     "@types/node": "^25.3.3",

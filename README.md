@@ -111,14 +111,24 @@ docker compose -f docker-compose.yml down
 
 ### Tests et qualité
 
+Vérification complète (recommandé avant commit ou déploiement) :
+
 ```bash
-pnpm --dir backend typecheck
-pnpm --dir frontend typecheck
-pnpm --dir backend test
-pnpm --dir frontend test
-pnpm --dir frontend build
-pnpm test
+pnpm verify
 ```
+
+Équivalent détaillé (ou exécution ciblée) :
+
+```bash
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm --dir frontend build
+```
+
+Sous Windows : `.\scripts\verify.ps1`
+
+Documentation : [Structure du dépôt et de l’IDE](docs/STRUCTURE-DU-DEPOT.md).
 
 ## Seed Catalogue (Optionnel)
 

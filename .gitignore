@@ -32,6 +32,7 @@ cloudrun.env.local.yaml
 # Editor / OS
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
 .DS_Store
 *.suo
