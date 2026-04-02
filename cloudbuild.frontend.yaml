@@ -6,6 +6,8 @@ steps:
   - name: gcr.io/cloud-builders/docker
     args:
       - build
+      - -f
+      - frontend/Dockerfile
       - -t
       - gcr.io/$PROJECT_ID/cineconnect-web
       - --build-arg
@@ -13,7 +15,7 @@ steps:
       - --build-arg
       - VITE_SOCKET_URL=${_VITE_SOCKET_URL}
       - .
-    dir: frontend
+    dir: .
 
 images:
   - gcr.io/$PROJECT_ID/cineconnect-web
